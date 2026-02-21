@@ -1,6 +1,7 @@
-import { access, mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { PROJECT_USER_AGENT } from "../../config.js";
+import { pathExists } from "../../utils/fs.js";
 
 interface FetchOptions {
   refresh: boolean;
@@ -9,15 +10,6 @@ interface FetchOptions {
 
 function sanitizeSlug(slug: string): string {
   return slug.replace(/[^a-z0-9-]/gi, "-").toLowerCase();
-}
-
-async function exists(filePath: string): Promise<boolean> {
-  try {
-    await access(filePath);
-    return true;
-  } catch {
-    return false;
-  }
 }
 
 async function sleep(ms: number): Promise<void> {
@@ -46,7 +38,7 @@ async function fetchWithRetry(url: string, retries: number, delayMs: number): Pr
 
 export async function getCachedHtml(source: string, slug: string, url: string, options: FetchOptions): Promise<string> {
   const cachePath = path.join("data", "sources", source, `${sanitizeSlug(slug)}.html`);
-  const hasCache = await exists(cachePath);
+  const hasCache = await pathExists(cachePath);
 
   if (hasCache && !options.refresh) {
     return readFile(cachePath, "utf8");
