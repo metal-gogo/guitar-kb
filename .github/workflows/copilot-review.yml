@@ -1,0 +1,98 @@
+name: Copilot Review
+
+on:
+  pull_request_target:
+    types: [opened, reopened, ready_for_review, synchronize]
+  pull_request_review:
+    types: [submitted, edited, dismissed]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  request-copilot-review:
+    if: github.event_name == 'pull_request_target' && !github.event.pull_request.draft
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const pull_number = context.payload.pull_request.number;
+
+            const candidates = [
+              'github-copilot[bot]',
+              'copilot[bot]',
+              'copilot-pull-request-reviewer[bot]'
+            ];
+
+            let requested = false;
+            for (const reviewer of candidates) {
+              try {
+                await github.rest.pulls.requestReviewers({
+                  owner,
+                  repo,
+                  pull_number,
+                  reviewers: [reviewer],
+                });
+                core.info(`Requested review from ${reviewer}`);
+                requested = true;
+                break;
+              } catch (error) {
+                core.info(`Could not request ${reviewer}: ${error.message}`);
+              }
+            }
+
+            if (!requested) {
+              core.warning('Could not auto-request Copilot review; ensure Copilot review is enabled for this repository.');
+            }
+
+  require-copilot-review:
+    runs-on: ubuntu-latest
+    env:
+      COPILOT_REVIEWER_LOGINS: ${{ vars.COPILOT_REVIEWER_LOGINS || 'github-copilot[bot],copilot[bot],copilot-pull-request-reviewer[bot]' }}
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const pull_number =
+              context.payload.pull_request?.number ?? context.payload.review?.pull_request_url?.split('/').pop();
+
+            const isDraft = Boolean(context.payload.pull_request?.draft);
+            if (isDraft) {
+              core.info('Draft PR detected; Copilot review check will enforce after ready for review.');
+              return;
+            }
+
+            const configured = (process.env.COPILOT_REVIEWER_LOGINS || '')
+              .split(',')
+              .map((entry) => entry.trim().toLowerCase())
+              .filter(Boolean);
+
+            const allowedReviewers = new Set(configured);
+
+            const reviews = await github.paginate(github.rest.pulls.listReviews, {
+              owner,
+              repo,
+              pull_number: Number(pull_number),
+              per_page: 100,
+            });
+
+            const matched = reviews.filter((review) => {
+              const login = review.user?.login?.toLowerCase() || '';
+              return allowedReviewers.has(login) && review.state !== 'DISMISSED';
+            });
+
+            if (matched.length === 0) {
+              core.setFailed(
+                `Copilot review is required before merge. Expected one reviewer login from: ${Array.from(allowedReviewers).join(', ')}`
+              );
+              return;
+            }
+
+            const latest = matched[matched.length - 1];
+            core.info(`Copilot review detected from ${latest.user?.login} with state ${latest.state}.`);
