@@ -1,6 +1,9 @@
 name: Copilot Review
 
 on:
+  # NOTE: We intentionally use `pull_request_target` so this workflow runs from
+  # the base branch and can access PR metadata consistently (including forks).
+  # This workflow does not checkout or execute PR code; it only uses GitHub API.
   pull_request_target:
     types: [opened, reopened, ready_for_review, synchronize]
   pull_request_review:
@@ -8,7 +11,7 @@ on:
 
 permissions:
   contents: read
-  pull-requests: write
+  pull-requests: read
 
 jobs:
   request-copilot-review:
@@ -22,37 +25,18 @@ jobs:
             const repo = context.repo.repo;
             const pull_number = context.payload.pull_request.number;
 
-            const candidates = [
-              'github-copilot[bot]',
-              'copilot[bot]',
-              'copilot-pull-request-reviewer[bot]'
-            ];
-
-            let requested = false;
-            for (const reviewer of candidates) {
-              try {
-                await github.rest.pulls.requestReviewers({
-                  owner,
-                  repo,
-                  pull_number,
-                  reviewers: [reviewer],
-                });
-                core.info(`Requested review from ${reviewer}`);
-                requested = true;
-                break;
-              } catch (error) {
-                core.info(`Could not request ${reviewer}: ${error.message}`);
-              }
-            }
-
-            if (!requested) {
-              core.warning('Could not auto-request Copilot review; ensure Copilot review is enabled for this repository.');
-            }
+            core.info(`Copilot review workflow triggered for ${owner}/${repo}#${pull_number}.`);
+            core.info(
+              'Bot accounts (for example `github-copilot[bot]`) cannot be requested via the pull request `reviewers` API parameter.'
+            );
+            core.info(
+              'Ensure the Copilot PR review app is enabled so reviews are auto-generated from pull request activity.'
+            );
 
   require-copilot-review:
     runs-on: ubuntu-latest
     env:
-      COPILOT_REVIEWER_LOGINS: ${{ vars.COPILOT_REVIEWER_LOGINS || 'github-copilot[bot],copilot[bot],copilot-pull-request-reviewer[bot]' }}
+      COPILOT_REVIEWER_LOGINS: github-copilot[bot],copilot[bot],copilot-pull-request-reviewer[bot]
     steps:
       - uses: actions/github-script@v7
         with:
@@ -60,9 +44,24 @@ jobs:
             const owner = context.repo.owner;
             const repo = context.repo.repo;
             const pull_number =
-              context.payload.pull_request?.number ?? context.payload.review?.pull_request_url?.split('/').pop();
+              context.payload.pull_request?.number ?? context.payload.review?.pull_request?.number;
 
-            const isDraft = Boolean(context.payload.pull_request?.draft);
+            const parsedPullNumber = Number(pull_number);
+            if (!Number.isInteger(parsedPullNumber) || parsedPullNumber <= 0) {
+              core.setFailed('Unable to determine pull request number from event payload.');
+              return;
+            }
+
+            let isDraft = Boolean(context.payload.pull_request?.draft);
+            if (context.payload.pull_request?.draft === undefined) {
+              const pr = await github.rest.pulls.get({
+                owner,
+                repo,
+                pull_number: parsedPullNumber,
+              });
+              isDraft = Boolean(pr.data.draft);
+            }
+
             if (isDraft) {
               core.info('Draft PR detected; Copilot review check will enforce after ready for review.');
               return;
@@ -78,7 +77,7 @@ jobs:
             const reviews = await github.paginate(github.rest.pulls.listReviews, {
               owner,
               repo,
-              pull_number: Number(pull_number),
+              pull_number: parsedPullNumber,
               per_page: 100,
             });
 

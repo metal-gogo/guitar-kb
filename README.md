@@ -64,17 +64,20 @@ npm run validate
 
 - Workflow: `.github/workflows/copilot-review.yml`
 - Required status check: `Copilot Review / require-copilot-review`
-- Optional repo variable: `COPILOT_REVIEWER_LOGINS` (comma-separated bot logins)
+- Copilot reviewer logins are configured in `.github/workflows/copilot-review.yml`
 
 To enforce this for every PR, add `Copilot Review / require-copilot-review` as a required check in your GitHub branch protection (or ruleset) for `main`.
 
 You can configure this with `gh` (requires admin permission on the repo):
 
 ```bash
-cd /home/mgogo/src/guitar-kb
+cd /path/to/your/guitar-kb
+
+OWNER="your-github-owner"
+REPO="your-repo-name"
 
 # Merge the Copilot check into existing required status checks for main
-gh api repos/metal-gogo/guitar-kb/branches/main/protection > /tmp/gkb-main-protection.json
+gh api repos/$OWNER/$REPO/branches/main/protection > /tmp/gkb-main-protection.json
 
 jq '
 	.required_status_checks.contexts =
@@ -94,10 +97,10 @@ jq '
 		}
 ' /tmp/gkb-main-protection.json > /tmp/gkb-main-protection-updated.json
 
-gh api --method PUT repos/metal-gogo/guitar-kb/branches/main/protection \
+gh api --method PUT repos/$OWNER/$REPO/branches/main/protection \
 	--input /tmp/gkb-main-protection-updated.json
 
 # Verify
-gh api repos/metal-gogo/guitar-kb/branches/main/protection \
+gh api repos/$OWNER/$REPO/branches/main/protection \
 	--jq '.required_status_checks.contexts'
 ```
