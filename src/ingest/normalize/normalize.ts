@@ -1,4 +1,5 @@
 import type { ChordQuality, ChordRecord, RawChordRecord, SourceRef } from "../../types/model.js";
+import { assertCanonicalChordId } from "../../types/guards.js";
 import { compareChordOrder } from "../../utils/sort.js";
 
 const QUALITY_MAP: Record<string, ChordQuality> = {
@@ -55,7 +56,9 @@ export function normalizeQuality(qualityRaw: string): ChordQuality {
 }
 
 export function toChordId(root: string, quality: ChordQuality): string {
-  return `chord:${root}:${quality}`;
+  const id = `chord:${root}:${quality}`;
+  assertCanonicalChordId(id);
+  return id;
 }
 
 export function normalizeRecords(raw: RawChordRecord[]): ChordRecord[] {
