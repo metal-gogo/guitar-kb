@@ -6,6 +6,21 @@ export async function validateChordRecords(records: ChordRecord[]): Promise<void
   const schemaRaw = await readFile("chords.schema.json", "utf8");
   const schema = JSON.parse(schemaRaw) as object;
   const ajv = new Ajv2020({ allErrors: true });
+  ajv.addFormat("uri", {
+    type: "string",
+    validate: (value: string) => {
+      try {
+        new URL(value);
+        return true;
+      } catch {
+        return false;
+      }
+    },
+  });
+  ajv.addFormat("date-time", {
+    type: "string",
+    validate: (value: string) => !Number.isNaN(Date.parse(value)),
+  });
   const validate = ajv.compile(schema);
 
   for (const record of records) {
