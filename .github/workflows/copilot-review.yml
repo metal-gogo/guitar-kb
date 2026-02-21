@@ -11,8 +11,8 @@ on:
 
 permissions:
   contents: read
-  pull-requests: read
-  issues: read
+  pull-requests: write
+  issues: write
 
 jobs:
   request-copilot-review:
@@ -25,14 +25,42 @@ jobs:
             const owner = context.repo.owner;
             const repo = context.repo.repo;
             const pull_number = context.payload.pull_request.number;
+            const issue_number = pull_number;
+            const marker = '<!-- copilot-review-auto-trigger -->';
 
             core.info(`Copilot review workflow triggered for ${owner}/${repo}#${pull_number}.`);
-            core.info(
-              'Bot accounts (for example `github-copilot[bot]`) cannot be requested via the pull request `reviewers` API parameter.'
+
+            const existingComments = await github.paginate(github.rest.issues.listComments, {
+              owner,
+              repo,
+              issue_number,
+              per_page: 100,
+            });
+
+            const hasTrigger = existingComments.some((comment) =>
+              typeof comment.body === 'string' && comment.body.includes(marker)
             );
-            core.info(
-              'Ensure the Copilot PR review app is enabled so reviews are auto-generated from pull request activity.'
-            );
+
+            if (hasTrigger) {
+              core.info('Copilot auto-trigger comment already exists; skipping duplicate trigger.');
+              return;
+            }
+
+            const triggerBody = [
+              marker,
+              '@github-copilot review',
+              '',
+              'Automatic review request from workflow: please review this pull request.'
+            ].join('\n');
+
+            await github.rest.issues.createComment({
+              owner,
+              repo,
+              issue_number,
+              body: triggerBody,
+            });
+
+            core.info('Posted Copilot auto-trigger comment.');
 
   require-copilot-review:
     runs-on: ubuntu-latest

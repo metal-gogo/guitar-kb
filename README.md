@@ -64,6 +64,7 @@ npm run validate
 
 - Workflow: `.github/workflows/copilot-review.yml`
 - Required status check: `Copilot Review / require-copilot-review`
+- Workflow auto-posts a one-time `@github-copilot review` trigger comment per PR
 - Optional repo variable: `COPILOT_REVIEWER_LOGINS` (comma-separated reviewer bot logins)
 - Optional repo variable: `COPILOT_REVIEW_OVERRIDE_LABEL` (defaults to `copilot-review/override`)
 - If Copilot review is unavailable, maintainers can apply the override label to unblock while keeping the gate in place
