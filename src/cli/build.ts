@@ -1,21 +1,46 @@
-import { mkdir, readFile } from "node:fs/promises";
+import { access, mkdir, readFile, rm } from "node:fs/promises";
 import path from "node:path";
 import { chordMarkdown } from "../build/docs/generateDocs.js";
 import { writeChordJsonl } from "../build/output/writeJsonl.js";
 import { generateChordSvg } from "../build/svg/generateSvg.js";
+import { ingestNormalizedChords } from "../ingest/pipeline.js";
 import type { ChordRecord } from "../types/model.js";
-import { writeText } from "../utils/fs.js";
+import { compareChordOrder } from "../utils/sort.js";
+import { writeJson, writeText } from "../utils/fs.js";
 import { validateChordRecords } from "../validate/schema.js";
 
+const NORMALIZED_PATH = path.join("data", "generated", "chords.normalized.json");
+
+async function pathExists(filePath: string): Promise<boolean> {
+  try {
+    await access(filePath);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 async function loadNormalized(): Promise<ChordRecord[]> {
-  const content = await readFile(path.join("data", "generated", "chords.normalized.json"), "utf8");
+  const content = await readFile(NORMALIZED_PATH, "utf8");
   return JSON.parse(content) as ChordRecord[];
 }
 
+async function loadOrGenerateNormalized(): Promise<ChordRecord[]> {
+  if (await pathExists(NORMALIZED_PATH)) {
+    return loadNormalized();
+  }
+
+  const generated = await ingestNormalizedChords({ refresh: false, delayMs: 250 });
+  await writeJson(NORMALIZED_PATH, generated);
+  return generated;
+}
+
 async function main(): Promise<void> {
-  const chords = await loadNormalized();
+  const chords = (await loadOrGenerateNormalized()).slice().sort(compareChordOrder);
   await validateChordRecords(chords);
 
+  await rm(path.join("docs", "chords"), { recursive: true, force: true });
+  await rm(path.join("docs", "diagrams"), { recursive: true, force: true });
   await writeChordJsonl(path.join("data", "chords.jsonl"), chords);
   await mkdir(path.join("docs", "chords"), { recursive: true });
   await mkdir(path.join("docs", "diagrams"), { recursive: true });

@@ -47,7 +47,7 @@ npm run validate
 ## Project commands
 
 - `npm run ingest` — reads cached source HTML (or refreshes with `--refresh`) and normalizes chord entities
-- `npm run build` — validates normalized entities, writes `data/chords.jsonl`, generates docs and SVG diagrams
+- `npm run build` — deterministically validates normalized entities, writes `data/chords.jsonl`, and regenerates docs/SVG artifacts (if normalized data is missing, it is generated from cached sources first)
 - `npm run validate` — validates `data/chords.jsonl` against `chords.schema.json`
 - `npm test` — parser, normalization, SVG, and schema tests
 - `npm run lint` — strict TypeScript checks
@@ -64,7 +64,9 @@ npm run validate
 
 - Workflow: `.github/workflows/copilot-review.yml`
 - Required status check: `Copilot Review / require-copilot-review`
-- Copilot reviewer logins are configured in `.github/workflows/copilot-review.yml`
+- Optional repo variable: `COPILOT_REVIEWER_LOGINS` (comma-separated reviewer bot logins)
+- Optional repo variable: `COPILOT_REVIEW_OVERRIDE_LABEL` (defaults to `copilot-review/override`)
+- If Copilot review is unavailable, maintainers can apply the override label to unblock while keeping the gate in place
 
 To enforce this for every PR, add `Copilot Review / require-copilot-review` as a required check in your GitHub branch protection (or ruleset) for `main`.
 
