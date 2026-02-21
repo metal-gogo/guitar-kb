@@ -9,6 +9,10 @@ describe("normalizeQuality", () => {
     expect(normalizeQuality("M7")).toBe("maj7");
     expect(normalizeQuality("7")).toBe("7");
   });
+
+  it("rejects unsupported aliases", () => {
+    expect(() => normalizeQuality("major ninth")).toThrow("Unsupported chord quality");
+  });
 });
 
 describe("normalizeRecords", () => {
@@ -31,5 +35,35 @@ describe("normalizeRecords", () => {
     expect(normalized).toHaveLength(1);
     expect(normalized[0]?.id).toBe("chord:C:maj");
     expect(normalized[0]?.source_refs[0]?.source).toBe("source-a");
+  });
+
+  it("sorts records deterministically by root and quality", () => {
+    const raw: RawChordRecord[] = [
+      {
+        source: "source-a",
+        url: "https://example.com/c7",
+        symbol: "C7",
+        root: "C",
+        quality_raw: "7",
+        aliases: ["C7"],
+        formula: ["1", "3", "5", "b7"],
+        pitch_classes: ["C", "E", "G", "Bb"],
+        voicings: [{ id: "v1", frets: [null, 3, 2, 3, 1, 0], base_fret: 1 }]
+      },
+      {
+        source: "source-a",
+        url: "https://example.com/cmaj",
+        symbol: "C",
+        root: "C",
+        quality_raw: "major",
+        aliases: ["C"],
+        formula: ["1", "3", "5"],
+        pitch_classes: ["C", "E", "G"],
+        voicings: [{ id: "v1", frets: [null, 3, 2, 0, 1, 0], base_fret: 1 }]
+      }
+    ];
+
+    const normalized = normalizeRecords(raw);
+    expect(normalized.map((item) => item.id)).toEqual(["chord:C:maj", "chord:C:7"]);
   });
 });
