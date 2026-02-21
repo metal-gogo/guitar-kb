@@ -1,4 +1,4 @@
-import { access, mkdir, readFile, rm } from "node:fs/promises";
+import { mkdir, readFile, rm } from "node:fs/promises";
 import path from "node:path";
 import { chordMarkdown } from "../build/docs/generateDocs.js";
 import { writeChordJsonl } from "../build/output/writeJsonl.js";
@@ -6,19 +6,10 @@ import { generateChordSvg } from "../build/svg/generateSvg.js";
 import { ingestNormalizedChords } from "../ingest/pipeline.js";
 import type { ChordRecord } from "../types/model.js";
 import { compareChordOrder } from "../utils/sort.js";
-import { writeJson, writeText } from "../utils/fs.js";
+import { pathExists, writeJson, writeText } from "../utils/fs.js";
 import { validateChordRecords } from "../validate/schema.js";
 
 const NORMALIZED_PATH = path.join("data", "generated", "chords.normalized.json");
-
-async function pathExists(filePath: string): Promise<boolean> {
-  try {
-    await access(filePath);
-    return true;
-  } catch {
-    return false;
-  }
-}
 
 async function loadNormalized(): Promise<ChordRecord[]> {
   const content = await readFile(NORMALIZED_PATH, "utf8");
