@@ -107,4 +107,61 @@ describe("normalizeRecords", () => {
     const normalized = normalizeRecords(raw);
     expect(normalized.map((item) => item.id)).toEqual(["chord:C:maj", "chord:C#:maj", "chord:Db:maj"]);
   });
+
+  it("links enharmonic equivalents explicitly", () => {
+    const raw: RawChordRecord[] = [
+      {
+        source: "source-a",
+        url: "https://example.com/c-sharp-major",
+        symbol: "C#",
+        root: "C#",
+        quality_raw: "major",
+        aliases: ["C#", "C#maj"],
+        formula: ["1", "3", "5"],
+        pitch_classes: ["C#", "E#", "G#"],
+        voicings: [{ id: "v1", frets: [null, 4, 6, 6, 6, 4], base_fret: 4 }]
+      }
+    ];
+
+    const normalized = normalizeRecords(raw);
+    expect(normalized).toHaveLength(1);
+    expect(normalized[0]?.enharmonic_equivalents).toEqual(["chord:Db:maj"]);
+  });
+
+  it("merges aliases and source refs deterministically for the same canonical chord", () => {
+    const raw: RawChordRecord[] = [
+      {
+        source: "source-a",
+        url: "https://example.com/c-major-a",
+        symbol: "C",
+        root: "C",
+        quality_raw: "major",
+        aliases: ["C", "Cmaj"],
+        formula: ["1", "3", "5"],
+        pitch_classes: ["C", "E", "G"],
+        voicings: [{ id: "v1", frets: [null, 3, 2, 0, 1, 0], base_fret: 1 }]
+      },
+      {
+        source: "source-b",
+        url: "https://example.com/c-major-b",
+        symbol: "CM",
+        root: "C",
+        quality_raw: "M",
+        aliases: ["CM", "C"],
+        formula: ["1", "3", "5"],
+        pitch_classes: ["C", "E", "G"],
+        voicings: [{ id: "v2", frets: [3, 3, 5, 5, 5, 3], base_fret: 3 }]
+      }
+    ];
+
+    const normalized = normalizeRecords(raw);
+    expect(normalized).toHaveLength(1);
+    expect(normalized[0]?.id).toBe("chord:C:maj");
+    expect(normalized[0]?.aliases).toEqual(["C", "Cmaj", "CM"]);
+    expect(normalized[0]?.source_refs.map((ref) => ref.source)).toEqual(["source-a", "source-b"]);
+    expect(normalized[0]?.voicings.map((voicing) => voicing.id)).toEqual([
+      "chord:C:maj:v1:source-a",
+      "chord:C:maj:v2:source-b",
+    ]);
+  });
 });
