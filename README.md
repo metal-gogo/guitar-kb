@@ -59,3 +59,48 @@ npm run validate
 - Facts only are extracted (names, formulas, pitch classes, voicings, tuning)
 - No source text blocks or source images are reused
 - Every chord and voicing includes provenance references (`source_refs`)
+
+## PR review gate (Copilot)
+
+- Workflow: `.github/workflows/copilot-review.yml`
+- Required status check: `Copilot Review / require-copilot-review`
+- Copilot reviewer logins are configured in `.github/workflows/copilot-review.yml`
+
+To enforce this for every PR, add `Copilot Review / require-copilot-review` as a required check in your GitHub branch protection (or ruleset) for `main`.
+
+You can configure this with `gh` (requires admin permission on the repo):
+
+```bash
+cd /path/to/your/guitar-kb
+
+OWNER="your-github-owner"
+REPO="your-repo-name"
+
+# Merge the Copilot check into existing required status checks for main
+gh api repos/$OWNER/$REPO/branches/main/protection > /tmp/gkb-main-protection.json
+
+jq '
+	.required_status_checks.contexts =
+		((.required_status_checks.contexts // []) + ["Copilot Review / require-copilot-review"] | unique)
+	| {
+			required_status_checks,
+			enforce_admins,
+			required_pull_request_reviews,
+			restrictions,
+			required_linear_history,
+			allow_force_pushes,
+			allow_deletions,
+			block_creations,
+			required_conversation_resolution,
+			lock_branch,
+			allow_fork_syncing
+		}
+' /tmp/gkb-main-protection.json > /tmp/gkb-main-protection-updated.json
+
+gh api --method PUT repos/$OWNER/$REPO/branches/main/protection \
+	--input /tmp/gkb-main-protection-updated.json
+
+# Verify
+gh api repos/$OWNER/$REPO/branches/main/protection \
+	--jq '.required_status_checks.contexts'
+```

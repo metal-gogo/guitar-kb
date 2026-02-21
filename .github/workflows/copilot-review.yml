@@ -1,0 +1,97 @@
+name: Copilot Review
+
+on:
+  # NOTE: We intentionally use `pull_request_target` so this workflow runs from
+  # the base branch and can access PR metadata consistently (including forks).
+  # This workflow does not checkout or execute PR code; it only uses GitHub API.
+  pull_request_target:
+    types: [opened, reopened, ready_for_review, synchronize]
+  pull_request_review:
+    types: [submitted, edited, dismissed]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  request-copilot-review:
+    if: github.event_name == 'pull_request_target' && !github.event.pull_request.draft
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const pull_number = context.payload.pull_request.number;
+
+            core.info(`Copilot review workflow triggered for ${owner}/${repo}#${pull_number}.`);
+            core.info(
+              'Bot accounts (for example `github-copilot[bot]`) cannot be requested via the pull request `reviewers` API parameter.'
+            );
+            core.info(
+              'Ensure the Copilot PR review app is enabled so reviews are auto-generated from pull request activity.'
+            );
+
+  require-copilot-review:
+    runs-on: ubuntu-latest
+    env:
+      COPILOT_REVIEWER_LOGINS: github-copilot[bot],copilot[bot],copilot-pull-request-reviewer[bot]
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const pull_number =
+              context.payload.pull_request?.number ?? context.payload.review?.pull_request?.number;
+
+            const parsedPullNumber = Number(pull_number);
+            if (!Number.isInteger(parsedPullNumber) || parsedPullNumber <= 0) {
+              core.setFailed('Unable to determine pull request number from event payload.');
+              return;
+            }
+
+            let isDraft = Boolean(context.payload.pull_request?.draft);
+            if (context.payload.pull_request?.draft === undefined) {
+              const pr = await github.rest.pulls.get({
+                owner,
+                repo,
+                pull_number: parsedPullNumber,
+              });
+              isDraft = Boolean(pr.data.draft);
+            }
+
+            if (isDraft) {
+              core.info('Draft PR detected; Copilot review check will enforce after ready for review.');
+              return;
+            }
+
+            const configured = (process.env.COPILOT_REVIEWER_LOGINS || '')
+              .split(',')
+              .map((entry) => entry.trim().toLowerCase())
+              .filter(Boolean);
+
+            const allowedReviewers = new Set(configured);
+
+            const reviews = await github.paginate(github.rest.pulls.listReviews, {
+              owner,
+              repo,
+              pull_number: parsedPullNumber,
+              per_page: 100,
+            });
+
+            const matched = reviews.filter((review) => {
+              const login = review.user?.login?.toLowerCase() || '';
+              return allowedReviewers.has(login) && review.state !== 'DISMISSED';
+            });
+
+            if (matched.length === 0) {
+              core.setFailed(
+                `Copilot review is required before merge. Expected one reviewer login from: ${Array.from(allowedReviewers).join(', ')}`
+              );
+              return;
+            }
+
+            const latest = matched[matched.length - 1];
+            core.info(`Copilot review detected from ${latest.user?.login} with state ${latest.state}.`);
