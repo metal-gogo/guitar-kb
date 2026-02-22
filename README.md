@@ -1,24 +1,61 @@
 # Guitar Chord Knowledge Base (GCKB)
 
-A deterministic guitar chord reference pipeline designed for:
+GCKB is a deterministic pipeline that transforms cached chord source pages into:
 
-- 🎸 Humans (clean Markdown pages + generated diagrams)
-- 🤖 LLMs (normalized JSONL + stable canonical IDs + provenance)
+- Human-facing Markdown pages with generated chord diagrams
+- LLM-friendly normalized JSONL with stable canonical IDs and provenance
 
-Primary scope (MVP): chord references.  
-Future scope: techniques, theory, progressions.
+Primary scope (MVP): chord references (C, Cm, C7, Cmaj7) from two sources.
 
----
+## What this repository does
 
-## 🚀 Quickstart
+End-to-end pipeline:
+
+1. Ingest source HTML from local cache (or refresh from source URLs)
+2. Parse source-specific chord/voicing data
+3. Normalize to canonical records (stable IDs and ordering)
+4. Generate machine and human artifacts (`data/chords.jsonl`, docs, SVGs)
+5. Validate all output against `chords.schema.json`
+
+## Inputs and outputs
+
+### Inputs
+
+- Source target config in `src/config.ts` (`MVP_TARGETS`)
+- Cached source HTML in `data/sources/<source>/<slug>.html`
+- Normalization and canonical ID policy in `planning/decisions/0001-canonical-id-and-enharmonics.md`
+- Schema constraints in `chords.schema.json`
+
+### Generated artifacts
+
+- `data/generated/chords.normalized.json` (intermediate normalized records)
+- `data/chords.jsonl` (primary machine-consumable output)
+- `docs/chords/*.md` (per-chord documentation)
+- `docs/diagrams/*.svg` (generated voicing diagrams)
+
+## Repository map
+
+- `src/cli/*` – command entrypoints (`ingest`, `build`, `validate`)
+- `src/ingest/fetch/*` – cache-aware fetch logic (with user agent and retry behavior)
+- `src/ingest/parsers/*` – source-specific parsers (`guitar-chord-org`, `all-guitar-chords`)
+- `src/ingest/normalize/*` – canonical record normalization
+- `src/build/output/*` – JSONL output writer
+- `src/build/docs/*` – Markdown generation
+- `src/build/svg/*` – SVG diagram generation
+- `src/validate/*` – schema validation
+- `src/types/*` – core data model and guards
+- `src/utils/*` – filesystem and deterministic sorting helpers
+- `test/fixtures/*` – cached parser fixtures
+- `test/unit/*` – parser/normalize/svg/schema/model tests
+- `planning/decisions/*` – ADRs and architectural decisions
+- `planning/issues/*` – issue drafts and delivery planning
+
+## Command reference
 
 ### Requirements
 
 - Node 20+
 - npm 9+
-- (optional) GitHub CLI (`gh`) for automated issue creation
-
----
 
 ### Install
 
@@ -26,15 +63,52 @@ Future scope: techniques, theory, progressions.
 npm install
 ```
 
-### Run the full MVP pipeline
+### Ingest normalized records
 
 ```bash
 npm run ingest
+```
+
+Writes `data/generated/chords.normalized.json`.
+
+To refresh remote source pages while ingesting:
+
+```bash
+npm run ingest -- --refresh
+```
+
+### Build outputs
+
+```bash
 npm run build
+```
+
+Build behavior:
+
+- loads `data/generated/chords.normalized.json` if present
+- otherwise generates normalized records via ingest pipeline
+- sorts records deterministically
+- validates records
+- regenerates JSONL/docs/SVG artifacts
+
+### Validate output schema
+
+```bash
 npm run validate
 ```
 
-### Validate locally before PR
+Validates every `data/chords.jsonl` record against `chords.schema.json`.
+
+### Lint and tests
+
+```bash
+npm run lint
+npm test
+```
+
+## Typical local workflows
+
+### Full clean local verification (recommended before PR)
 
 ```bash
 npm run lint
@@ -44,67 +118,65 @@ npm run build
 npm run validate
 ```
 
-## Project commands
-
-- `npm run ingest` — reads cached source HTML (or refreshes with `--refresh`) and normalizes chord entities
-- `npm run build` — deterministically validates normalized entities, writes `data/chords.jsonl`, and regenerates docs/SVG artifacts (if normalized data is missing, it is generated from cached sources first)
-- `npm run validate` — validates `data/chords.jsonl` against `chords.schema.json`
-- `npm test` — parser, normalization, SVG, and schema tests
-- `npm run lint` — strict TypeScript checks
-
-## Determinism and legal boundaries
-
-- Source caches are stored under `data/sources/<source>/<slug>.html`
-- Builds are deterministic from cached HTML inputs
-- Facts only are extracted (names, formulas, pitch classes, voicings, tuning)
-- No source text blocks or source images are reused
-- Every chord and voicing includes provenance references (`source_refs`)
-
-## PR review gate (Copilot)
-
-- Workflow: `.github/workflows/copilot-review.yml`
-- Required status check: `Copilot Review / require-copilot-review`
-- Copilot review requests are triggered by repository ruleset `copilot_code_review` (with `review_on_push=true`)
-- Workflow responsibility is enforcement only (validate a qualifying Copilot review exists)
-- Optional repo variable: `COPILOT_REVIEWER_LOGINS` (comma-separated reviewer bot logins)
-- Optional repo variable: `COPILOT_REVIEW_OVERRIDE_LABEL` (defaults to `copilot-review/override`)
-- If Copilot review is unavailable, maintainers can apply the override label to unblock while keeping the gate in place
-
-To enforce this for every PR, add `Copilot Review / require-copilot-review` as a required check in your GitHub branch protection (or ruleset) for `main`.
-
-You can configure this with `gh` (requires admin permission on the repo):
+### Fast artifact refresh during development
 
 ```bash
-cd /path/to/your/guitar-kb
-
-OWNER="your-github-owner"
-REPO="your-repo-name"
-
-# Merge the Copilot check into existing required status checks for main
-gh api repos/$OWNER/$REPO/branches/main/protection > /tmp/gkb-main-protection.json
-
-jq '
-	.required_status_checks.contexts =
-		((.required_status_checks.contexts // []) + ["Copilot Review / require-copilot-review"] | unique)
-	| {
-			required_status_checks,
-			enforce_admins,
-			required_pull_request_reviews,
-			restrictions,
-			required_linear_history,
-			allow_force_pushes,
-			allow_deletions,
-			block_creations,
-			required_conversation_resolution,
-			lock_branch,
-			allow_fork_syncing
-		}
-' /tmp/gkb-main-protection.json > /tmp/gkb-main-protection-updated.json
-
-gh api --method PUT repos/$OWNER/$REPO/branches/main/protection \
-	--input /tmp/gkb-main-protection-updated.json
-
-# Verify
-gh api repos/$OWNER/$REPO/branches/main/protection \
-	--jq '.required_status_checks.contexts'
+npm run build
+npm run validate
 ```
+
+## Determinism and data integrity
+
+Determinism is enforced through:
+
+- stable canonical IDs (`chord:<ROOT>:<QUALITY>`)
+- fixed root and quality sort order (`src/config.ts`, `src/utils/sort.ts`)
+- cached HTML inputs under `data/sources/*`
+- deterministic build regeneration of docs and diagrams
+
+Data integrity is enforced through:
+
+- schema validation (`src/validate/schema.ts` + `chords.schema.json`)
+- strict model guards and tests
+- provenance fields (`source_refs`) at chord and voicing levels
+
+## Legal and provenance boundaries
+
+This project extracts facts, not copyrighted presentation.
+
+- Allowed: chord names, aliases, formulas, note spellings, tunings, voicing metadata
+- Not allowed: copied source prose, reused external diagrams/images
+- Required: provenance references for each chord/voicing (`source`, `url`, optional `retrieved_at`/`note`)
+
+See `AGENTS.md` for full operating policy.
+
+## CI and review gates
+
+PRs are expected to pass:
+
+- `npm run lint`
+- `npm test`
+- `npm run build`
+- `npm run validate`
+
+Copilot review gate:
+
+- workflow: `.github/workflows/copilot-review.yml`
+- required check context: `Copilot Review / require-copilot-review`
+- ruleset-triggered Copilot review requests are enforced by the workflow
+
+## Troubleshooting
+
+- **Missing `data/chords.jsonl`**: run `npm run build` first.
+- **Schema validation failure**: inspect failing record shape against `chords.schema.json`.
+- **Parser regressions**: verify source fixtures in `test/fixtures/sources/*` and run parser unit tests.
+- **Unexpected artifact differences**: rebuild from cached inputs and compare sorted outputs.
+
+## Project status
+
+MVP scope is implemented; current focus is post-MVP hardening:
+
+- documentation clarity
+- stronger determinism/provenance regression guards
+- parser resilience and normalization edge cases
+- CI and release-readiness polish
