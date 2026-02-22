@@ -81,26 +81,23 @@ describe("parseGuitarChordOrg", () => {
 
     it("falls back to safe defaults for voicings with missing attributes", () => {
       const html = readFixture("partial-voicing-attrs");
-      let parsed: ReturnType<typeof parseGuitarChordOrg> | undefined;
-      expect(() => {
-        parsed = parseGuitarChordOrg(html, BASE_URL);
-      }).not.toThrow();
+      const parsed = parseGuitarChordOrg(html, BASE_URL);
 
-      expect(parsed?.voicings).toHaveLength(2);
+      expect(parsed.voicings).toHaveLength(2);
 
       // sparse voicing – missing data-base-fret, data-frets, data-fingers
-      const sparse = parsed?.voicings[0];
-      expect(sparse?.id).toBe("sparse");
-      expect(sparse?.base_fret).toBe(1);
-      expect(sparse?.frets).toEqual([null, null, null, null, null, null]);
-      expect(sparse?.fingers).toEqual([0, 0, 0, 0, 0, 0]);
+      const sparse = parsed.voicings[0];
+      expect(sparse.id).toBe("sparse");
+      expect(sparse.base_fret).toBe(1);
+      expect(sparse.frets).toEqual([null, null, null, null, null, null]);
+      expect(sparse.fingers).toEqual([0, 0, 0, 0, 0, 0]);
 
       // full voicing – all attributes present
-      const full = parsed?.voicings[1];
-      expect(full?.id).toBe("full");
-      expect(full?.base_fret).toBe(2);
-      expect(full?.frets).toEqual([null, 1, 2, 3, null, null]);
-      expect(full?.fingers).toEqual([0, 1, 2, 3, 0, 0]);
+      const full = parsed.voicings[1];
+      expect(full.id).toBe("full");
+      expect(full.base_fret).toBe(2);
+      expect(full.frets).toEqual([null, 1, 2, 3, null, null]);
+      expect(full.fingers).toEqual([0, 1, 2, 3, 0, 0]);
     });
 
     it("produces deterministic output on repeated parses of the same fixture", () => {
