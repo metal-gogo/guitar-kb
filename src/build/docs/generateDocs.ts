@@ -4,7 +4,13 @@ export function chordMarkdown(chord: ChordRecord): string {
   const aliases = (chord.aliases ?? []).join(", ") || "none";
   const enharmonics = (chord.enharmonic_equivalents ?? []).join(", ") || "none";
   const voicingLines = chord.voicings
-    .map((voicing) => `- ${voicing.id}: frets ${voicing.frets.map((f) => (f === null ? "x" : String(f))).join("/")} (base fret ${voicing.base_fret})`)
+    .slice()
+    .sort((a, b) => a.id.localeCompare(b.id))
+    .map((voicing) => {
+      const frets = voicing.frets.map((fret) => (fret === null ? "x" : String(fret))).join("/");
+      const diagramPath = `../diagrams/${voicing.id.replace(/:/g, "__")}.svg`;
+      return `- ${voicing.id}: frets ${frets} (base fret ${voicing.base_fret}) | diagram: ${diagramPath}`;
+    })
     .join("\n");
 
   const sourceLines = chord.source_refs.map((ref) => `- ${ref.source}: ${ref.url}`).join("\n");
