@@ -21,7 +21,7 @@ Parser robustness must survive minor DOM changes while preserving deterministic 
 
 ## Validation Steps
 ```bash
-npm test -- --run test/unit/parser.allGuitarChords.test.ts
+npm test -- test/unit/parser.allGuitarChords.test.ts
 npm run validate
 ```
 

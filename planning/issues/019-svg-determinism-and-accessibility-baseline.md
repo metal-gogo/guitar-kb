@@ -21,7 +21,7 @@ SVG diagrams are core outputs; unstable rendering or inaccessible markup reduces
 
 ## Validation Steps
 ```bash
-npm test -- --run test/unit/svg.test.ts
+npm test -- test/unit/svg.test.ts
 npm run build
 ```
 

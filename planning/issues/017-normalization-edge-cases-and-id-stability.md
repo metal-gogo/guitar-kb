@@ -21,7 +21,7 @@ Normalization integrity is central to deterministic artifacts and reliable retri
 
 ## Validation Steps
 ```bash
-npm test -- --run test/unit/normalize.test.ts
+npm test -- test/unit/normalize.test.ts
 npm run validate
 ```
 

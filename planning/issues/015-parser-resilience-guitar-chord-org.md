@@ -21,7 +21,7 @@ Upstream site changes are a high regression risk for scraping-based ingestion.
 
 ## Validation Steps
 ```bash
-npm test -- --run test/unit/parser.guitarChordOrg.test.ts
+npm test -- test/unit/parser.guitarChordOrg.test.ts
 npm run validate
 ```
 
