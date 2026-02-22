@@ -3,10 +3,7 @@ import { chordMarkdown } from "../../src/build/docs/generateDocs.js";
 import type { ChordRecord } from "../../src/types/model.js";
 
 function buildChord(overrides: Partial<ChordRecord> = {}): ChordRecord {
-  // Type assertion required: spreading Partial<ChordRecord> widens required
-  // fields (e.g. voicings, source_refs) to T | undefined in the object literal,
-  // making it not directly assignable to ChordRecord under strict mode.
-  return {
+  const base: ChordRecord = {
     id: "chord:C:maj",
     root: "C",
     quality: "maj",
@@ -21,8 +18,19 @@ function buildChord(overrides: Partial<ChordRecord> = {}): ChordRecord {
     ],
     source_refs: [{ source: "unit", url: "https://example.com/chord" }],
     notes: { summary: "C major summary." },
+  };
+
+  return {
+    ...base,
     ...overrides,
-  } as ChordRecord;
+    id: overrides.id ?? base.id,
+    root: overrides.root ?? base.root,
+    quality: overrides.quality ?? base.quality,
+    formula: overrides.formula ?? base.formula,
+    pitch_classes: overrides.pitch_classes ?? base.pitch_classes,
+    voicings: overrides.voicings ?? base.voicings,
+    source_refs: overrides.source_refs ?? base.source_refs,
+  };
 }
 
 describe("chordMarkdown", () => {
