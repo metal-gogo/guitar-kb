@@ -6,6 +6,8 @@ on:
   # This workflow does not checkout or execute PR code; it only uses GitHub API.
   pull_request_target:
     types: [opened, reopened, ready_for_review, synchronize, review_requested, review_request_removed]
+  pull_request_review:
+    types: [submitted]
 
 permissions:
   contents: read
@@ -23,7 +25,8 @@ jobs:
           script: |
             const owner = context.repo.owner;
             const repo = context.repo.repo;
-            const pull_number = context.payload.pull_request?.number;
+            const pull_number =
+              context.payload.pull_request?.number ?? context.payload.review?.pull_request?.number;
 
             const parsedPullNumber = Number(pull_number);
             if (!Number.isInteger(parsedPullNumber) || parsedPullNumber <= 0) {
@@ -62,6 +65,7 @@ jobs:
             const allowedReviewers = new Set(configured);
 
             const pendingCopilotRequest = (pr.data.requested_reviewers || [])
+              .filter((reviewer) => reviewer?.type === 'Bot')
               .map((reviewer) => reviewer?.login?.toLowerCase() || '')
               .some((login) => allowedReviewers.has(login));
 
@@ -79,7 +83,8 @@ jobs:
 
             const matched = reviews.filter((review) => {
               const login = review.user?.login?.toLowerCase() || '';
-              return allowedReviewers.has(login) && review.state !== 'DISMISSED';
+              const isBot = review.user?.type === 'Bot';
+              return isBot && allowedReviewers.has(login) && review.state !== 'DISMISSED';
             });
 
             if (matched.length === 0) {
