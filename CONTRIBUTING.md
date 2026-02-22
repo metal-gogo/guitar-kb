@@ -26,7 +26,7 @@ fix: ...        # Bug fix
 test: ...       # Test changes only
 docs: ...       # Documentation only
 chore: ...      # Config/build changes
-refactor: ...   # Code restructure, no behaviour change
+refactor: ...   # Code restructure, no behavior change
 ```
 
 ### Scope
@@ -71,7 +71,7 @@ The `copilot-review.yml` workflow is triggered by two events:
 1. **`pull_request_target`** — fires immediately when the PR is opened or updated, so the check appears early and blocks the merge gate right away.
 2. **`workflow_run` (after `CI` completes)** — re-runs after CI finishes to capture Copilot reviews that arrived while CI was running.
 
-Both runs use the same job name (`require-copilot-review`), which is why GitHub shows the check twice. Both must pass for the branch protection ruleset to allow merging. This is expected behaviour; ignore the apparent duplication.
+Both runs use the same job name (`require-copilot-review`), which is why GitHub shows the check twice. Both must pass for the branch protection ruleset to allow merging. This is expected behavior; ignore the apparent duplication.
 
 ### Override
 
@@ -91,7 +91,7 @@ Before squash-merging any PR, verify:
 ### Manual
 
 - [ ] All Copilot inline comments addressed or explicitly dismissed with a reply
-- [ ] New tests added for new behaviour (parsers, normalization, SVG, docs)
+- [ ] New tests added for new behavior (parsers, normalization, SVG, docs)
 - [ ] `chords.schema.json` updated if the data model changed
 - [ ] `README.md` updated if a new CLI command or workflow step was added
 - [ ] `source_refs` provenance is present in any new chord/voicing records
@@ -119,5 +119,5 @@ npm run ingest        # Re-parse cached HTML sources
 Run all in sequence before opening a PR:
 
 ```bash
-npm run lint && npm test -- --run && npm run build && npm run validate
+npm run lint && npm test && npm run build && npm run validate
 ```

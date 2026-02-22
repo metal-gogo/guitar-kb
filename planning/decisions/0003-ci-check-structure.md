@@ -9,7 +9,7 @@
 
 The repository uses two required CI checks on every PR:
 
-1. `build` — runs lint, test, build, and validate via `ci.yml`
+1. `build` — runs lint, test, ingest, build, and validate via `ci.yml`
 2. `require-copilot-review` — gates merge on a Copilot bot review via `copilot-review.yml`
 
 The `copilot-review.yml` workflow is triggered by both `pull_request_target` and `workflow_run` (after `CI` completes). This causes GitHub to display the `require-copilot-review` check twice in the PR status panel.

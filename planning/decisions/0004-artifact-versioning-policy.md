@@ -1,7 +1,7 @@
 # Decision 0004: Artifact Versioning Policy (Commit vs Generated Outputs)
 
-**Date:** 2026-02-22  
-**Status:** Accepted
+**Date:** 2026-02-22\
+**Status:** Accepted\
 
 ---
 
@@ -26,7 +26,7 @@ The repository also caches raw HTML under `data/sources/` to enable reproducible
 
 | Path | Reason |
 |---|---|
-| `data/generated/` | Intermediate normalised JSON (`chords.normalized.json`) — fully reproducible by re-running `npm run ingest` + build pipeline; committing it would create unnecessary diff noise |
+| `data/generated/` | Intermediate normalized JSON (`chords.normalized.json`) — fully reproducible by re-running `npm run ingest` + build pipeline; committing it would create unnecessary diff noise |
 | `data/chords.jsonl` | Primary machine-consumable output — generated deterministically by `npm run build`; treated as a build artifact, not a source file |
 | `docs/chords/` | Generated Markdown chord pages — rebuilt on every `npm run build` run |
 | `docs/diagrams/` | Generated SVG chord diagrams — rebuilt on every `npm run build` run |
