@@ -33,6 +33,14 @@ End-to-end pipeline:
 - `docs/chords/*.md` (per-chord documentation)
 - `docs/diagrams/*.svg` (generated voicing diagrams)
 
+### Artifact versioning policy
+
+Source cache (`data/sources/**/*.html`) is **committed** to enable deterministic, offline builds.
+
+All generated outputs (`data/generated/`, `data/chords.jsonl`, `docs/chords/`, `docs/diagrams/`) are **excluded from git** via `.gitignore`. They are fully reproducible by running `npm run build`. Committing generated outputs would create noisy diffs and risk stale artifacts drifting from the build scripts.
+
+Full policy: [`planning/decisions/0003-artifact-versioning-policy.md`](planning/decisions/0003-artifact-versioning-policy.md)
+
 ## Repository map
 
 - `src/cli/*` – command entrypoints (`ingest`, `build`, `validate`)
