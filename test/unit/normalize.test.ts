@@ -217,7 +217,8 @@ describe("normalizeRecords", () => {
           voicings: [{ id: "v1", frets: [null, 3, 2, 0, 1, 0], base_fret: 1 }]
         }
       ]);
-      return records[0]?.id;
+      expect(records).toHaveLength(1);
+      return records[0].id;
     });
     expect(new Set(ids).size).toBe(1);
     expect(ids[0]).toBe("chord:C:maj");
@@ -238,10 +239,11 @@ describe("normalizeRecords", () => {
     ];
 
     for (const [root, , expectedEquivalent] of pairs) {
+      const slug = root.replace(/#/g, "sharp").replace(/b$/, "flat").toLowerCase();
       const records = normalizeRecords([
         {
           source: "source-a",
-          url: `https://example.com/${root.toLowerCase()}`,
+          url: `https://example.com/${slug}-major`,
           symbol: root,
           root,
           quality_raw: "major",
@@ -251,7 +253,8 @@ describe("normalizeRecords", () => {
           voicings: [{ id: "v1", frets: [null, null, null, null, null, null], base_fret: 1 }]
         }
       ]);
-      expect(records[0]?.enharmonic_equivalents, `expected enharmonic for ${root}`).toContain(expectedEquivalent);
+      expect(records).toHaveLength(1);
+      expect(records[0].enharmonic_equivalents, `expected enharmonic for ${root}`).toContain(expectedEquivalent);
     }
   });
 
