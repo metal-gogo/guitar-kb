@@ -2,3 +2,9 @@ node_modules/
 dist/
 coverage/
 .env
+
+# Generated build outputs (reproducible from source cache — do not commit)
+data/generated/
+data/chords.jsonl
+docs/chords/
+docs/diagrams/
