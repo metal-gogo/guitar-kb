@@ -9,7 +9,7 @@ on:
 
 permissions:
   contents: read
-  pull-requests: write
+  pull-requests: read
 
 jobs:
   require-copilot-review:
@@ -23,8 +23,7 @@ jobs:
           script: |
             const owner = context.repo.owner;
             const repo = context.repo.repo;
-            const pull_number =
-              context.payload.pull_request?.number ?? context.payload.review?.pull_request?.number;
+            const pull_number = context.payload.pull_request?.number;
 
             const parsedPullNumber = Number(pull_number);
             if (!Number.isInteger(parsedPullNumber) || parsedPullNumber <= 0) {
