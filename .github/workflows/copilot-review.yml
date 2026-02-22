@@ -6,8 +6,6 @@ on:
   # This workflow does not checkout or execute PR code; it only uses GitHub API.
   pull_request_target:
     types: [opened, reopened, ready_for_review, synchronize]
-  pull_request_review:
-    types: [submitted, edited, dismissed]
 
 permissions:
   contents: read
