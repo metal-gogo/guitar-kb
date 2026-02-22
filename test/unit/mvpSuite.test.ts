@@ -8,6 +8,14 @@ import { ingestNormalizedChords } from "../../src/ingest/pipeline.js";
 import { validateChordRecords } from "../../src/validate/schema.js";
 
 describe("MVP pipeline suite", () => {
+  const REQUIRED_MVP_CHORD_IDS = [
+    "chord:C:maj",
+    "chord:C:min",
+    "chord:C:7",
+    "chord:C:maj7",
+  ] as const;
+  const MIN_VOICINGS_PER_MVP_CHORD = 2;
+
   let tempDir = "";
 
   afterEach(async () => {
@@ -19,7 +27,16 @@ describe("MVP pipeline suite", () => {
 
   it("produces schema-valid chords, JSONL output, and SVG markup", async () => {
     const chords = await ingestNormalizedChords({ refresh: false, delayMs: 0 });
-    expect(chords.length).toBeGreaterThanOrEqual(4);
+    const byId = new Map(chords.map((chord) => [chord.id, chord]));
+
+    expect(chords.length).toBeGreaterThanOrEqual(REQUIRED_MVP_CHORD_IDS.length);
+    expect(chords.map((chord) => chord.id)).toEqual(REQUIRED_MVP_CHORD_IDS);
+
+    for (const chordId of REQUIRED_MVP_CHORD_IDS) {
+      const chord = byId.get(chordId);
+      expect(chord, `Missing required MVP chord ${chordId}`).toBeDefined();
+      expect(chord?.voicings.length ?? 0, `MVP chord ${chordId} has insufficient voicings`).toBeGreaterThanOrEqual(MIN_VOICINGS_PER_MVP_CHORD);
+    }
 
     await validateChordRecords(chords);
 
