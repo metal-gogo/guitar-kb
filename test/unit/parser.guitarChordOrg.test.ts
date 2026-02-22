@@ -43,6 +43,13 @@ describe("parseGuitarChordOrg", () => {
       expect(parsed.pitch_classes).toEqual(testCase.pitchClasses);
       expect(parsed.voicings.length).toBeGreaterThan(0);
       expect(parsed.voicings[0]?.source_refs?.[0]).toEqual({ source: "guitar-chord-org", url });
+
+      if (testCase.slug === "c-major") {
+        const firstVoicing = parsed.voicings[0];
+        expect(firstVoicing?.frets).toEqual([null, 3, 2, 0, 1, 0]);
+        expect(firstVoicing?.base_fret).toBe(1);
+        expect(firstVoicing?.fingers).toEqual([0, 3, 2, 0, 1, 0]);
+      }
     }
   });
 });
