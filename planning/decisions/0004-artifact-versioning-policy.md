@@ -1,4 +1,4 @@
-# Decision 0003: Artifact Versioning Policy (Commit vs Generated Outputs)
+# Decision 0004: Artifact Versioning Policy (Commit vs Generated Outputs)
 
 **Date:** 2026-02-22  
 **Status:** Accepted

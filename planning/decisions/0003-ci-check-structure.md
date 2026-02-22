@@ -1,4 +1,4 @@
-# Decision 0002: CI Check Structure and Copilot Review Gate
+# Decision 0003: CI Check Structure and Copilot Review Gate
 
 **Date:** 2026-02-22  
 **Status:** Accepted
