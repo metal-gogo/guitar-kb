@@ -1,0 +1,123 @@
+# Contributing to Guitar Chord Knowledge Base
+
+This document describes the development workflow, merge process, and release-readiness checklist for GCKB.
+
+---
+
+## Branch Naming
+
+| Type | Pattern | Example |
+|---|---|---|
+| Feature | `feat/<issue>-short-desc` | `feat/34-docs-generator-completeness` |
+| Fix | `fix/<issue>-short-desc` | `fix/27-normalize-flat-roots` |
+| Chore | `chore/<issue>-short-desc` | `chore/36-ci-clarity` |
+
+**Never push directly to `main`.**  All changes must go through a PR.
+
+---
+
+## Commit Style
+
+Use [Conventional Commits](https://www.conventionalcommits.org/):
+
+```
+feat: ...       # New feature
+fix: ...        # Bug fix
+test: ...       # Test changes only
+docs: ...       # Documentation only
+chore: ...      # Config/build changes
+refactor: ...   # Code restructure, no behaviour change
+```
+
+### Scope
+
+Include a scope when the change is file-area specific:
+
+```
+test(svg): add determinism assertions
+fix(normalize): handle flat root edge case
+```
+
+---
+
+## PR Process
+
+1. Open an issue first; branch off `main`.
+2. Make small, logical commits.
+3. Open a PR with `--base main` and a description covering:
+   - What changed and why
+   - How to validate locally (exact commands)
+   - Known limitations / follow-up issues
+4. Wait for CI (`build`) and Copilot review (`require-copilot-review`) to pass.
+5. Address Copilot inline comments; push fixes.
+6. Squash and merge when both checks are green.
+7. Delete the branch after merge.
+
+---
+
+## CI Checks
+
+Every PR runs two required checks.
+
+| Check | Workflow | Trigger | What it does |
+|---|---|---|---|
+| `build` | `ci.yml` | `pull_request`, `push main` | lint → test → ingest → build → validate |
+| `require-copilot-review` | `copilot-review.yml` | `pull_request_target`, `workflow_run` (after CI) | Blocks merge until the Copilot bot has submitted a review |
+
+### Why `require-copilot-review` appears twice in the PR checks panel
+
+The `copilot-review.yml` workflow is triggered by two events:
+
+1. **`pull_request_target`** — fires immediately when the PR is opened or updated, so the check appears early and blocks the merge gate right away.
+2. **`workflow_run` (after `CI` completes)** — re-runs after CI finishes to capture Copilot reviews that arrived while CI was running.
+
+Both runs use the same job name (`require-copilot-review`), which is why GitHub shows the check twice. Both must pass for the branch protection ruleset to allow merging. This is expected behaviour; ignore the apparent duplication.
+
+### Override
+
+If Copilot is unavailable, a maintainer can apply the `copilot-review/override` label to bypass the check. Use sparingly and document the reason in the PR description.
+
+---
+
+## Release-Readiness Checklist
+
+Before squash-merging any PR, verify:
+
+### Automated (must be green)
+
+- [ ] `build` check passes (lint + test + build + validate)
+- [ ] `require-copilot-review` check passes (Copilot has reviewed)
+
+### Manual
+
+- [ ] All Copilot inline comments addressed or explicitly dismissed with a reply
+- [ ] New tests added for new behaviour (parsers, normalization, SVG, docs)
+- [ ] `chords.schema.json` updated if the data model changed
+- [ ] `README.md` updated if a new CLI command or workflow step was added
+- [ ] `source_refs` provenance is present in any new chord/voicing records
+- [ ] No copied source prose or reused external images
+- [ ] Branch will be deleted after merge
+
+### After merge
+
+- [ ] Confirm issue auto-closed (or close manually)
+- [ ] Remove `status/in-progress` label if still present
+- [ ] Verify `main` CI passes on the squashed commit
+
+---
+
+## Local Validation Commands
+
+```bash
+npm run lint          # ESLint
+npm test              # Vitest (all test files)
+npm run build         # Full build: docs + SVG + JSONL
+npm run validate      # Schema validation on generated JSONL
+npm run ingest        # Re-parse cached HTML sources
+```
+
+Run all in sequence before opening a PR:
+
+```bash
+npm run lint && npm test -- --run && npm run build && npm run validate
+```
