@@ -29,7 +29,6 @@ describe("MVP pipeline suite", () => {
     const chords = await ingestNormalizedChords({ refresh: false, delayMs: 0 });
     const byId = new Map(chords.map((chord) => [chord.id, chord]));
 
-    expect(chords.length).toBeGreaterThanOrEqual(REQUIRED_MVP_CHORD_IDS.length);
     expect(chords.map((chord) => chord.id)).toEqual(REQUIRED_MVP_CHORD_IDS);
 
     for (const chordId of REQUIRED_MVP_CHORD_IDS) {
