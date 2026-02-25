@@ -159,6 +159,23 @@ describe("generateChordSvg", () => {
       expect(svg).toContain('>G<');
       expect(svg).toContain('>B<');
       expect(countOccurrences(svg, '>E<')).toBe(2);
+
+      const eIndex = svg.indexOf('>E<');
+      const aIndex = svg.indexOf('>A<');
+      const dIndex = svg.indexOf('>D<');
+      const gIndex = svg.indexOf('>G<');
+      const bIndex = svg.indexOf('>B<');
+
+      expect(eIndex).toBeGreaterThanOrEqual(0);
+      expect(aIndex).toBeGreaterThanOrEqual(0);
+      expect(dIndex).toBeGreaterThanOrEqual(0);
+      expect(gIndex).toBeGreaterThanOrEqual(0);
+      expect(bIndex).toBeGreaterThanOrEqual(0);
+
+      expect(eIndex).toBeLessThan(aIndex);
+      expect(aIndex).toBeLessThan(dIndex);
+      expect(dIndex).toBeLessThan(gIndex);
+      expect(gIndex).toBeLessThan(bIndex);
     });
 
     it("uses provided tuning labels when passed", () => {

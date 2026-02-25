@@ -2,7 +2,8 @@ import type { Voicing } from "../../types/model.js";
 
 const DEFAULT_TUNING = ["E", "A", "D", "G", "B", "E"];
 
-export function generateChordSvg(voicing: Voicing, tuning: string[] = DEFAULT_TUNING): string {
+export function generateChordSvg(voicing: Voicing, tuning?: string[]): string {
+  const resolvedTuning = tuning ?? DEFAULT_TUNING;
   const width = 180;
   const height = 248;
   const stringX = [20, 48, 76, 104, 132, 160];
@@ -39,7 +40,7 @@ export function generateChordSvg(voicing: Voicing, tuning: string[] = DEFAULT_TU
 
   const stringLabels = stringX
     .map((x, index) => {
-      const label = tuning[index] ?? "";
+      const label = resolvedTuning[index] ?? "";
       return `<text x="${x}" y="224" text-anchor="middle" font-size="12" fill="#111827">${label}</text>`;
     })
     .join("\n");
