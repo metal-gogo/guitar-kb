@@ -21,7 +21,7 @@ describe("generateChordSvg", () => {
         base_fret: 1,
       });
       expect(svg).toContain('xmlns="http://www.w3.org/2000/svg"');
-      expect(svg).toContain('viewBox="0 0 180 220"');
+      expect(svg).toContain('viewBox="0 0 180 248"');
     });
 
     it("includes XML declaration", () => {
@@ -142,6 +142,58 @@ describe("generateChordSvg", () => {
       });
       // 3 fretted strings: frets[1]=3, frets[2]=2, frets[4]=1
       expect(countOccurrences(svg, "<circle")).toBe(3);
+    });
+  });
+
+  describe("labels", () => {
+    it("renders standard tuning string labels in left-to-right order", () => {
+      const svg = generateChordSvg({
+        id: "chord:C:maj:v1",
+        frets: [null, 3, 2, 0, 1, 0],
+        base_fret: 1,
+      });
+
+      expect(svg).toContain('>E<');
+      expect(svg).toContain('>A<');
+      expect(svg).toContain('>D<');
+      expect(svg).toContain('>G<');
+      expect(svg).toContain('>B<');
+      expect(countOccurrences(svg, '>E<')).toBe(2);
+    });
+
+    it("uses provided tuning labels when passed", () => {
+      const svg = generateChordSvg(
+        {
+          id: "chord:C:maj:v1",
+          frets: [null, 3, 2, 0, 1, 0],
+          base_fret: 1,
+        },
+        ["D", "A", "D", "G", "A", "D"],
+      );
+
+      expect(countOccurrences(svg, '>D<')).toBe(3);
+      expect(countOccurrences(svg, '>A<')).toBe(2);
+      expect(svg).toContain('>G<');
+    });
+
+    it("renders base fret label when base_fret > 1", () => {
+      const svg = generateChordSvg({
+        id: "chord:C:maj:v2",
+        frets: [8, 10, 10, 9, 8, 8],
+        base_fret: 8,
+      });
+
+      expect(svg).toContain('>8fr<');
+    });
+
+    it("does not render redundant base fret label when base_fret is 1", () => {
+      const svg = generateChordSvg({
+        id: "chord:C:maj:v1",
+        frets: [null, 3, 2, 0, 1, 0],
+        base_fret: 1,
+      });
+
+      expect(svg).not.toContain('>1fr<');
     });
   });
 
