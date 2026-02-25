@@ -6,13 +6,49 @@ export const ROOT_ORDER = [
 
 export const QUALITY_ORDER = ["maj", "min", "7", "maj7", "min7", "dim", "dim7", "aug", "sus2", "sus4"] as const;
 
-export const MVP_TARGETS = [
-  { source: "guitar-chord-org", slug: "c-major", url: "https://www.guitar-chord.org/c-maj.html" },
-  { source: "guitar-chord-org", slug: "c-minor", url: "https://www.guitar-chord.org/c-min.html" },
-  { source: "guitar-chord-org", slug: "c7", url: "https://www.guitar-chord.org/c-7.html" },
-  { source: "guitar-chord-org", slug: "cmaj7", url: "https://www.guitar-chord.org/c-maj7.html" },
-  { source: "all-guitar-chords", slug: "c-major", url: "https://all-guitar-chords.com/chords/index/c/major" },
-  { source: "all-guitar-chords", slug: "c-minor", url: "https://all-guitar-chords.com/chords/index/c/minor" },
-  { source: "all-guitar-chords", slug: "c7", url: "https://all-guitar-chords.com/chords/index/c/dominant-7th" },
-  { source: "all-guitar-chords", slug: "cmaj7", url: "https://all-guitar-chords.com/chords/index/c/major-7th" }
+interface CoreQualityTarget {
+  quality: "maj" | "min" | "7" | "maj7";
+  cacheSuffix: "major" | "minor" | "7" | "maj7";
+  guitarSlug: "maj" | "min" | "7" | "maj7";
+  allGuitarSlug: "major" | "minor" | "dominant-7th" | "major-7th";
+}
+
+interface IngestTarget {
+  source: "guitar-chord-org" | "all-guitar-chords";
+  slug: string;
+  url: string;
+}
+
+const CORE_QUALITY_TARGETS: readonly CoreQualityTarget[] = [
+  { quality: "maj", cacheSuffix: "major", guitarSlug: "maj", allGuitarSlug: "major" },
+  { quality: "min", cacheSuffix: "minor", guitarSlug: "min", allGuitarSlug: "minor" },
+  { quality: "7", cacheSuffix: "7", guitarSlug: "7", allGuitarSlug: "dominant-7th" },
+  { quality: "maj7", cacheSuffix: "maj7", guitarSlug: "maj7", allGuitarSlug: "major-7th" },
 ] as const;
+
+function toRootSlug(root: string): string {
+  let slug = root.toLowerCase().replace(/#/g, "-sharp");
+  if (root.length > 1 && root.endsWith("b")) {
+    slug = slug.replace(/b$/, "-flat");
+  }
+  return slug;
+}
+
+export const MVP_TARGETS: ReadonlyArray<IngestTarget> = ROOT_ORDER.flatMap((root) => {
+  const rootSlug = toRootSlug(root);
+  return CORE_QUALITY_TARGETS.flatMap((qualityTarget) => {
+    const cacheSlug = `${rootSlug}-${qualityTarget.cacheSuffix}`;
+    return [
+      {
+        source: "guitar-chord-org" as const,
+        slug: cacheSlug,
+        url: `https://www.guitar-chord.org/${rootSlug}-${qualityTarget.guitarSlug}.html`,
+      },
+      {
+        source: "all-guitar-chords" as const,
+        slug: cacheSlug,
+        url: `https://all-guitar-chords.com/chords/index/${rootSlug}/${qualityTarget.allGuitarSlug}`,
+      },
+    ];
+  });
+});
