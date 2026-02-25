@@ -26,11 +26,11 @@ function sourceRegistryMap(
   return new Map(registry.map((entry) => [entry.id, entry]));
 }
 
-function filterTargets(
-  targets: ReadonlyArray<PipelineIngestTarget>,
+function filterTargets<T extends PipelineIngestTarget>(
+  targets: ReadonlyArray<T>,
   registry: ReadonlyArray<SourceRegistryEntry>,
   options: IngestPipelineOptions,
-): ReadonlyArray<PipelineIngestTarget> {
+): ReadonlyArray<T> {
   let filtered = [...targets];
 
   if (options.source) {
@@ -66,7 +66,7 @@ export function selectIngestTargets(
   registry: ReadonlyArray<SourceRegistryEntry>,
   options: IngestPipelineOptions,
 ): ReadonlyArray<IngestTarget> {
-  return filterTargets(targets, registry, options) as ReadonlyArray<IngestTarget>;
+  return filterTargets(targets, registry, options);
 }
 
 export async function ingestNormalizedChordsWithTargets(
