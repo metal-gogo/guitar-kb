@@ -19,11 +19,11 @@ https://www.all-guitar-chords.com/chords/c-major
 The correct URL format is:
 
 ```
-https://all-guitar-chords.com/chords/index/c/major
+https://www.all-guitar-chords.com/chords/index/c/major
 ```
 
 This means:
-- The `www.` subdomain is wrong — the site serves without it.
+- The `www.` subdomain is required for canonical source URLs.
 - The path structure is wrong — chords use `/chords/index/<root>/<quality>`,
   not `/chords/<root>-<quality>`.
 
@@ -41,7 +41,7 @@ fixed first.
 
 - Update URL construction logic in the all-guitar-chords source config/parser
   (`src/config.ts` or `src/ingest/parsers/`) to produce:
-  `https://all-guitar-chords.com/chords/index/<root>/<quality>`
+  `https://www.all-guitar-chords.com/chords/index/<root>/<quality>`
 - Determine the correct root and quality slug format:
   - root: lowercase, e.g., `c`, `f-sharp`, `b-flat`
   - quality: lowercase, e.g., `major`, `minor`, `dominant-7th`, `major-7th`
@@ -57,11 +57,11 @@ fixed first.
 ## Acceptance Criteria
 
 - All `source_refs` entries from `all-guitar-chords` source contain valid,
-  accessible URLs in the `https://all-guitar-chords.com/chords/index/*` format.
+  accessible URLs in the `https://www.all-guitar-chords.com/chords/index/*` format.
 - `npm run build && npm run validate` passes cleanly.
 - Cached HTML fixtures are refreshed and committed.
 - Parser tests pass against updated fixtures.
-- No `www.all-guitar-chords.com` URLs appear in generated outputs.
+- All generated all-guitar-chords URLs use `www.all-guitar-chords.com`.
 
 ## Validation Steps
 
