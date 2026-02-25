@@ -38,7 +38,7 @@ async function main(): Promise<void> {
   await writeText(path.join("docs", "index.md"), chordIndexMarkdown(chords));
 
   for (const chord of chords) {
-    await writeText(path.join("docs", "chords", `${chord.id.replace(/:/g, "__")}.md`), chordMarkdown(chord));
+    await writeText(path.join("docs", "chords", `${chord.id.replace(/:/g, "__")}.md`), chordMarkdown(chord, chords));
     for (const voicing of chord.voicings) {
       const svg = generateChordSvg(voicing, chord.tuning);
       await writeText(path.join("docs", "diagrams", `${voicing.id.replace(/:/g, "__")}.svg`), svg);

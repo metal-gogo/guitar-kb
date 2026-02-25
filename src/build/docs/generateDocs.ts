@@ -1,7 +1,67 @@
 import type { ChordRecord } from "../../types/model.js";
 import { compareChordOrder } from "../../utils/sort.js";
 
-export function chordMarkdown(chord: ChordRecord): string {
+function pagePathForChordId(chordId: string): string {
+  return `./${chordId.replace(/:/g, "__").replace(/#/g, "%23")}.md`;
+}
+
+function diagramPathForVoicingId(voicingId: string): string {
+  return `../diagrams/${voicingId.replace(/:/g, "__").replace(/#/g, "%23")}.svg`;
+}
+
+function formatNavLinks(ids: string[], byId: Map<string, ChordRecord>): string {
+  if (ids.length === 0) {
+    return "none";
+  }
+
+  return ids
+    .map((id) => {
+      const chord = byId.get(id);
+      if (!chord) {
+        return "";
+      }
+      return `[${chord.root} ${chord.quality}](${pagePathForChordId(chord.id)})`;
+    })
+    .filter((value) => value.length > 0)
+    .join(", ");
+}
+
+function enharmonicLinkIds(chord: ChordRecord, allChords: ChordRecord[]): string[] {
+  const byId = new Map(allChords.map((entry) => [entry.id, entry]));
+  const related = new Set<string>();
+
+  for (const candidate of chord.enharmonic_equivalents ?? []) {
+    if (byId.has(candidate) && candidate !== chord.id) {
+      related.add(candidate);
+    }
+  }
+
+  for (const candidate of allChords) {
+    if ((candidate.enharmonic_equivalents ?? []).includes(chord.id) && candidate.id !== chord.id) {
+      related.add(candidate.id);
+    }
+  }
+
+  return Array.from(related).sort((a, b) => {
+    const left = byId.get(a);
+    const right = byId.get(b);
+    if (!left || !right) {
+      return a.localeCompare(b);
+    }
+    return compareChordOrder(left, right);
+  });
+}
+
+function relatedQualityLinkIds(chord: ChordRecord, allChords: ChordRecord[]): string[] {
+  return allChords
+    .filter((candidate) => candidate.root === chord.root && candidate.id !== chord.id)
+    .slice()
+    .sort(compareChordOrder)
+    .map((candidate) => candidate.id);
+}
+
+export function chordMarkdown(chord: ChordRecord, allChords: ChordRecord[]): string {
+  const byId = new Map(allChords.map((entry) => [entry.id, entry]));
   const aliases = (chord.aliases ?? []).join(", ") || "none";
   const enharmonics = (chord.enharmonic_equivalents ?? []).join(", ") || "none";
   const voicingLines = chord.voicings
@@ -9,14 +69,16 @@ export function chordMarkdown(chord: ChordRecord): string {
     .sort((a, b) => a.id.localeCompare(b.id))
     .map((voicing) => {
       const frets = voicing.frets.map((fret) => (fret === null ? "x" : String(fret))).join("/");
-      const diagramPath = `../diagrams/${voicing.id.replace(/:/g, "__")}.svg`;
+      const diagramPath = diagramPathForVoicingId(voicing.id);
       return `- ${voicing.id}: frets ${frets} (base fret ${voicing.base_fret}) | diagram: ${diagramPath}`;
     })
     .join("\n");
 
   const sourceLines = chord.source_refs.map((ref) => `- ${ref.source}: ${ref.url}`).join("\n");
+  const enharmonicLinks = formatNavLinks(enharmonicLinkIds(chord, allChords), byId);
+  const relatedQualityLinks = formatNavLinks(relatedQualityLinkIds(chord, allChords), byId);
 
-  return `# ${chord.root} ${chord.quality}\n\n- Canonical ID: ${chord.id}\n- Aliases: ${aliases}\n- Enharmonic equivalents: ${enharmonics}\n- Formula: ${chord.formula.join("-")}\n- Pitch classes: ${chord.pitch_classes.join(", ")}\n\n## Summary\n${chord.notes?.summary ?? "Chord reference generated from factual source data."}\n\n## Voicings\n${voicingLines}\n\n## Provenance\n${sourceLines}\n`;
+  return `# ${chord.root} ${chord.quality}\n\n- Canonical ID: ${chord.id}\n- Aliases: ${aliases}\n- Enharmonic equivalents: ${enharmonics}\n- Formula: ${chord.formula.join("-")}\n- Pitch classes: ${chord.pitch_classes.join(", ")}\n\n## Summary\n${chord.notes?.summary ?? "Chord reference generated from factual source data."}\n\n## Voicings\n${voicingLines}\n\n## Provenance\n${sourceLines}\n\n## Navigation\n- [← Chord Index](../index.md)\n- Enharmonic equivalents: ${enharmonicLinks}\n- Related qualities: ${relatedQualityLinks}\n`;
 }
 
 export function chordIndexMarkdown(chords: ChordRecord[]): string {
@@ -31,13 +93,13 @@ export function chordIndexMarkdown(chords: ChordRecord[]): string {
 
   const sections = Array.from(grouped.entries()).map(([root, rootChords]) => {
     const lines = rootChords.map((chord) => {
-      const pagePath = `./chords/${chord.id.replace(/:/g, "__")}.md`;
+      const pagePath = `./chords/${chord.id.replace(/:/g, "__").replace(/#/g, "%23")}.md`;
       const aliases = (chord.aliases ?? []).join(", ") || "none";
       const formula = chord.formula.join("-");
-      return `- [${chord.root} ${chord.quality}](${pagePath}) (aliases: ${aliases}; formula: ${formula})`;
+      return `- [${chord.quality}](${pagePath}) (${chord.root} ${chord.quality}; aliases: ${aliases}; formula: ${formula})`;
     });
 
-    return `## ${root}\n\n${lines.join("\n")}`;
+    return `## ${root}\n\n### Qualities\n\n${lines.join("\n")}`;
   });
 
   return `# Chord Index\n\n${sections.join("\n\n")}\n`;
