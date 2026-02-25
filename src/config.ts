@@ -11,8 +11,8 @@ export const MVP_TARGETS = [
   { source: "guitar-chord-org", slug: "c-minor", url: "https://www.guitar-chord.org/c-min.html" },
   { source: "guitar-chord-org", slug: "c7", url: "https://www.guitar-chord.org/c-7.html" },
   { source: "guitar-chord-org", slug: "cmaj7", url: "https://www.guitar-chord.org/c-maj7.html" },
-  { source: "all-guitar-chords", slug: "c-major", url: "https://www.all-guitar-chords.com/chords/c-major" },
-  { source: "all-guitar-chords", slug: "c-minor", url: "https://www.all-guitar-chords.com/chords/c-minor" },
-  { source: "all-guitar-chords", slug: "c7", url: "https://www.all-guitar-chords.com/chords/c7" },
-  { source: "all-guitar-chords", slug: "cmaj7", url: "https://www.all-guitar-chords.com/chords/cmaj7" }
+  { source: "all-guitar-chords", slug: "c-major", url: "https://all-guitar-chords.com/chords/index/c/major" },
+  { source: "all-guitar-chords", slug: "c-minor", url: "https://all-guitar-chords.com/chords/index/c/minor" },
+  { source: "all-guitar-chords", slug: "c7", url: "https://all-guitar-chords.com/chords/index/c/dominant-7th" },
+  { source: "all-guitar-chords", slug: "cmaj7", url: "https://all-guitar-chords.com/chords/index/c/major-7th" }
 ] as const;
