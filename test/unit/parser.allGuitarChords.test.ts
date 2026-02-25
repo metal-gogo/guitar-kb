@@ -6,6 +6,7 @@ const readFixture = (slug: string): string =>
   readFileSync(`test/fixtures/sources/all-guitar-chords/${slug}.html`, "utf8");
 
 const URL_BY_SLUG: Record<string, string> = {
+  "a-major": "https://all-guitar-chords.com/chords/index/a/major",
   "c-major": "https://all-guitar-chords.com/chords/index/c/major",
   "c-minor": "https://all-guitar-chords.com/chords/index/c/minor",
   c7: "https://all-guitar-chords.com/chords/index/c/dominant-7th",
@@ -18,7 +19,16 @@ describe("parseAllGuitarChords", () => {
   describe("happy path – MVP chord fixtures", () => {
     const cases = [
       {
+        slug: "a-major",
+        root: "A",
+        qualityRaw: "maj",
+        formula: ["1", "3", "5"],
+        pitchClasses: ["A", "C#", "E"],
+        expectedVoicings: 3,
+      },
+      {
         slug: "c-major",
+        root: "C",
         qualityRaw: "maj",
         formula: ["1", "3", "5"],
         pitchClasses: ["C", "E", "G"],
@@ -26,6 +36,7 @@ describe("parseAllGuitarChords", () => {
       },
       {
         slug: "c-minor",
+        root: "C",
         qualityRaw: "min",
         formula: ["1", "b3", "5"],
         pitchClasses: ["C", "Eb", "G"],
@@ -33,6 +44,7 @@ describe("parseAllGuitarChords", () => {
       },
       {
         slug: "c7",
+        root: "C",
         qualityRaw: "7",
         formula: ["1", "3", "5", "b7"],
         pitchClasses: ["C", "E", "G", "Bb"],
@@ -40,6 +52,7 @@ describe("parseAllGuitarChords", () => {
       },
       {
         slug: "cmaj7",
+        root: "C",
         qualityRaw: "M7",
         formula: ["1", "3", "5", "7"],
         pitchClasses: ["C", "E", "G", "B"],
@@ -52,12 +65,30 @@ describe("parseAllGuitarChords", () => {
       const html = readFixture(testCase.slug);
       const parsed = parseAllGuitarChords(html, url);
 
-      expect(parsed.root).toBe("C");
+      expect(parsed.root).toBe(testCase.root);
       expect(parsed.quality_raw).toBe(testCase.qualityRaw);
       expect(parsed.formula).toEqual(testCase.formula);
       expect(parsed.pitch_classes).toEqual(testCase.pitchClasses);
       expect(parsed.voicings.length).toBe(testCase.expectedVoicings);
       expect(parsed.voicings[0]?.source_refs?.[0]).toEqual({ source: "all-guitar-chords", url });
+    });
+
+    it("extracts A major voicing frets and base-fret values in source order", () => {
+      const url = URL_BY_SLUG["a-major"];
+      const html = readFixture("a-major");
+      const parsed = parseAllGuitarChords(html, url);
+
+      expect(parsed.voicings.map((voicing) => voicing.frets)).toEqual([
+        [null, 0, 2, 2, 2, 0],
+        [null, null, 2, 2, 2, 5],
+        [5, 7, 7, 6, 5, 5],
+      ]);
+      expect(parsed.voicings.map((voicing) => voicing.base_fret)).toEqual([1, 2, 5]);
+      expect(parsed.voicings.map((voicing) => voicing.id)).toEqual([
+        "variation-1",
+        "variation-2",
+        "variation-3",
+      ]);
     });
   });
 

@@ -6,6 +6,7 @@ const readFixture = (slug: string): string =>
   readFileSync(`test/fixtures/sources/guitar-chord-org/${slug}.html`, "utf8");
 
 const URL_BY_SLUG = {
+  "a-major": "https://www.guitar-chord.org/a-maj.html",
   "c-major": "https://www.guitar-chord.org/c-maj.html",
   "c-minor": "https://www.guitar-chord.org/c-min.html",
   c7: "https://www.guitar-chord.org/c-7.html",
@@ -26,6 +27,13 @@ describe("parseGuitarChordOrg", () => {
         pitchClasses: string[];
         expectedVoicings: number;
       }> = [
+        {
+          slug: "a-major",
+          qualityRaw: "major",
+          formula: ["1", "3", "5"],
+          pitchClasses: ["A", "C#", "E"],
+          expectedVoicings: 3,
+        },
         {
           slug: "c-major",
           qualityRaw: "major",
@@ -62,7 +70,8 @@ describe("parseGuitarChordOrg", () => {
         const html = readFixture(testCase.slug);
         const parsed = parseGuitarChordOrg(html, url);
 
-        expect(parsed.root).toBe("C");
+        const expectedRoot = testCase.slug === "a-major" ? "A" : "C";
+        expect(parsed.root).toBe(expectedRoot);
         expect(parsed.quality_raw).toBe(testCase.qualityRaw);
         expect(parsed.formula).toEqual(testCase.formula);
         expect(parsed.pitch_classes).toEqual(testCase.pitchClasses);
@@ -76,6 +85,24 @@ describe("parseGuitarChordOrg", () => {
           expect(firstVoicing?.fingers).toEqual([0, 3, 2, 0, 1, 0]);
         }
       }
+    });
+
+    it("extracts A major voicing frets and base-fret values in source order", () => {
+      const url = URL_BY_SLUG["a-major"];
+      const html = readFixture("a-major");
+      const parsed = parseGuitarChordOrg(html, url);
+
+      expect(parsed.voicings.map((voicing) => voicing.frets)).toEqual([
+        [null, 0, 2, 2, 2, 0],
+        [5, 7, 7, 6, 5, 5],
+        [null, null, 2, 2, 2, 5],
+      ]);
+      expect(parsed.voicings.map((voicing) => voicing.base_fret)).toEqual([1, 5, 2]);
+      expect(parsed.voicings.map((voicing) => voicing.id)).toEqual([
+        "open",
+        "barre-5",
+        "high-voicing",
+      ]);
     });
   });
 
