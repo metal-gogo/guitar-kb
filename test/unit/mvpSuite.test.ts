@@ -41,6 +41,14 @@ describe("MVP pipeline suite", () => {
       expect(chord?.voicings.length ?? 0, `MVP chord ${chordId} has insufficient voicings`).toBeGreaterThanOrEqual(MIN_VOICINGS_PER_MVP_CHORD);
     }
 
+    for (const chord of chords) {
+      expect(chord.aliases?.length ?? 0, `Chord ${chord.id} is missing aliases`).toBeGreaterThan(0);
+      expect(chord.formula.length, `Chord ${chord.id} has empty formula`).toBeGreaterThan(0);
+      expect(chord.pitch_classes.length, `Chord ${chord.id} has empty pitch_classes`).toBeGreaterThan(0);
+      expect(chord.voicings.length, `Chord ${chord.id} has no voicings`).toBeGreaterThan(0);
+      expect(chord.source_refs.length, `Chord ${chord.id} has no source_refs`).toBeGreaterThan(0);
+    }
+
     await validateChordRecords(chords);
 
     tempDir = await mkdtemp(path.join(os.tmpdir(), "gckb-mvp-suite-"));
