@@ -9,7 +9,7 @@ interface IngestPipelineOptions {
   delayMs?: number;
 }
 
-interface IngestTarget {
+interface PipelineIngestTarget {
   source: string;
   slug: string;
   url: string;
@@ -22,7 +22,7 @@ function sourceRegistryMap(
 }
 
 export async function ingestNormalizedChordsWithTargets(
-  targets: ReadonlyArray<IngestTarget>,
+  targets: ReadonlyArray<PipelineIngestTarget>,
   registry: ReadonlyArray<SourceRegistryEntry>,
   options: IngestPipelineOptions = {},
 ): Promise<ChordRecord[]> {
