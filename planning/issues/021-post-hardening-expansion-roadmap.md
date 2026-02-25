@@ -204,7 +204,7 @@ Work MUST proceed in this sequence to respect dependencies:
                                ↓
                              028 → 030 → 034   (discoverability layer)
                 029 → 033              (ingestion infra — parallel-safe after 022–025)
-                031                    (voicing metadata — after 026/027)
+                031                    (voicing metadata — after 026/027 and voicing guards/032)
                 035                    (DX — can go anytime after 025)
 ```
 

@@ -119,7 +119,7 @@ This roadmap batch is complete when:
 - CLI supports `--chord`, `--source`, and `--dry-run` flags.
 - Docsite has a nav index page and cross-links between chord pages.
 - Devcontainer enables a clean environment install and full build in one step.
-- All 10 issues are closed with CI passing.
+- All 14 issues (022–035) are closed with CI passing.
 
 ---
 

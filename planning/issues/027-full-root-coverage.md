@@ -11,7 +11,7 @@
 
 Extend ingest targets (`MVP_TARGETS` in `src/config.ts`) to all 12 chromatic
 roots — C, C#/Db, D, D#/Eb, E, F, F#/Gb, G, G#/Ab, A, A#/Bb, B — for the
-core qualities: maj, min, 7, maj7 (and min7/dim/aug/sus2/sus4 once issue 022
+core qualities: maj, min, 7, maj7 (and min7/dim/aug/sus2/sus4 once issue 026
 is merged). Validate deterministic normalized output for the expanded set.
 
 ## Why
