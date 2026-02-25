@@ -2,11 +2,23 @@ import { mkdir } from "node:fs/promises";
 import path from "node:path";
 import { ingestNormalizedChords } from "../ingest/pipeline.js";
 import { writeJson } from "../utils/fs.js";
-
-const refresh = process.argv.includes("--refresh");
+import { parseIngestCliOptions } from "./options.js";
 
 async function main(): Promise<void> {
-  const chords = await ingestNormalizedChords({ refresh, delayMs: 250 });
+  const options = parseIngestCliOptions(process.argv.slice(2));
+  const chords = await ingestNormalizedChords({
+    refresh: options.refresh,
+    delayMs: 250,
+    chord: options.chord,
+    source: options.source,
+    dryRun: options.dryRun,
+  });
+
+  if (options.dryRun) {
+    process.stdout.write("Dry run complete\n");
+    return;
+  }
+
   await mkdir(path.join("data", "generated"), { recursive: true });
   await writeJson(path.join("data", "generated", "chords.normalized.json"), chords);
 

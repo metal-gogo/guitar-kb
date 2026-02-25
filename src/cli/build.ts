@@ -8,26 +8,76 @@ import type { ChordRecord } from "../types/model.js";
 import { compareChordOrder } from "../utils/sort.js";
 import { pathExists, writeJson, writeText } from "../utils/fs.js";
 import { validateChordRecords } from "../validate/schema.js";
+import { parseBuildCliOptions } from "./options.js";
 
 const NORMALIZED_PATH = path.join("data", "generated", "chords.normalized.json");
+
+interface BuildRuntimeOptions {
+  chord?: string;
+  source?: string;
+  dryRun: boolean;
+}
 
 async function loadNormalized(): Promise<ChordRecord[]> {
   const content = await readFile(NORMALIZED_PATH, "utf8");
   return JSON.parse(content) as ChordRecord[];
 }
 
-async function loadOrGenerateNormalized(): Promise<ChordRecord[]> {
-  if (await pathExists(NORMALIZED_PATH)) {
-    return loadNormalized();
+function filterChords(chords: ChordRecord[], options: BuildRuntimeOptions): ChordRecord[] {
+  let filtered = chords;
+
+  if (options.source) {
+    filtered = filtered.filter((chord) => chord.source_refs.some((ref) => ref.source === options.source));
   }
 
-  const generated = await ingestNormalizedChords({ refresh: false, delayMs: 250 });
-  await writeJson(NORMALIZED_PATH, generated);
+  if (options.chord) {
+    const term = options.chord.toLowerCase();
+    const isCanonical = term.startsWith("chord:");
+    filtered = filtered.filter((chord) => {
+      if (isCanonical) {
+        return chord.id.toLowerCase() === term;
+      }
+      return chord.id.toLowerCase().includes(term);
+    });
+  }
+
+  if (filtered.length === 0 && (options.chord || options.source)) {
+    const requested = `${options.source ? `source=${options.source} ` : ""}${options.chord ? `chord=${options.chord}` : ""}`.trim();
+    throw new Error(`No chords matched filters: ${requested}`);
+  }
+
+  return filtered;
+}
+
+async function loadOrGenerateNormalized(options: BuildRuntimeOptions): Promise<ChordRecord[]> {
+  if (await pathExists(NORMALIZED_PATH)) {
+    const normalized = await loadNormalized();
+    return filterChords(normalized, options);
+  }
+
+  const generated = await ingestNormalizedChords({
+    refresh: false,
+    delayMs: 250,
+    chord: options.chord,
+    source: options.source,
+    dryRun: options.dryRun,
+  });
+
+  if (!options.dryRun) {
+    await writeJson(NORMALIZED_PATH, generated);
+  }
   return generated;
 }
 
 async function main(): Promise<void> {
-  const chords = (await loadOrGenerateNormalized()).slice().sort(compareChordOrder);
+  const options = parseBuildCliOptions(process.argv.slice(2));
+  const chords = (await loadOrGenerateNormalized(options)).slice().sort(compareChordOrder);
+
+  if (options.dryRun) {
+    process.stdout.write(`Dry run: would build outputs for ${chords.length} chords\n`);
+    return;
+  }
+
   await validateChordRecords(chords);
 
   await rm(path.join("docs", "chords"), { recursive: true, force: true });

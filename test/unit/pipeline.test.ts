@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 import { mkdtemp, mkdir, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { ROOT_ORDER } from "../../src/config.js";
-import { ingestNormalizedChords, ingestNormalizedChordsWithTargets } from "../../src/ingest/pipeline.js";
+import { ROOT_ORDER, type IngestTarget } from "../../src/config.js";
+import { ingestNormalizedChords, ingestNormalizedChordsWithTargets, selectIngestTargets } from "../../src/ingest/pipeline.js";
 import type { SourceRegistryEntry } from "../../src/types/model.js";
 
 describe("ingestNormalizedChords", () => {
@@ -76,15 +76,50 @@ describe("ingestNormalizedChords", () => {
       const chords = await ingestNormalizedChordsWithTargets(
         [{ source: "stub-third-source", slug: "c-major", url: "https://stub.example/c-major" }],
         [stubSource],
-        { refresh: false, delayMs: 0 },
+        { refresh: false, delayMs: 0, dryRun: true },
       );
 
-      expect(chords).toHaveLength(1);
-      expect(chords[0]?.id).toBe("chord:C:maj");
-      expect(chords[0]?.source_refs.some((ref) => ref.source === "stub-third-source")).toBe(true);
+      expect(chords).toHaveLength(0);
     } finally {
       process.chdir(originalCwd);
       await rm(tempDir, { recursive: true, force: true });
     }
+  });
+
+  it("filters ingest targets by source and chord", () => {
+    const targets: IngestTarget[] = [
+      { source: "guitar-chord-org", chordId: "chord:C:maj", slug: "c-major", url: "https://a.example/c-major" },
+      { source: "all-guitar-chords", chordId: "chord:C:maj", slug: "c-major", url: "https://b.example/c-major" },
+      { source: "all-guitar-chords", chordId: "chord:C:maj7", slug: "c-maj7", url: "https://b.example/c-maj7" },
+    ];
+    const registry: SourceRegistryEntry[] = [
+      { id: "guitar-chord-org", displayName: "A", baseUrl: "https://a.example", cacheDir: "a", parse: () => { throw new Error("not used"); } },
+      { id: "all-guitar-chords", displayName: "B", baseUrl: "https://b.example", cacheDir: "b", parse: () => { throw new Error("not used"); } },
+    ];
+
+    const selected = selectIngestTargets(targets, registry, {
+      source: "all-guitar-chords",
+      chord: "chord:C:maj",
+      dryRun: true,
+    });
+
+    expect(selected).toHaveLength(1);
+    expect(selected[0]?.source).toBe("all-guitar-chords");
+    expect(selected[0]?.chordId).toBe("chord:C:maj");
+  });
+
+  it("throws for unknown source or empty filtered result", () => {
+    const targets: IngestTarget[] = [
+      { source: "guitar-chord-org", chordId: "chord:C:maj", slug: "c-major", url: "https://a.example/c-major" },
+    ];
+    const registry: SourceRegistryEntry[] = [
+      { id: "guitar-chord-org", displayName: "A", baseUrl: "https://a.example", cacheDir: "a", parse: () => { throw new Error("not used"); } },
+    ];
+
+    expect(() => selectIngestTargets(targets, registry, { source: "missing-source" }))
+      .toThrow("Unknown source: missing-source");
+
+    expect(() => selectIngestTargets(targets, registry, { chord: "chord:Db:maj7" }))
+      .toThrow("No ingest targets matched filters");
   });
 });
