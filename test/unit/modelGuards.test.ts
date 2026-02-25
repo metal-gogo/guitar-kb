@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { assertCanonicalChordId, isCanonicalChordId, isChordQuality } from "../../src/types/guards.js";
+import { assertCanonicalChordId, isCanonicalChordId, isChordQuality, isVoicingPosition } from "../../src/types/guards.js";
 
 describe("isCanonicalChordId", () => {
   it("accepts valid canonical IDs", () => {
@@ -28,5 +28,15 @@ describe("isChordQuality", () => {
     expect(isChordQuality("dim7")).toBe(true);
     expect(isChordQuality("maj7")).toBe(true);
     expect(isChordQuality("major")).toBe(false);
+  });
+});
+
+describe("isVoicingPosition", () => {
+  it("matches allowed voicing positions", () => {
+    expect(isVoicingPosition("open")).toBe(true);
+    expect(isVoicingPosition("barre")).toBe(true);
+    expect(isVoicingPosition("upper")).toBe(true);
+    expect(isVoicingPosition("unknown")).toBe(true);
+    expect(isVoicingPosition("mid")).toBe(false);
   });
 });

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { normalizeQuality, normalizeRecords } from "../../src/ingest/normalize/normalize.js";
+import { derivePosition, normalizeQuality, normalizeRecords } from "../../src/ingest/normalize/normalize.js";
 import type { RawChordRecord } from "../../src/types/model.js";
 
 describe("normalizeQuality", () => {
@@ -306,5 +306,40 @@ describe("normalizeRecords", () => {
     const a = normalizeRecords(raw);
     const b = normalizeRecords(raw);
     expect(JSON.stringify(a)).toBe(JSON.stringify(b));
+  });
+
+  it("derives open position when voicing includes open strings and no high frets", () => {
+    expect(derivePosition([null, 3, 2, 0, 1, 0])).toBe("open");
+  });
+
+  it("derives barre position when four or more strings share the same lowest fret", () => {
+    expect(derivePosition([3, 3, 5, 5, 3, 3])).toBe("barre");
+  });
+
+  it("derives upper position when lowest played fret is high and not barre", () => {
+    expect(derivePosition([null, 7, 9, 9, 8, null])).toBe("upper");
+  });
+
+  it("derives unknown position when heuristics do not match", () => {
+    expect(derivePosition([null, 3, 5, 5, 4, null])).toBe("unknown");
+  });
+
+  it("assigns derived position on normalized voicings", () => {
+    const raw: RawChordRecord[] = [
+      {
+        source: "source-a",
+        url: "https://example.com/c-major",
+        symbol: "C",
+        root: "C",
+        quality_raw: "major",
+        aliases: ["C"],
+        formula: ["1", "3", "5"],
+        pitch_classes: ["C", "E", "G"],
+        voicings: [{ id: "v1", frets: [null, 3, 2, 0, 1, 0], base_fret: 1 }]
+      }
+    ];
+
+    const normalized = normalizeRecords(raw);
+    expect(normalized[0]?.voicings[0]?.position).toBe("open");
   });
 });
