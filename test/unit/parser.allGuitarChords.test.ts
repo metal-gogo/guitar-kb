@@ -127,6 +127,24 @@ describe("parseAllGuitarChords", () => {
       ]);
     });
 
+    it("extracts C major voicing frets and base-fret values in source order", () => {
+      const url = URL_BY_SLUG["c-major"];
+      const html = readFixture("c-major");
+      const parsed = parseAllGuitarChords(html, url);
+
+      expect(parsed.voicings.map((voicing) => voicing.frets)).toEqual([
+        [null, 3, 2, 0, 1, 0],
+        [3, 3, 5, 5, 5, 3],
+        [8, 10, 10, 9, 8, 8],
+      ]);
+      expect(parsed.voicings.map((voicing) => voicing.base_fret)).toEqual([1, 3, 8]);
+      expect(parsed.voicings.map((voicing) => voicing.id)).toEqual([
+        "triad",
+        "voicing-2",
+        "voicing-3",
+      ]);
+    });
+
     it("extracts D major voicing frets and base-fret values in source order", () => {
       const url = URL_BY_SLUG["d-major"];
       const html = readFixture("d-major");
