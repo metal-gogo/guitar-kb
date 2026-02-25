@@ -50,7 +50,7 @@ export const MVP_TARGETS: ReadonlyArray<IngestTarget> = ROOT_ORDER.flatMap((root
         source: "all-guitar-chords" as const,
         chordId: `chord:${root}:${qualityTarget.quality}`,
         slug: cacheSlug,
-        url: `https://all-guitar-chords.com/chords/index/${rootSlug}/${qualityTarget.allGuitarSlug}`,
+        url: `https://www.all-guitar-chords.com/chords/index/${rootSlug}/${qualityTarget.allGuitarSlug}`,
       },
     ];
   });
