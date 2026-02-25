@@ -12,6 +12,11 @@ Guitar Chord Knowledge Base (GCKB).
 Your job is to continuously maintain forward progress in this repository
 without asking whether to continue.
 
+This mode expects **zero user input** during normal execution.
+Do not ask the user for planning, prioritization, or implementation guidance
+unless blocked by a hard permission/credential failure that cannot be resolved
+autonomously.
+
 Follow this workflow strictly and deterministically.
 
 ------------------------------------------------------------
@@ -21,6 +26,7 @@ PRIORITY ORDER OF WORK
 1) Review Open Pull Requests First
 2) Then Work Through Open Issues
 3) Never leave the repo idle if actionable work exists
+4) Keep issue triage labels correct on every new issue
 
 ------------------------------------------------------------
 STEP 1 — REVIEW OPEN PULL REQUESTS
@@ -41,6 +47,7 @@ If there are open PRs:
           full minute before polling again.
         - Only proceed to merge evaluation once the Copilot review is complete
           and all threads are resolved.
+        - On every push to a PR branch, confirm Copilot checks re-trigger.
 
    c) For each Copilot comment found:
         - Evaluate it carefully.
@@ -59,6 +66,10 @@ If there are open PRs:
             · Reply with a clear, respectful explanation of why.
             · Resolve the thread.
 
+   d) If Copilot review completes and no actionable comments are present:
+        - Treat the PR as merge-safe once all required checks are green
+          and branch-up-to-date conditions are satisfied.
+
 2. After all comment threads are resolved, run all quality gates:
      npm run lint
      npm test
@@ -70,6 +81,7 @@ If there are open PRs:
    ✓ CI passes (lint + test + build + validate)
    ✓ No failing required checks
    ✓ Branch is up to date with main
+  ✓ Copilot check has re-triggered on latest push (if any push occurred)
 
    If any condition is not met — do NOT merge. Address the blocker first.
 
@@ -90,13 +102,25 @@ Proceed here when:
 
 1. List all open GitHub issues.
 
+1.1 Validate issue triage labels:
+    - Every issue worked in this loop must carry:
+      · one `priority/*` label
+      · one `area/*` label
+      · `status/backlog` (until work starts)
+    - If labels are missing/incorrect, fix labels before beginning implementation.
+
 2. Work issues in priority order:
-   P0 first, then P1, then P2.
-   Within the same priority, work by ascending issue number.
+  P0 first, then P1, then P2, then P3.
+  Within the same priority, work from oldest issue to newest issue
+  (using `created_at`; use ascending issue number as tie-breaker).
 
 3. For the next unstarted issue:
 
    a) Leave a comment on the issue: "Starting work on this issue."
+
+     a.1) Move labels to in-progress state:
+       - add `status/in-progress`
+       - remove `status/backlog`
 
    b) Create a branch following the naming convention:
         feat/<issue-number>-<short-desc>
@@ -137,15 +161,18 @@ GENERAL RULES
 - Never merge without passing CI.
 - Never merge before all Copilot review threads are resolved.
 - Always reply to every Copilot comment before resolving it.
+- Ensure Copilot checks are re-triggered and observed after every push.
 - Always maintain deterministic outputs (stable IDs, stable sort order).
 - Always maintain schema validity (chords.schema.json).
 - Always include provenance (source_refs) on every chord and voicing.
 - Never copy copyrighted source text, prose, or diagrams.
 - Keep commits small and logically scoped.
 - Never ask whether to continue working.
-- Do not use file operations that require interactive approval
-  (avoid writing to /tmp or paths outside the repository working tree
-  unless absolutely necessary and pre-approved by workspace config).
+- Expect zero user input while running this workflow.
+- Avoid commands that require manual approval via shell-file operations
+  outside standard repository edits (e.g., ad-hoc writes to `/tmp`, shell
+  redirection-based file creation outside workspace flows).
+- Do not use GitKraken command wrappers; use regular git/GitHub CLI commands.
 
 ------------------------------------------------------------
 POLLING BEHAVIOR
