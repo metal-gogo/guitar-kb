@@ -9,6 +9,7 @@ describe("validateChordRecords", () => {
         id: "chord:C:maj",
         root: "C",
         quality: "maj",
+        aliases: ["C"],
         formula: ["1", "3", "5"],
         pitch_classes: ["C", "E", "G"],
         voicings: [{ id: "v1", frets: [null, 3, 2, 0, 1, 0], base_fret: 1, source_refs: [{ source: "unit", url: "https://example.com/v1" }] }],
@@ -22,6 +23,7 @@ describe("validateChordRecords", () => {
       id: "chord:C:maj",
       root: "C",
       quality: "maj",
+      aliases: ["C"],
       formula: ["1", "3", "5"],
       pitch_classes: ["C", "E", "G"],
       voicings: [{ id: "v1", frets: [null, 3, 2, 0, 1, 0], base_fret: 1, source_refs: [{ source: "unit", url: "https://example.com/v1" }] }],
@@ -38,6 +40,7 @@ describe("validateChordRecords", () => {
       id: "chord:C:maj",
       root: "C",
       quality: "maj",
+      aliases: ["C"],
       formula: ["1", "3", "5"],
       pitch_classes: ["C", "E", "G"],
       voicings: [{ id: "v1", frets: [null, 3, 2, 0, 1, 0], base_fret: 1 }],
@@ -54,6 +57,7 @@ describe("validateChordRecords", () => {
       id: "chord:C:maj",
       root: "C",
       quality: "maj",
+      aliases: ["C"],
       formula: ["1", "3", "5"],
       pitch_classes: ["C", "E", "G"],
       voicings: [{ id: "v1", frets: [null, 3, 2, 0, 1, 0], base_fret: 1, source_refs: [] }],
@@ -70,6 +74,7 @@ describe("validateChordRecords", () => {
       id: "chord:C:maj",
       root: "C",
       quality: "maj",
+      aliases: ["C"],
       formula: ["1", "3", "5"],
       pitch_classes: ["C", "E", "G"],
       voicings: [{ id: "v1", frets: [null, 3, 2, 0, 1, 0], base_fret: 1, source_refs: [{ source: "", url: "https://example.com/v1" }] }],
@@ -86,6 +91,7 @@ describe("validateChordRecords", () => {
       id: "chord:C:maj",
       root: "C",
       quality: "maj",
+      aliases: ["C"],
       formula: ["1", "3", "5"],
       pitch_classes: ["C", "E", "G"],
       voicings: [{ id: "v1", frets: [null, 3, 2, 0, 1, 0], base_fret: 1, source_refs: [{ source: "unit", url: "" }] }],
@@ -95,5 +101,49 @@ describe("validateChordRecords", () => {
     await expect(validateChordRecords([
       invalid
     ])).rejects.toThrow(/Schema validation failed/);
+  });
+
+  it("rejects records missing aliases", async () => {
+    const invalid = {
+      id: "chord:C:maj",
+      root: "C",
+      quality: "maj",
+      formula: ["1", "3", "5"],
+      pitch_classes: ["C", "E", "G"],
+      voicings: [{ id: "v1", frets: [null, 3, 2, 0, 1, 0], base_fret: 1, source_refs: [{ source: "unit", url: "https://example.com/v1" }] }],
+      source_refs: [{ source: "unit", url: "https://example.com" }]
+    } as unknown as ChordRecord;
+
+    await expect(validateChordRecords([invalid])).rejects.toThrow(/Schema validation failed/);
+  });
+
+  it("rejects records with empty formula", async () => {
+    const invalid = {
+      id: "chord:C:maj",
+      root: "C",
+      quality: "maj",
+      aliases: ["C"],
+      formula: [],
+      pitch_classes: ["C", "E", "G"],
+      voicings: [{ id: "v1", frets: [null, 3, 2, 0, 1, 0], base_fret: 1, source_refs: [{ source: "unit", url: "https://example.com/v1" }] }],
+      source_refs: [{ source: "unit", url: "https://example.com" }]
+    } as unknown as ChordRecord;
+
+    await expect(validateChordRecords([invalid])).rejects.toThrow(/Schema validation failed/);
+  });
+
+  it("rejects records with empty pitch_classes", async () => {
+    const invalid = {
+      id: "chord:C:maj",
+      root: "C",
+      quality: "maj",
+      aliases: ["C"],
+      formula: ["1", "3", "5"],
+      pitch_classes: [],
+      voicings: [{ id: "v1", frets: [null, 3, 2, 0, 1, 0], base_fret: 1, source_refs: [{ source: "unit", url: "https://example.com/v1" }] }],
+      source_refs: [{ source: "unit", url: "https://example.com" }]
+    } as unknown as ChordRecord;
+
+    await expect(validateChordRecords([invalid])).rejects.toThrow(/Schema validation failed/);
   });
 });
