@@ -5,7 +5,14 @@ import { parseGuitarChordOrg } from "../../src/ingest/parsers/guitarChordOrg.js"
 const readFixture = (slug: string): string =>
   readFileSync(`test/fixtures/sources/guitar-chord-org/${slug}.html`, "utf8");
 
-const BASE_URL = "https://www.guitar-chord.org/c-major.html";
+const URL_BY_SLUG: Record<string, string> = {
+  "c-major": "https://www.guitar-chord.org/c-maj.html",
+  "c-minor": "https://www.guitar-chord.org/c-min.html",
+  c7: "https://www.guitar-chord.org/c-7.html",
+  cmaj7: "https://www.guitar-chord.org/c-maj7.html",
+};
+
+const BASE_URL = URL_BY_SLUG["c-major"];
 
 describe("parseGuitarChordOrg", () => {
   describe("happy path – MVP chord fixtures", () => {
@@ -38,7 +45,7 @@ describe("parseGuitarChordOrg", () => {
       ];
 
       for (const testCase of cases) {
-        const url = `https://www.guitar-chord.org/${testCase.slug}.html`;
+        const url = URL_BY_SLUG[testCase.slug];
         const html = readFixture(testCase.slug);
         const parsed = parseGuitarChordOrg(html, url);
 
@@ -102,7 +109,7 @@ describe("parseGuitarChordOrg", () => {
 
     it("produces deterministic output on repeated parses of the same fixture", () => {
       const html = readFixture("c-major");
-      const url = "https://www.guitar-chord.org/c-major.html";
+      const url = URL_BY_SLUG["c-major"];
       const a = parseGuitarChordOrg(html, url);
       const b = parseGuitarChordOrg(html, url);
       expect(JSON.stringify(a)).toBe(JSON.stringify(b));
