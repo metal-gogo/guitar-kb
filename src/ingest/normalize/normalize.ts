@@ -52,6 +52,107 @@ const ENHARMONIC_ROOT: Record<string, string> = {
   Bb: "A#"
 };
 
+const DEFAULT_FORMULAS: Record<ChordQuality, string[]> = {
+  maj: ["1", "3", "5"],
+  min: ["1", "b3", "5"],
+  "7": ["1", "3", "5", "b7"],
+  maj7: ["1", "3", "5", "7"],
+  min7: ["1", "b3", "5", "b7"],
+  dim: ["1", "b3", "b5"],
+  dim7: ["1", "b3", "b5", "6"],
+  aug: ["1", "3", "#5"],
+  sus2: ["1", "2", "5"],
+  sus4: ["1", "4", "5"],
+};
+
+const INTERVAL_TO_SEMITONES: Record<string, number> = {
+  "1": 0,
+  b2: 1,
+  "2": 2,
+  "#2": 3,
+  b3: 3,
+  "3": 4,
+  "4": 5,
+  "#4": 6,
+  b5: 6,
+  "5": 7,
+  "#5": 8,
+  b6: 8,
+  "6": 9,
+  bb7: 9,
+  b7: 10,
+  "7": 11,
+};
+
+const SHARP_NOTES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"] as const;
+const FLAT_NOTES = ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"] as const;
+
+const NOTE_TO_INDEX: Record<string, number> = {
+  C: 0,
+  "C#": 1,
+  Db: 1,
+  D: 2,
+  "D#": 3,
+  Eb: 3,
+  E: 4,
+  F: 5,
+  "F#": 6,
+  Gb: 6,
+  G: 7,
+  "G#": 8,
+  Ab: 8,
+  A: 9,
+  "A#": 10,
+  Bb: 10,
+  B: 11,
+};
+
+function normalizeStringArray(values: string[]): string[] {
+  const unique = new Set(values.map((value) => value.trim()).filter(Boolean));
+  return [...unique];
+}
+
+function defaultAlias(root: string, quality: ChordQuality): string {
+  switch (quality) {
+    case "maj":
+      return root;
+    case "min":
+      return `${root}m`;
+    case "7":
+      return `${root}7`;
+    case "maj7":
+      return `${root}maj7`;
+    case "min7":
+      return `${root}m7`;
+    case "dim":
+      return `${root}dim`;
+    case "dim7":
+      return `${root}dim7`;
+    case "aug":
+      return `${root}aug`;
+    case "sus2":
+      return `${root}sus2`;
+    case "sus4":
+      return `${root}sus4`;
+  }
+}
+
+function derivePitchClasses(root: string, formula: string[]): string[] {
+  const rootIndex = NOTE_TO_INDEX[root];
+  if (rootIndex === undefined) {
+    return [];
+  }
+  const scale = root.includes("b") ? FLAT_NOTES : SHARP_NOTES;
+  const notes = formula.map((interval) => INTERVAL_TO_SEMITONES[interval]).map((semitones) => {
+    if (semitones === undefined) {
+      return "";
+    }
+    return scale[(rootIndex + semitones) % 12] ?? "";
+  }).filter(Boolean);
+
+  return normalizeStringArray(notes);
+}
+
 export function normalizeQuality(qualityRaw: string): ChordQuality {
   const rawTrimmed = qualityRaw.trim();
   const exact = QUALITY_MAP[rawTrimmed];
@@ -79,6 +180,15 @@ export function normalizeRecords(raw: RawChordRecord[]): ChordRecord[] {
   for (const input of raw) {
     const quality = normalizeQuality(input.quality_raw);
     const id = toChordId(input.root, quality);
+    const formula = normalizeStringArray(input.formula).length > 0
+      ? normalizeStringArray(input.formula)
+      : DEFAULT_FORMULAS[quality];
+    const pitchClasses = normalizeStringArray(input.pitch_classes).length > 0
+      ? normalizeStringArray(input.pitch_classes)
+      : derivePitchClasses(input.root, formula);
+    const aliases = normalizeStringArray(input.aliases).length > 0
+      ? normalizeStringArray(input.aliases)
+      : [defaultAlias(input.root, quality)];
     const sourceRef: SourceRef = {
       source: input.source,
       url: input.url
@@ -92,24 +202,24 @@ export function normalizeRecords(raw: RawChordRecord[]): ChordRecord[] {
         id,
         root: input.root,
         quality,
-        aliases: [...new Set(input.aliases)],
+        aliases,
         enharmonic_equivalents: enharmonic,
-        formula: input.formula,
-        pitch_classes: input.pitch_classes,
+        formula,
+        pitch_classes: pitchClasses,
         tuning: ["E", "A", "D", "G", "B", "E"],
         voicings: input.voicings.map((voicing, index) => ({
           ...voicing,
           id: `${id}:v${index + 1}:${input.source}`
         })),
         notes: {
-          summary: `${input.root} ${quality} chord with formula ${input.formula.join("-")}.`
+          summary: `${input.root} ${quality} chord with formula ${formula.join("-")}.`
         },
         source_refs: [sourceRef]
       });
       continue;
     }
 
-    existing.aliases = [...new Set([...(existing.aliases ?? []), ...input.aliases])];
+    existing.aliases = normalizeStringArray([...(existing.aliases ?? []), ...aliases]);
     existing.voicings.push(...input.voicings.map((voicing, index) => ({
       ...voicing,
       id: `${id}:v${existing.voicings.length + index + 1}:${input.source}`

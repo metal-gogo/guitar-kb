@@ -8,6 +8,7 @@
     "id",
     "root",
     "quality",
+    "aliases",
     "formula",
     "pitch_classes",
     "voicings",
@@ -30,6 +31,7 @@
     },
     "aliases": {
       "type": "array",
+      "minItems": 1,
       "items": {
         "type": "string"
       },
@@ -45,6 +47,7 @@
     },
     "formula": {
       "type": "array",
+      "minItems": 1,
       "items": {
         "type": "string"
       },
@@ -52,6 +55,7 @@
     },
     "pitch_classes": {
       "type": "array",
+      "minItems": 1,
       "items": {
         "type": "string",
         "pattern": "^[A-G](#|b)?$"
@@ -67,6 +71,7 @@
     },
     "voicings": {
       "type": "array",
+      "minItems": 1,
       "items": {
         "type": "object",
         "required": [
