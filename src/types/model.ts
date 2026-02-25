@@ -7,11 +7,24 @@ export interface SourceRef {
   note?: string;
 }
 
+export type VoicingPosition = "open" | "barre" | "upper" | "unknown";
+
+export interface RawVoicing {
+  id: string;
+  frets: Array<number | null>;
+  fingers?: Array<number | null>;
+  base_fret: number;
+  tags?: string[];
+  difficulty?: string;
+  source_refs?: SourceRef[];
+}
+
 export interface Voicing {
   id: string;
   frets: Array<number | null>;
   fingers?: Array<number | null>;
   base_fret: number;
+  position?: VoicingPosition;
   tags?: string[];
   difficulty?: string;
   source_refs?: SourceRef[];
@@ -42,7 +55,7 @@ export interface RawChordRecord {
   aliases: string[];
   formula: string[];
   pitch_classes: string[];
-  voicings: Voicing[];
+  voicings: RawVoicing[];
 }
 
 export type ParserFn = (html: string, url: string) => RawChordRecord;
