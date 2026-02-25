@@ -33,81 +33,105 @@ function buildChord(overrides: Partial<ChordRecord> = {}): ChordRecord {
   };
 }
 
+function renderChord(
+  chordOverrides: Partial<ChordRecord> = {},
+  allChords?: ChordRecord[],
+): string {
+  const chord = buildChord(chordOverrides);
+  return chordMarkdown(chord, allChords ?? [chord]);
+}
+
+function extractMarkdownLinks(markdown: string): string[] {
+  const matches = markdown.match(/\[[^\]]+\]\(([^)]+)\)/g) ?? [];
+  return matches
+    .map((match) => {
+      const capture = /\[[^\]]+\]\(([^)]+)\)/.exec(match);
+      return capture?.[1];
+    })
+    .filter((value): value is string => Boolean(value));
+}
+
 describe("chordMarkdown", () => {
   describe("required sections", () => {
     it("includes a root + quality heading", () => {
-      const md = chordMarkdown(buildChord());
+      const md = renderChord();
       expect(md).toMatch(/^# C maj/m);
     });
 
     it("includes canonical ID", () => {
-      const md = chordMarkdown(buildChord());
+      const md = renderChord();
       expect(md).toContain("Canonical ID: chord:C:maj");
     });
 
     it("includes aliases", () => {
-      const md = chordMarkdown(buildChord());
+      const md = renderChord();
       expect(md).toContain("Aliases: C, Cmaj");
     });
 
     it("falls back to 'none' for empty aliases", () => {
-      const md = chordMarkdown(buildChord({ aliases: [] }));
+      const md = renderChord({ aliases: [] });
       expect(md).toContain("Aliases: none");
     });
 
     it("includes formula", () => {
-      const md = chordMarkdown(buildChord());
+      const md = renderChord();
       expect(md).toContain("Formula: 1-3-5");
     });
 
     it("includes pitch classes", () => {
-      const md = chordMarkdown(buildChord());
+      const md = renderChord();
       expect(md).toContain("Pitch classes: C, E, G");
     });
 
     it("includes a Summary section with chord notes", () => {
-      const md = chordMarkdown(buildChord());
+      const md = renderChord();
       expect(md).toContain("## Summary");
       expect(md).toContain("C major summary.");
     });
 
     it("falls back to default summary when notes are absent", () => {
-      const md = chordMarkdown(buildChord({ notes: undefined }));
+      const md = renderChord({ notes: undefined });
       expect(md).toContain("## Summary");
       expect(md).toContain("Chord reference generated from factual source data.");
     });
 
     it("includes a Voicings section header", () => {
-      const md = chordMarkdown(buildChord());
+      const md = renderChord();
       expect(md).toContain("## Voicings");
     });
 
     it("includes a Provenance section with source URLs", () => {
-      const md = chordMarkdown(buildChord());
+      const md = renderChord();
       expect(md).toContain("## Provenance");
       expect(md).toContain("- unit: https://example.com/chord");
+    });
+
+    it("includes a Navigation section with a back-to-index link", () => {
+      const md = renderChord();
+      expect(md).toContain("## Navigation");
+      expect(md).toContain("[← Chord Index](../index.md)");
     });
   });
 
   describe("voicing rendering", () => {
     it("includes diagram references for each voicing", () => {
-      const md = chordMarkdown(buildChord({
+      const md = renderChord({
         voicings: [
           { id: "chord:C:maj:v2", frets: [null, 3, 2, 0, 1, 0], base_fret: 1 },
           { id: "chord:C:maj:v1", frets: [null, 3, 2, 0, 1, 0], base_fret: 1 },
         ],
-      }));
+      });
       expect(md).toContain("diagram: ../diagrams/chord__C__maj__v1.svg");
       expect(md).toContain("diagram: ../diagrams/chord__C__maj__v2.svg");
     });
 
     it("renders voicings in stable id order", () => {
-      const md = chordMarkdown(buildChord({
+      const md = renderChord({
         voicings: [
           { id: "chord:C:maj:v2", frets: [null, 3, 2, 0, 1, 0], base_fret: 1 },
           { id: "chord:C:maj:v1", frets: [null, 3, 2, 0, 1, 0], base_fret: 1 },
         ],
-      }));
+      });
       const v1Index = md.indexOf("chord:C:maj:v1");
       const v2Index = md.indexOf("chord:C:maj:v2");
       expect(v1Index).toBeGreaterThan(-1);
@@ -116,21 +140,21 @@ describe("chordMarkdown", () => {
     });
 
     it("renders frets with 'x' for null/muted strings", () => {
-      const md = chordMarkdown(buildChord({
+      const md = renderChord({
         voicings: [{ id: "v1", frets: [null, 3, 2, 0, 1, 0], base_fret: 1 }],
-      }));
+      });
       expect(md).toContain("frets x/3/2/0/1/0");
     });
 
     it("renders base fret in voicing line", () => {
-      const md = chordMarkdown(buildChord({
+      const md = renderChord({
         voicings: [{ id: "v1", frets: [null, 3, 2, 0, 1, 0], base_fret: 5 }],
-      }));
+      });
       expect(md).toContain("base fret 5");
     });
 
     it("renders empty voicings without error", () => {
-      const md = chordMarkdown(buildChord({ voicings: [] }));
+      const md = renderChord({ voicings: [] });
       expect(md).toContain("## Voicings");
     });
   });
@@ -138,7 +162,7 @@ describe("chordMarkdown", () => {
   describe("determinism", () => {
     it("produces identical output on repeated calls for the same chord", () => {
       const chord = buildChord();
-      expect(chordMarkdown(chord)).toBe(chordMarkdown(chord));
+      expect(chordMarkdown(chord, [chord])).toBe(chordMarkdown(chord, [chord]));
     });
 
     it("produces identical output regardless of input voicing order", () => {
@@ -154,7 +178,55 @@ describe("chordMarkdown", () => {
           { id: "chord:C:maj:v1", frets: [null, 3, 2, 0, 1, 0], base_fret: 1 },
         ],
       });
-      expect(chordMarkdown(fwd)).toBe(chordMarkdown(rev));
+      expect(chordMarkdown(fwd, [fwd])).toBe(chordMarkdown(rev, [rev]));
+    });
+  });
+
+  describe("navigation links", () => {
+    it("renders bidirectional enharmonic links when either side declares the relationship", () => {
+      const cSharp = buildChord({
+        id: "chord:C#:maj",
+        root: "C#",
+        quality: "maj",
+        enharmonic_equivalents: ["chord:Db:maj"],
+      });
+      const dFlat = buildChord({
+        id: "chord:Db:maj",
+        root: "Db",
+        quality: "maj",
+        enharmonic_equivalents: [],
+      });
+      const allChords = [cSharp, dFlat];
+
+      const cSharpMd = chordMarkdown(cSharp, allChords);
+      const dFlatMd = chordMarkdown(dFlat, allChords);
+
+      expect(cSharpMd).toContain("[Db maj](./chord__Db__maj.md)");
+      expect(dFlatMd).toContain("[C# maj](./chord__C%23__maj.md)");
+    });
+
+    it("renders related quality links for same-root different-quality chords", () => {
+      const cMaj = buildChord({ id: "chord:C:maj", root: "C", quality: "maj" });
+      const cMin = buildChord({ id: "chord:C:min", root: "C", quality: "min" });
+      const c7 = buildChord({ id: "chord:C:7", root: "C", quality: "7" });
+      const dMaj = buildChord({ id: "chord:D:maj", root: "D", quality: "maj" });
+      const allChords = [cMaj, cMin, c7, dMaj];
+
+      const cMajMd = chordMarkdown(cMaj, allChords);
+      expect(cMajMd).toContain("[C min](./chord__C__min.md)");
+      expect(cMajMd).toContain("[C 7](./chord__C__7.md)");
+      expect(cMajMd).not.toContain("[D maj](./chord__D__maj.md)");
+    });
+
+    it("keeps navigation output deterministic for identical inputs", () => {
+      const cMaj = buildChord({ id: "chord:C:maj", root: "C", quality: "maj" });
+      const c7 = buildChord({ id: "chord:C:7", root: "C", quality: "7" });
+      const cMin = buildChord({ id: "chord:C:min", root: "C", quality: "min" });
+      const allChords = [cMaj, c7, cMin];
+
+      const first = chordMarkdown(cMaj, allChords);
+      const second = chordMarkdown(cMaj, allChords);
+      expect(first).toBe(second);
     });
   });
 });
@@ -174,9 +246,9 @@ describe("chordIndexMarkdown", () => {
 
     const md = chordIndexMarkdown(chords);
 
-    expect(md).toContain("[C maj](./chords/chord__C__maj.md)");
-    expect(md).toContain("[C min](./chords/chord__C__min.md)");
-    expect(md).toContain("[D maj7](./chords/chord__D__maj7.md)");
+    expect(md).toContain("[maj](./chords/chord__C__maj.md)");
+    expect(md).toContain("[min](./chords/chord__C__min.md)");
+    expect(md).toContain("[maj7](./chords/chord__D__maj7.md)");
   });
 
   it("groups entries by root and keeps deterministic root/quality ordering", () => {
@@ -198,8 +270,8 @@ describe("chordIndexMarkdown", () => {
     expect(cGroup).toBeLessThan(csGroup);
     expect(csGroup).toBeLessThan(dbGroup);
 
-    const cMaj = md.indexOf("[C maj](./chords/chord__C__maj.md)");
-    const cMin = md.indexOf("[C min](./chords/chord__C__min.md)");
+    const cMaj = md.indexOf("[maj](./chords/chord__C__maj.md)");
+    const cMin = md.indexOf("[min](./chords/chord__C__min.md)");
     expect(cMaj).toBeGreaterThan(-1);
     expect(cMin).toBeGreaterThan(-1);
     expect(cMaj).toBeLessThan(cMin);
@@ -229,6 +301,37 @@ describe("chordIndexMarkdown", () => {
     const first = chordIndexMarkdown(chords);
     const second = chordIndexMarkdown(chords);
     expect(first).toBe(second);
+  });
+
+  it("does not emit broken relative links for index and chord navigation pages", () => {
+    const chords = [
+      buildChord({ id: "chord:C:maj", root: "C", quality: "maj", enharmonic_equivalents: ["chord:Db:maj"] }),
+      buildChord({ id: "chord:C:min", root: "C", quality: "min" }),
+      buildChord({ id: "chord:Db:maj", root: "Db", quality: "maj", enharmonic_equivalents: [] }),
+    ];
+
+    const indexMd = chordIndexMarkdown(chords);
+    const generatedPages = new Set([
+      "./index.md",
+      ...chords.map((chord) => `./chords/${chord.id.replace(/:/g, "__").replace(/#/g, "%23")}.md`),
+    ]);
+
+    for (const link of extractMarkdownLinks(indexMd)) {
+      expect(generatedPages.has(link)).toBe(true);
+    }
+
+    for (const chord of chords) {
+      const pageMd = chordMarkdown(chord, chords);
+      for (const link of extractMarkdownLinks(pageMd)) {
+        const normalized = link.startsWith("../")
+          ? `./${link.slice(3)}`
+          : (link.startsWith("./") ? `./chords/${link.slice(2)}` : link);
+        if (normalized.startsWith("./diagrams/")) {
+          continue;
+        }
+        expect(generatedPages.has(normalized)).toBe(true);
+      }
+    }
   });
 });
 

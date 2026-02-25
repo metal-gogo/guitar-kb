@@ -43,8 +43,8 @@ describe("deterministic full-pipeline outputs", () => {
     const jsonlB = await readFile(jsonlBPath, "utf8");
     expect(jsonlA).toBe(jsonlB);
 
-    const docsA = new Map(runA.map((chord) => [chord.id, chordMarkdown(chord)]));
-    const docsB = new Map(runB.map((chord) => [chord.id, chordMarkdown(chord)]));
+    const docsA = new Map(runA.map((chord) => [chord.id, chordMarkdown(chord, runA)]));
+    const docsB = new Map(runB.map((chord) => [chord.id, chordMarkdown(chord, runB)]));
     expect(Array.from(docsA.keys())).toEqual(Array.from(docsB.keys()));
     for (const [chordId, markdownA] of docsA.entries()) {
       expect(markdownA).toBe(docsB.get(chordId));
