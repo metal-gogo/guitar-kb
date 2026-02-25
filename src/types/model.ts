@@ -1,4 +1,4 @@
-export type ChordQuality = "maj" | "min" | "7" | "maj7" | "min7" | "dim" | "aug" | "sus2" | "sus4";
+export type ChordQuality = "maj" | "min" | "7" | "maj7" | "min7" | "dim" | "dim7" | "aug" | "sus2" | "sus4";
 
 export interface SourceRef {
   source: string;

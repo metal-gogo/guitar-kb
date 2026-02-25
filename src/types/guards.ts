@@ -13,5 +13,5 @@ export function assertCanonicalChordId(value: string): void {
 }
 
 export function isChordQuality(value: string): value is ChordQuality {
-  return ["maj", "min", "7", "maj7", "min7", "dim", "aug", "sus2", "sus4"].includes(value);
+  return ["maj", "min", "7", "maj7", "min7", "dim", "dim7", "aug", "sus2", "sus4"].includes(value);
 }

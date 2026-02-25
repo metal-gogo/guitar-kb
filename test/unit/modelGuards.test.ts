@@ -25,6 +25,7 @@ describe("assertCanonicalChordId", () => {
 describe("isChordQuality", () => {
   it("matches the allowed quality set", () => {
     expect(isChordQuality("maj")).toBe(true);
+    expect(isChordQuality("dim7")).toBe(true);
     expect(isChordQuality("maj7")).toBe(true);
     expect(isChordQuality("major")).toBe(false);
   });
