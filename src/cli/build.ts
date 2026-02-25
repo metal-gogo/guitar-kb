@@ -1,6 +1,6 @@
 import { mkdir, readFile, rm } from "node:fs/promises";
 import path from "node:path";
-import { chordMarkdown } from "../build/docs/generateDocs.js";
+import { chordIndexMarkdown, chordMarkdown } from "../build/docs/generateDocs.js";
 import { writeChordJsonl } from "../build/output/writeJsonl.js";
 import { generateChordSvg } from "../build/svg/generateSvg.js";
 import { ingestNormalizedChords } from "../ingest/pipeline.js";
@@ -35,6 +35,7 @@ async function main(): Promise<void> {
   await writeChordJsonl(path.join("data", "chords.jsonl"), chords);
   await mkdir(path.join("docs", "chords"), { recursive: true });
   await mkdir(path.join("docs", "diagrams"), { recursive: true });
+  await writeText(path.join("docs", "index.md"), chordIndexMarkdown(chords));
 
   for (const chord of chords) {
     await writeText(path.join("docs", "chords", `${chord.id.replace(/:/g, "__")}.md`), chordMarkdown(chord));
