@@ -22,6 +22,7 @@ describe("parseGuitarChordOrg", () => {
     it("extracts factual MVP chord data from cached fixtures", () => {
       const cases: Array<{
         slug: MvpSlug;
+        root: string;
         qualityRaw: string;
         formula: string[];
         pitchClasses: string[];
@@ -29,6 +30,7 @@ describe("parseGuitarChordOrg", () => {
       }> = [
         {
           slug: "a-major",
+          root: "A",
           qualityRaw: "major",
           formula: ["1", "3", "5"],
           pitchClasses: ["A", "C#", "E"],
@@ -36,6 +38,7 @@ describe("parseGuitarChordOrg", () => {
         },
         {
           slug: "c-major",
+          root: "C",
           qualityRaw: "major",
           formula: ["1", "3", "5"],
           pitchClasses: ["C", "E", "G"],
@@ -43,6 +46,7 @@ describe("parseGuitarChordOrg", () => {
         },
         {
           slug: "c-minor",
+          root: "C",
           qualityRaw: "minor",
           formula: ["1", "b3", "5"],
           pitchClasses: ["C", "Eb", "G"],
@@ -50,6 +54,7 @@ describe("parseGuitarChordOrg", () => {
         },
         {
           slug: "c7",
+          root: "C",
           qualityRaw: "7",
           formula: ["1", "3", "5", "b7"],
           pitchClasses: ["C", "E", "G", "Bb"],
@@ -57,6 +62,7 @@ describe("parseGuitarChordOrg", () => {
         },
         {
           slug: "cmaj7",
+          root: "C",
           qualityRaw: "maj7",
           formula: ["1", "3", "5", "7"],
           pitchClasses: ["C", "E", "G", "B"],
@@ -70,8 +76,7 @@ describe("parseGuitarChordOrg", () => {
         const html = readFixture(testCase.slug);
         const parsed = parseGuitarChordOrg(html, url);
 
-        const expectedRoot = testCase.slug === "a-major" ? "A" : "C";
-        expect(parsed.root).toBe(expectedRoot);
+        expect(parsed.root).toBe(testCase.root);
         expect(parsed.quality_raw).toBe(testCase.qualityRaw);
         expect(parsed.formula).toEqual(testCase.formula);
         expect(parsed.pitch_classes).toEqual(testCase.pitchClasses);
