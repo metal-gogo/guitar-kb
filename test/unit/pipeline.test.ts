@@ -37,6 +37,22 @@ describe("ingestNormalizedChords", () => {
     }
   });
 
+  it("preserves authoritative A major voicing frets and base frets", async () => {
+    const chords = await ingestNormalizedChords({ refresh: false, delayMs: 0 });
+    const aMajor = chords.find((chord) => chord.id === "chord:A:maj");
+
+    expect(aMajor).toBeDefined();
+    expect(aMajor?.voicings.map((voicing) => voicing.frets)).toEqual([
+      [null, 0, 2, 2, 2, 0],
+      [5, 7, 7, 6, 5, 5],
+      [null, null, 2, 2, 2, 5],
+      [null, 0, 2, 2, 2, 0],
+      [null, null, 2, 2, 2, 5],
+      [5, 7, 7, 6, 5, 5],
+    ]);
+    expect(aMajor?.voicings.map((voicing) => voicing.base_fret)).toEqual([1, 5, 2, 1, 2, 5]);
+  });
+
   it("supports dry-run ingestion from a registry-only third source", async () => {
     const originalCwd = process.cwd();
     const tempDir = await mkdtemp(path.join(os.tmpdir(), "gckb-registry-stub-"));
