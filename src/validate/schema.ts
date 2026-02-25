@@ -7,9 +7,17 @@ function throwVoicingGuard(recordId: string, voicingIndex: number, reason: strin
 }
 
 function validateVoicingGuards(record: ChordRecord): void {
-  const tuningStringCount = record.tuning?.length ?? 6;
+  const tuningStringCount = Array.isArray(record.tuning) ? record.tuning.length : 6;
+
+  if (!Array.isArray(record.voicings)) {
+    return;
+  }
 
   for (const [voicingIndex, voicing] of record.voicings.entries()) {
+    if (!voicing || !Array.isArray(voicing.frets)) {
+      continue;
+    }
+
     if (voicing.frets.length !== tuningStringCount) {
       throwVoicingGuard(record.id, voicingIndex, `expected ${tuningStringCount} strings, received ${voicing.frets.length}`);
     }

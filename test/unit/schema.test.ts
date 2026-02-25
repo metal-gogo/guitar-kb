@@ -207,4 +207,19 @@ describe("validateChordRecords", () => {
 
     await expect(validateChordRecords([invalid])).rejects.toThrow(/all strings are muted/);
   });
+
+  it("defers structurally invalid voicings to Ajv schema errors", async () => {
+    const invalid = {
+      id: "chord:C:maj",
+      root: "C",
+      quality: "maj",
+      aliases: ["C"],
+      formula: ["1", "3", "5"],
+      pitch_classes: ["C", "E", "G"],
+      voicings: null,
+      source_refs: [{ source: "unit", url: "https://example.com" }]
+    } as unknown as ChordRecord;
+
+    await expect(validateChordRecords([invalid])).rejects.toThrow(/Schema validation failed/);
+  });
 });
