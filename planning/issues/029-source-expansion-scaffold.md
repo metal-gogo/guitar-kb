@@ -62,5 +62,5 @@ npm run validate
 
 ## Follow-ups
 
-- Use this registry in issue 029 (CLI ergonomic `--source` filter).
+- Use this registry in issue 033 (CLI Ergonomics Expansion; CLI ergonomic `--source` filter).
 - Document the add-a-source guide in `CONTRIBUTING.md` after this merges.

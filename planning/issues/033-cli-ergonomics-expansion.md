@@ -3,7 +3,7 @@
 **GitHub Issue:** https://github.com/metal-gogo/guitar-kb/issues/68  
 **Roadmap batch:** Post-Hardening Expansion (ADR-0005)  
 **Priority:** P2  
-**Depends on:** issue 025 (source registry), issue 022–023 (expanded coverage)
+**Depends on:** issue 029 (source registry), issue 027 (full root coverage)
 
 ---
 

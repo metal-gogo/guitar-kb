@@ -3,7 +3,7 @@
 **GitHub Issue:** https://github.com/metal-gogo/guitar-kb/issues/67  
 **Roadmap batch:** Post-Hardening Expansion (ADR-0005)  
 **Priority:** P1  
-**Depends on:** issue 023 (full root coverage)
+**Depends on:** issue 027 (full root coverage)
 
 ---
 
@@ -57,5 +57,5 @@ npm test
 ## Follow-ups
 
 - Extend guards for finger position overlap in a later issue.
-- Use guards in issue 027 (voicing position metadata) to reject garbage input
+- Use guards in issue 031 (voicing position metadata) to reject garbage input
   before position derivation.

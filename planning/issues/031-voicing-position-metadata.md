@@ -3,7 +3,7 @@
 **GitHub Issue:** https://github.com/metal-gogo/guitar-kb/issues/66  
 **Roadmap batch:** Post-Hardening Expansion (ADR-0005)  
 **Priority:** P1  
-**Depends on:** issue 022 (quality map), issue 028 (voicing validation guards)
+**Depends on:** issue 026 (quality map), issue 032 (voicing validation guards)
 
 ---
 
@@ -60,5 +60,5 @@ npm test
 
 ## Follow-ups
 
-- Expose `position` as a CLI filter flag (issue 029).
+- Expose `position` as a CLI filter flag (issue 033).
 - Add a `difficulty` heuristic derived from position + fret spread in a future issue.

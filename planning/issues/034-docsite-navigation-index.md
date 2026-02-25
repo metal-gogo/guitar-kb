@@ -3,7 +3,7 @@
 **GitHub Issue:** https://github.com/metal-gogo/guitar-kb/issues/69  
 **Roadmap batch:** Post-Hardening Expansion (ADR-0005)  
 **Priority:** P2  
-**Depends on:** issue 024 (chord index page), issue 027 (voicing position metadata)
+**Depends on:** issue 028 (chord index page), issue 031 (voicing position metadata)
 
 ---
 
@@ -18,7 +18,7 @@ Extend the docs generator to:
 
 ## Why
 
-Issue 024 generates a flat index. This issue upgrades it to a navigable
+Issue 028 generates a flat index. This issue upgrades it to a navigable
 docsite with cross-links, making `docs/` genuinely useful as a browsable
 reference without a static site generator or external reader. LLMs following
 linked context also benefit from explicit enharmonic and quality-variant links.

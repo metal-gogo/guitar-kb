@@ -3,7 +3,7 @@
 **GitHub Issue:** https://github.com/metal-gogo/guitar-kb/issues/62  
 **Roadmap batch:** Post-Hardening Expansion (ADR-0005)  
 **Priority:** P0  
-**Depends on:** issue 022 (quality map expansion)
+**Depends on:** issue 026 (quality map expansion)
 
 ---
 
@@ -54,5 +54,5 @@ npm test
 ## Follow-ups
 
 - Add extended quality coverage (min7, dim, aug, sus2, sus4) once the quality
-  map (issue 022) is in place — this issue can then be re-run with updated targets.
+  map (issue 026) is in place — this issue can then be re-run with updated targets.
 - Review fixture volume management policy as fixture count grows.

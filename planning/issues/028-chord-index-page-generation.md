@@ -3,7 +3,7 @@
 **GitHub Issue:** https://github.com/metal-gogo/guitar-kb/issues/63  
 **Roadmap batch:** Post-Hardening Expansion (ADR-0005)  
 **Priority:** P1  
-**Depends on:** issue 023 (full root coverage)
+**Depends on:** issue 027 (full root coverage)
 
 ---
 
@@ -54,4 +54,4 @@ npm test -- test/unit/docs.test.ts
 
 - Add a quality-grouped view (all maj chords, all min chords, etc.) as an
   alternative index layout in a later issue.
-- Add a "related chords" section to individual pages (issue 030).
+- Add a "related chords" section to individual pages (issue 034).

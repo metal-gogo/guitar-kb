@@ -145,6 +145,6 @@ This roadmap batch is complete when:
 
 ## Compliance
 
-ADR-0005 is satisfied when the 10-issue expansion batch (issues 022–031) is
-created, executed in sequence, and all definition-of-done criteria above pass
-on a clean `main` checkout.
+ADR-0005 is satisfied when the 14-issue roadmap batch (issues 022–035, including
+4 pre-expansion fixes and 10 expansion items) is created, executed in sequence,
+and all definition-of-done criteria above pass on a clean `main` checkout.

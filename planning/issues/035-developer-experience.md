@@ -44,7 +44,7 @@ Expand `CONTRIBUTING.md` with the following sections:
 2. **First-time setup** — clone, `npm install`, verify with `npm test`
 3. **Development workflow** — ingest → build → validate cycle with exact commands
 4. **Running tests** — `npm test`, filter flags, fixture management
-5. **Adding a new chord source** — pointer to source registry pattern (issue 025)
+5. **Adding a new chord source** — pointer to source registry pattern (issue 029)
 6. **Opening a PR** — branch naming, commit style, validation checklist,
    Copilot review gate explanation
 7. **Governance and ADRs** — where decisions live, how to propose a change

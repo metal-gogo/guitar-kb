@@ -3,7 +3,7 @@
 **GitHub Issue:** https://github.com/metal-gogo/guitar-kb/issues/58  
 **Roadmap batch:** Pre-Expansion Fixes  
 **Priority:** P0  
-**Must be done before:** issue 022 (quality map expansion) and any coverage growth
+**Must be done before:** issue 026 (quality map expansion) and any coverage growth
 
 ---
 
