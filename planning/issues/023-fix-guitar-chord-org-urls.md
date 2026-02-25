@@ -1,5 +1,6 @@
 # Issue: Fix guitar-chord.org Source URLs
 
+**GitHub Issue:** https://github.com/metal-gogo/guitar-kb/issues/58  
 **Roadmap batch:** Pre-Expansion Fixes  
 **Priority:** P0  
 **Must be done before:** issue 022 (quality map expansion) and any coverage growth

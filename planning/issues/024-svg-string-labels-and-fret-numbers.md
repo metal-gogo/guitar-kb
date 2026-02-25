@@ -1,5 +1,6 @@
 # Issue: SVG Diagram Enhancements — String Labels and Fret Numbers
 
+**GitHub Issue:** https://github.com/metal-gogo/guitar-kb/issues/59  
 **Roadmap batch:** Pre-Expansion Fixes  
 **Priority:** P0  
 **Must be done before:** coverage expansion (issues 022+), so all diagrams benefit

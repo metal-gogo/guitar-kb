@@ -1,5 +1,6 @@
 # Issue: Voicing Validation Guards — Fret Range and String Count
 
+**GitHub Issue:** https://github.com/metal-gogo/guitar-kb/issues/67  
 **Roadmap batch:** Post-Hardening Expansion (ADR-0005)  
 **Priority:** P1  
 **Depends on:** issue 023 (full root coverage)

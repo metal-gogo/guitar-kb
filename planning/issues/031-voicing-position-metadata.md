@@ -1,5 +1,6 @@
 # Issue: Voicing Position Metadata — Open / Barre / Upper
 
+**GitHub Issue:** https://github.com/metal-gogo/guitar-kb/issues/66  
 **Roadmap batch:** Post-Hardening Expansion (ADR-0005)  
 **Priority:** P1  
 **Depends on:** issue 022 (quality map), issue 028 (voicing validation guards)

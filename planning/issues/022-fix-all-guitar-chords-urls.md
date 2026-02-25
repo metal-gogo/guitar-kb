@@ -1,5 +1,6 @@
 # Issue: Fix all-guitar-chords.com Source URLs
 
+**GitHub Issue:** https://github.com/metal-gogo/guitar-kb/issues/57  
 **Roadmap batch:** Pre-Expansion Fixes  
 **Priority:** P0  
 **Must be done before:** issue 022 (quality map expansion) and any coverage growth

@@ -1,5 +1,6 @@
 # Issue: CLI Ergonomics Expansion — Partial Refresh and Dry-Run
 
+**GitHub Issue:** https://github.com/metal-gogo/guitar-kb/issues/68  
 **Roadmap batch:** Post-Hardening Expansion (ADR-0005)  
 **Priority:** P2  
 **Depends on:** issue 025 (source registry), issue 022–023 (expanded coverage)

@@ -1,5 +1,6 @@
 # Issue: Developer Experience — Devcontainer and Onboarding Guide
 
+**GitHub Issue:** https://github.com/metal-gogo/guitar-kb/issues/70  
 **Roadmap batch:** Post-Hardening Expansion (ADR-0005)  
 **Priority:** P2  
 **Can land anytime after issue 022**

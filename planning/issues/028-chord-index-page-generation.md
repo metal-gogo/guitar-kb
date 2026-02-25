@@ -1,5 +1,6 @@
 # Issue: Chord Index Page Generation
 
+**GitHub Issue:** https://github.com/metal-gogo/guitar-kb/issues/63  
 **Roadmap batch:** Post-Hardening Expansion (ADR-0005)  
 **Priority:** P1  
 **Depends on:** issue 023 (full root coverage)

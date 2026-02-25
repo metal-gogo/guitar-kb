@@ -1,5 +1,6 @@
 # Issue: Docsite Navigation Index — Cross-Links and Index Page
 
+**GitHub Issue:** https://github.com/metal-gogo/guitar-kb/issues/69  
 **Roadmap batch:** Post-Hardening Expansion (ADR-0005)  
 **Priority:** P2  
 **Depends on:** issue 024 (chord index page), issue 027 (voicing position metadata)

@@ -1,5 +1,6 @@
 # Issue: Complete Voicing Coverage — Ingest All Variations Per Chord
 
+**GitHub Issue:** https://github.com/metal-gogo/guitar-kb/issues/60  
 **Roadmap batch:** Pre-Expansion Fixes  
 **Priority:** P0  
 **Depends on:** issues 022–024 (URL fixes + SVG labels) complete  

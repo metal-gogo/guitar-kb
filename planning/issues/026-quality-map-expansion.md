@@ -1,5 +1,6 @@
 # Issue: Quality Map Expansion — min7, dim7, aug, sus2, sus4
 
+**GitHub Issue:** https://github.com/metal-gogo/guitar-kb/issues/61  
 **Roadmap batch:** Post-Hardening Expansion (ADR-0005)  
 **Priority:** P0  
 **Depends on:** issues 015–020 complete

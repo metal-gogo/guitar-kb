@@ -1,5 +1,7 @@
 # Issue: Post-Hardening Expansion Roadmap
 
+**GitHub Issue:** https://github.com/metal-gogo/guitar-kb/issues/55
+
 ## Summary
 
 Define and schedule the next action items for the post-hardening expansion

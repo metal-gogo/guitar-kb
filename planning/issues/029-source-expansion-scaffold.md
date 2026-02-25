@@ -1,5 +1,6 @@
 # Issue: Source Expansion Scaffold — Typed Source Registry
 
+**GitHub Issue:** https://github.com/metal-gogo/guitar-kb/issues/64  
 **Roadmap batch:** Post-Hardening Expansion (ADR-0005)  
 **Priority:** P1  
 **Depends on:** issues 015–016 (parser resilience) complete

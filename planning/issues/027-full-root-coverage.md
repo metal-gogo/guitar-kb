@@ -1,5 +1,6 @@
 # Issue: Full Root Coverage — All 12 Roots × Core Qualities
 
+**GitHub Issue:** https://github.com/metal-gogo/guitar-kb/issues/62  
 **Roadmap batch:** Post-Hardening Expansion (ADR-0005)  
 **Priority:** P0  
 **Depends on:** issue 022 (quality map expansion)
