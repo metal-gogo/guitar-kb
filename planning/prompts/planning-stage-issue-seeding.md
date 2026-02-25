@@ -1,6 +1,6 @@
 # Planning Stage Issue Seeding Prompt
 
-Use this prompt to generate the next roadmap wave (10–20 issues) with consistent triage.
+Use this prompt to generate the next roadmap wave (one parent planning issue plus 10–20 child execution issues) with consistent triage.
 
 ---
 
@@ -51,9 +51,9 @@ Issue-writing rules:
 - Require provenance preservation where ingestion/model changes are involved.
 
 Autonomy rules for generated plan:
-- Assume autonomous execution will process issues by priority then issue number.
+- Assume autonomous execution will process issues by priority (P0→P1→P2→P3), then oldest-to-newest (`created_at`) with issue number as tie-breaker.
 - Include dependencies explicitly when sequencing matters.
-- Prefer p1 tasks first if they reduce future integration risk.
+- Prefer p1 tasks first only within the P1 tier; never override P0-first ordering.
 - Insert a feedback review cycle after initial issue seeding before locking final priorities.
 
 Do not:
