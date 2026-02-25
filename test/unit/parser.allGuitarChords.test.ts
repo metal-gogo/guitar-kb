@@ -7,6 +7,7 @@ const readFixture = (slug: string): string =>
 
 const URL_BY_SLUG: Record<string, string> = {
   "a-major": "https://www.all-guitar-chords.com/chords/index/a/major",
+  "b-major": "https://www.all-guitar-chords.com/chords/index/b/major",
   "c-major": "https://www.all-guitar-chords.com/chords/index/c/major",
   "c-minor": "https://www.all-guitar-chords.com/chords/index/c/minor",
   c7: "https://www.all-guitar-chords.com/chords/index/c/dominant-7th",
@@ -24,6 +25,14 @@ describe("parseAllGuitarChords", () => {
         qualityRaw: "maj",
         formula: ["1", "3", "5"],
         pitchClasses: ["A", "C#", "E"],
+        expectedVoicings: 3,
+      },
+      {
+        slug: "b-major",
+        root: "B",
+        qualityRaw: "maj",
+        formula: ["1", "3", "5"],
+        pitchClasses: ["B", "D#", "F#"],
         expectedVoicings: 3,
       },
       {
@@ -84,6 +93,24 @@ describe("parseAllGuitarChords", () => {
         [5, 7, 7, 6, 5, 5],
       ]);
       expect(parsed.voicings.map((voicing) => voicing.base_fret)).toEqual([1, 2, 5]);
+      expect(parsed.voicings.map((voicing) => voicing.id)).toEqual([
+        "variation-1",
+        "variation-2",
+        "variation-3",
+      ]);
+    });
+
+    it("extracts B major voicing frets and base-fret values in source order", () => {
+      const url = URL_BY_SLUG["b-major"];
+      const html = readFixture("b-major");
+      const parsed = parseAllGuitarChords(html, url);
+
+      expect(parsed.voicings.map((voicing) => voicing.frets)).toEqual([
+        [null, 2, 4, 4, 4, 2],
+        [null, null, 4, 4, 4, 7],
+        [7, 9, 9, 8, 7, 7],
+      ]);
+      expect(parsed.voicings.map((voicing) => voicing.base_fret)).toEqual([2, 4, 7]);
       expect(parsed.voicings.map((voicing) => voicing.id)).toEqual([
         "variation-1",
         "variation-2",
