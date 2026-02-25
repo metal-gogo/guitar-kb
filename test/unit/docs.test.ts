@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { chordMarkdown } from "../../src/build/docs/generateDocs.js";
+import { chordIndexMarkdown, chordMarkdown } from "../../src/build/docs/generateDocs.js";
 import type { ChordRecord } from "../../src/types/model.js";
 
 function buildChord(overrides: Partial<ChordRecord> = {}): ChordRecord {
@@ -156,6 +156,79 @@ describe("chordMarkdown", () => {
       });
       expect(chordMarkdown(fwd)).toBe(chordMarkdown(rev));
     });
+  });
+});
+
+describe("chordIndexMarkdown", () => {
+  it("includes the Chord Index heading", () => {
+    const md = chordIndexMarkdown([buildChord()]);
+    expect(md).toContain("# Chord Index");
+  });
+
+  it("contains one link entry per chord page", () => {
+    const chords = [
+      buildChord({ id: "chord:C:maj", root: "C", quality: "maj" }),
+      buildChord({ id: "chord:C:min", root: "C", quality: "min", aliases: ["Cm"], formula: ["1", "b3", "5"] }),
+      buildChord({ id: "chord:D:maj7", root: "D", quality: "maj7", aliases: ["Dmaj7"], formula: ["1", "3", "5", "7"] }),
+    ];
+
+    const md = chordIndexMarkdown(chords);
+
+    expect(md).toContain("[C maj](./chords/chord__C__maj.md)");
+    expect(md).toContain("[C min](./chords/chord__C__min.md)");
+    expect(md).toContain("[D maj7](./chords/chord__D__maj7.md)");
+  });
+
+  it("groups entries by root and keeps deterministic root/quality ordering", () => {
+    const chords = [
+      buildChord({ id: "chord:Db:maj", root: "Db", quality: "maj", aliases: ["Db"], formula: ["1", "3", "5"] }),
+      buildChord({ id: "chord:C#:maj", root: "C#", quality: "maj", aliases: ["C#"], formula: ["1", "3", "5"] }),
+      buildChord({ id: "chord:C:min", root: "C", quality: "min", aliases: ["Cm"], formula: ["1", "b3", "5"] }),
+      buildChord({ id: "chord:C:maj", root: "C", quality: "maj", aliases: ["C"], formula: ["1", "3", "5"] }),
+    ];
+
+    const md = chordIndexMarkdown(chords);
+
+    const cGroup = md.indexOf("## C");
+    const csGroup = md.indexOf("## C#");
+    const dbGroup = md.indexOf("## Db");
+    expect(cGroup).toBeGreaterThan(-1);
+    expect(csGroup).toBeGreaterThan(-1);
+    expect(dbGroup).toBeGreaterThan(-1);
+    expect(cGroup).toBeLessThan(csGroup);
+    expect(csGroup).toBeLessThan(dbGroup);
+
+    const cMaj = md.indexOf("[C maj](./chords/chord__C__maj.md)");
+    const cMin = md.indexOf("[C min](./chords/chord__C__min.md)");
+    expect(cMaj).toBeGreaterThan(-1);
+    expect(cMin).toBeGreaterThan(-1);
+    expect(cMaj).toBeLessThan(cMin);
+  });
+
+  it("includes aliases and formula for quick reference", () => {
+    const md = chordIndexMarkdown([
+      buildChord({
+        id: "chord:C:7",
+        root: "C",
+        quality: "7",
+        aliases: ["C7", "Cdom7"],
+        formula: ["1", "3", "5", "b7"],
+      }),
+    ]);
+
+    expect(md).toContain("aliases: C7, Cdom7; formula: 1-3-5-b7");
+  });
+
+  it("is stable across repeated builds for identical inputs", () => {
+    const chords = [
+      buildChord({ id: "chord:C:maj", root: "C", quality: "maj" }),
+      buildChord({ id: "chord:C:min", root: "C", quality: "min", aliases: ["Cm"], formula: ["1", "b3", "5"] }),
+      buildChord({ id: "chord:D:7", root: "D", quality: "7", aliases: ["D7"], formula: ["1", "3", "5", "b7"] }),
+    ];
+
+    const first = chordIndexMarkdown(chords);
+    const second = chordIndexMarkdown(chords);
+    expect(first).toBe(second);
   });
 });
 
