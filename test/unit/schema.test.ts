@@ -12,7 +12,7 @@ describe("validateChordRecords", () => {
         aliases: ["C"],
         formula: ["1", "3", "5"],
         pitch_classes: ["C", "E", "G"],
-        voicings: [{ id: "v1", frets: [null, 3, 2, 0, 1, 0], base_fret: 1, source_refs: [{ source: "unit", url: "https://example.com/v1" }] }],
+        voicings: [{ id: "v1", frets: [null, 3, 2, 0, 1, 0], base_fret: 1, position: "open", source_refs: [{ source: "unit", url: "https://example.com/v1" }] }],
         source_refs: [{ source: "unit", url: "https://example.com" }]
       }
     ])).resolves.toBeUndefined();
@@ -26,7 +26,7 @@ describe("validateChordRecords", () => {
       aliases: ["C"],
       formula: ["1", "3", "5"],
       pitch_classes: ["C", "E", "G"],
-      voicings: [{ id: "v1", frets: [null, 3, 2, 0, 1, 0], base_fret: 1, source_refs: [{ source: "unit", url: "https://example.com/v1" }] }],
+      voicings: [{ id: "v1", frets: [null, 3, 2, 0, 1, 0], base_fret: 1, position: "open", source_refs: [{ source: "unit", url: "https://example.com/v1" }] }],
       source_refs: []
     } as unknown as ChordRecord;
 
@@ -43,7 +43,7 @@ describe("validateChordRecords", () => {
       aliases: ["C"],
       formula: ["1", "3", "5"],
       pitch_classes: ["C", "E", "G"],
-      voicings: [{ id: "v1", frets: [null, 3, 2, 0, 1, 0], base_fret: 1 }],
+      voicings: [{ id: "v1", frets: [null, 3, 2, 0, 1, 0], base_fret: 1, position: "open" }],
       source_refs: [{ source: "unit", url: "https://example.com" }]
     } as unknown as ChordRecord;
 
@@ -60,7 +60,7 @@ describe("validateChordRecords", () => {
       aliases: ["C"],
       formula: ["1", "3", "5"],
       pitch_classes: ["C", "E", "G"],
-      voicings: [{ id: "v1", frets: [null, 3, 2, 0, 1, 0], base_fret: 1, source_refs: [] }],
+      voicings: [{ id: "v1", frets: [null, 3, 2, 0, 1, 0], base_fret: 1, position: "open", source_refs: [] }],
       source_refs: [{ source: "unit", url: "https://example.com" }]
     } as unknown as ChordRecord;
 
@@ -77,7 +77,7 @@ describe("validateChordRecords", () => {
       aliases: ["C"],
       formula: ["1", "3", "5"],
       pitch_classes: ["C", "E", "G"],
-      voicings: [{ id: "v1", frets: [null, 3, 2, 0, 1, 0], base_fret: 1, source_refs: [{ source: "", url: "https://example.com/v1" }] }],
+      voicings: [{ id: "v1", frets: [null, 3, 2, 0, 1, 0], base_fret: 1, position: "open", source_refs: [{ source: "", url: "https://example.com/v1" }] }],
       source_refs: [{ source: "unit", url: "https://example.com" }]
     } as unknown as ChordRecord;
 
@@ -94,7 +94,7 @@ describe("validateChordRecords", () => {
       aliases: ["C"],
       formula: ["1", "3", "5"],
       pitch_classes: ["C", "E", "G"],
-      voicings: [{ id: "v1", frets: [null, 3, 2, 0, 1, 0], base_fret: 1, source_refs: [{ source: "unit", url: "" }] }],
+      voicings: [{ id: "v1", frets: [null, 3, 2, 0, 1, 0], base_fret: 1, position: "open", source_refs: [{ source: "unit", url: "" }] }],
       source_refs: [{ source: "unit", url: "https://example.com" }]
     } as unknown as ChordRecord;
 
@@ -110,7 +110,7 @@ describe("validateChordRecords", () => {
       quality: "maj",
       formula: ["1", "3", "5"],
       pitch_classes: ["C", "E", "G"],
-      voicings: [{ id: "v1", frets: [null, 3, 2, 0, 1, 0], base_fret: 1, source_refs: [{ source: "unit", url: "https://example.com/v1" }] }],
+      voicings: [{ id: "v1", frets: [null, 3, 2, 0, 1, 0], base_fret: 1, position: "open", source_refs: [{ source: "unit", url: "https://example.com/v1" }] }],
       source_refs: [{ source: "unit", url: "https://example.com" }]
     } as unknown as ChordRecord;
 
@@ -125,7 +125,7 @@ describe("validateChordRecords", () => {
       aliases: ["C"],
       formula: [],
       pitch_classes: ["C", "E", "G"],
-      voicings: [{ id: "v1", frets: [null, 3, 2, 0, 1, 0], base_fret: 1, source_refs: [{ source: "unit", url: "https://example.com/v1" }] }],
+      voicings: [{ id: "v1", frets: [null, 3, 2, 0, 1, 0], base_fret: 1, position: "open", source_refs: [{ source: "unit", url: "https://example.com/v1" }] }],
       source_refs: [{ source: "unit", url: "https://example.com" }]
     } as unknown as ChordRecord;
 
@@ -140,7 +140,7 @@ describe("validateChordRecords", () => {
       aliases: ["C"],
       formula: ["1", "3", "5"],
       pitch_classes: [],
-      voicings: [{ id: "v1", frets: [null, 3, 2, 0, 1, 0], base_fret: 1, source_refs: [{ source: "unit", url: "https://example.com/v1" }] }],
+      voicings: [{ id: "v1", frets: [null, 3, 2, 0, 1, 0], base_fret: 1, position: "open", source_refs: [{ source: "unit", url: "https://example.com/v1" }] }],
       source_refs: [{ source: "unit", url: "https://example.com" }]
     } as unknown as ChordRecord;
 
