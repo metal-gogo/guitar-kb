@@ -1,5 +1,5 @@
 import { load } from "cheerio";
-import type { RawChordRecord, Voicing } from "../../types/model.js";
+import type { RawChordRecord, RawVoicing } from "../../types/model.js";
 
 function parseCell(value: string): number | null {
   const normalized = value.trim().toLowerCase();
@@ -28,7 +28,7 @@ export function parseGuitarChordOrg(html: string, url: string): RawChordRecord {
   const pitchClasses = chord.find(".pitch-classes li").map((_i, el) => $(el).text().trim()).get();
   const aliases = chord.find(".aliases span").map((_i, el) => $(el).text().trim()).get();
 
-  const voicings: Voicing[] = chord.find(".voicing").map((_i, el) => {
+  const voicings: RawVoicing[] = chord.find(".voicing").map((_i, el) => {
     const node = $(el);
     return {
       id: node.attr("data-id") ?? "unknown",

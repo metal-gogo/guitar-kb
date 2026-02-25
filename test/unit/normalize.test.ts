@@ -320,6 +320,14 @@ describe("normalizeRecords", () => {
     expect(derivePosition([null, 7, 9, 9, 8, null])).toBe("upper");
   });
 
+  it("does not classify open-string high-fret shapes as upper", () => {
+    expect(derivePosition([0, 7, 9, 9, 8, 0])).toBe("unknown");
+  });
+
+  it("does not classify repeated non-lowest fret shapes as barre", () => {
+    expect(derivePosition([1, 3, 3, 3, 3, 5])).toBe("unknown");
+  });
+
   it("derives unknown position when heuristics do not match", () => {
     expect(derivePosition([null, 3, 5, 5, 4, null])).toBe("unknown");
   });

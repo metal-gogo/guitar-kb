@@ -1,4 +1,4 @@
-import type { ChordQuality, ChordRecord, RawChordRecord, SourceRef } from "../../types/model.js";
+import type { ChordQuality, ChordRecord, RawChordRecord, SourceRef, VoicingPosition } from "../../types/model.js";
 import { assertCanonicalChordId } from "../../types/guards.js";
 import { compareChordOrder } from "../../utils/sort.js";
 
@@ -174,34 +174,30 @@ export function toChordId(root: string, quality: ChordQuality): string {
   return id;
 }
 
-export function derivePosition(frets: Array<number | null>): "open" | "barre" | "upper" | "unknown" {
+export function derivePosition(frets: Array<number | null>): VoicingPosition {
   const playedFrets = frets.filter((fret): fret is number => fret !== null);
 
   if (playedFrets.length === 0) {
     return "unknown";
   }
 
+  const lowestPlayedFret = Math.min(...playedFrets);
   const hasOpenString = playedFrets.includes(0);
   const highestFret = Math.max(...playedFrets);
   const positiveFrets = playedFrets.filter((fret) => fret > 0);
-  const lowestPositiveFret = positiveFrets.length > 0 ? Math.min(...positiveFrets) : 0;
 
   if (hasOpenString && highestFret <= 5) {
     return "open";
   }
 
-  if (lowestPositiveFret >= 1) {
-    const fretCounts = positiveFrets.reduce<Map<number, number>>((counts, fret) => {
-      counts.set(fret, (counts.get(fret) ?? 0) + 1);
-      return counts;
-    }, new Map<number, number>());
-    const maxSameFretCount = Math.max(...fretCounts.values());
-    if (maxSameFretCount >= 4) {
+  if (lowestPlayedFret >= 1) {
+    const lowestFretCount = positiveFrets.filter((fret) => fret === lowestPlayedFret).length;
+    if (lowestFretCount >= 4) {
       return "barre";
     }
   }
 
-  if (lowestPositiveFret >= 5) {
+  if (lowestPlayedFret >= 5) {
     return "upper";
   }
 
