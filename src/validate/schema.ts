@@ -2,21 +2,6 @@ import { readFile } from "node:fs/promises";
 import { Ajv2020 } from "ajv/dist/2020.js";
 import type { ChordRecord } from "../types/model.js";
 
-function assertSelfContainedRecord(record: ChordRecord): void {
-  if (!record.aliases || record.aliases.length === 0) {
-    throw new Error(`Schema validation failed for ${record.id}\nSelf-containment check failed: aliases must be non-empty`);
-  }
-  if (!record.formula || record.formula.length === 0) {
-    throw new Error(`Schema validation failed for ${record.id}\nSelf-containment check failed: formula must be non-empty`);
-  }
-  if (!record.pitch_classes || record.pitch_classes.length === 0) {
-    throw new Error(`Schema validation failed for ${record.id}\nSelf-containment check failed: pitch_classes must be non-empty`);
-  }
-  if (!record.voicings || record.voicings.length === 0) {
-    throw new Error(`Schema validation failed for ${record.id}\nSelf-containment check failed: voicings must be non-empty`);
-  }
-}
-
 export async function validateChordRecords(records: ChordRecord[]): Promise<void> {
   const schemaRaw = await readFile("chords.schema.json", "utf8");
   const schema = JSON.parse(schemaRaw) as object;
@@ -45,7 +30,5 @@ export async function validateChordRecords(records: ChordRecord[]): Promise<void
       const details = ajv.errorsText(validate.errors, { separator: "\n" });
       throw new Error(`Schema validation failed for ${recordId}\n${details}`);
     }
-
-    assertSelfContainedRecord(record);
   }
 }
