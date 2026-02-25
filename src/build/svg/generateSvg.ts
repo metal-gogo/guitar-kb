@@ -1,8 +1,11 @@
 import type { Voicing } from "../../types/model.js";
 
-export function generateChordSvg(voicing: Voicing): string {
+const DEFAULT_TUNING = ["E", "A", "D", "G", "B", "E"];
+
+export function generateChordSvg(voicing: Voicing, tuning?: string[]): string {
+  const resolvedTuning = tuning ?? DEFAULT_TUNING;
   const width = 180;
-  const height = 220;
+  const height = 248;
   const stringX = [20, 48, 76, 104, 132, 160];
   const fretY = [40, 72, 104, 136, 168, 200];
 
@@ -35,6 +38,17 @@ export function generateChordSvg(voicing: Voicing): string {
     .filter(Boolean)
     .join("\n");
 
+  const stringLabels = stringX
+    .map((x, index) => {
+      const label = resolvedTuning[index] ?? "";
+      return `<text x="${x}" y="224" text-anchor="middle" font-size="12" fill="#111827">${label}</text>`;
+    })
+    .join("\n");
+
+  const fretLabel = voicing.base_fret > 1
+    ? `<text x="6" y="58" text-anchor="start" font-size="12" fill="#111827">${voicing.base_fret}fr</text>`
+    : "";
+
   return `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" role="img" aria-label="${voicing.id}">
   <rect x="0" y="0" width="${width}" height="${height}" fill="white" />
@@ -42,5 +56,7 @@ export function generateChordSvg(voicing: Voicing): string {
   ${horizontalLines}
   ${dots}
   ${openMuted}
+  ${fretLabel}
+  ${stringLabels}
 </svg>`;
 }
