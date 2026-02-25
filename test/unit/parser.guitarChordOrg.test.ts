@@ -24,6 +24,7 @@ describe("parseGuitarChordOrg", () => {
         qualityRaw: string;
         formula: string[];
         pitchClasses: string[];
+        expectedVoicings: number;
       }> = [
         {
           slug: "c-major",
