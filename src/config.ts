@@ -13,8 +13,9 @@ interface CoreQualityTarget {
   allGuitarSlug: "major" | "minor" | "dominant-7th" | "major-7th";
 }
 
-interface IngestTarget {
+export interface IngestTarget {
   source: "guitar-chord-org" | "all-guitar-chords";
+  chordId: string;
   slug: string;
   url: string;
 }
@@ -41,11 +42,13 @@ export const MVP_TARGETS: ReadonlyArray<IngestTarget> = ROOT_ORDER.flatMap((root
     return [
       {
         source: "guitar-chord-org" as const,
+        chordId: `chord:${root}:${qualityTarget.quality}`,
         slug: cacheSlug,
         url: `https://www.guitar-chord.org/${rootSlug}-${qualityTarget.guitarSlug}.html`,
       },
       {
         source: "all-guitar-chords" as const,
+        chordId: `chord:${root}:${qualityTarget.quality}`,
         slug: cacheSlug,
         url: `https://all-guitar-chords.com/chords/index/${rootSlug}/${qualityTarget.allGuitarSlug}`,
       },
