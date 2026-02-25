@@ -5,7 +5,14 @@ import { parseAllGuitarChords } from "../../src/ingest/parsers/allGuitarChords.j
 const readFixture = (slug: string): string =>
   readFileSync(`test/fixtures/sources/all-guitar-chords/${slug}.html`, "utf8");
 
-const BASE_URL = "https://www.all-guitar-chords.com/chords/c-major";
+const URL_BY_SLUG: Record<string, string> = {
+  "c-major": "https://all-guitar-chords.com/chords/index/c/major",
+  "c-minor": "https://all-guitar-chords.com/chords/index/c/minor",
+  c7: "https://all-guitar-chords.com/chords/index/c/dominant-7th",
+  cmaj7: "https://all-guitar-chords.com/chords/index/c/major-7th",
+};
+
+const BASE_URL = URL_BY_SLUG["c-major"];
 
 describe("parseAllGuitarChords", () => {
   describe("happy path – MVP chord fixtures", () => {
@@ -37,7 +44,7 @@ describe("parseAllGuitarChords", () => {
     ] as const;
 
     it.each(cases)("extracts factual MVP chord data from fixture $slug", (testCase) => {
-      const url = `https://www.all-guitar-chords.com/chords/${testCase.slug}`;
+      const url = URL_BY_SLUG[testCase.slug];
       const html = readFixture(testCase.slug);
       const parsed = parseAllGuitarChords(html, url);
 
@@ -93,7 +100,7 @@ describe("parseAllGuitarChords", () => {
 
     it("produces deterministic output on repeated parses of the same fixture", () => {
       const html = readFixture("cmaj7");
-      const url = "https://www.all-guitar-chords.com/chords/cmaj7";
+      const url = URL_BY_SLUG.cmaj7;
       const a = parseAllGuitarChords(html, url);
       const b = parseAllGuitarChords(html, url);
       expect(JSON.stringify(a)).toBe(JSON.stringify(b));
