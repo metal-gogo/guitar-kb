@@ -136,6 +136,24 @@ describe("parseGuitarChordOrg", () => {
         "barre-7",
       ]);
     });
+
+    it("extracts C major voicing frets and base-fret values in source order", () => {
+      const url = URL_BY_SLUG["c-major"];
+      const html = readFixture("c-major");
+      const parsed = parseGuitarChordOrg(html, url);
+
+      expect(parsed.voicings.map((voicing) => voicing.frets)).toEqual([
+        [null, 3, 2, 0, 1, 0],
+        [8, 10, 10, 9, 8, 8],
+        [null, 3, 5, 5, 5, 3],
+      ]);
+      expect(parsed.voicings.map((voicing) => voicing.base_fret)).toEqual([1, 8, 3]);
+      expect(parsed.voicings.map((voicing) => voicing.id)).toEqual([
+        "open",
+        "barre-8",
+        "shape-3",
+      ]);
+    });
   });
 
   describe("resilience – degraded HTML", () => {
