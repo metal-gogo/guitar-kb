@@ -13,7 +13,7 @@ export const SOURCE_REGISTRY: ReadonlyArray<SourceRegistryEntry> = [
   {
     id: "all-guitar-chords",
     displayName: "All Guitar Chords",
-    baseUrl: "https://all-guitar-chords.com",
+    baseUrl: "https://www.all-guitar-chords.com",
     cacheDir: "all-guitar-chords",
     parse: parseAllGuitarChords,
   },
