@@ -29,19 +29,33 @@ describe("normalizeQuality", () => {
     // min7 variants
     expect(normalizeQuality("m7")).toBe("min7");
     expect(normalizeQuality("min7")).toBe("min7");
+    expect(normalizeQuality("minor7")).toBe("min7");
+    expect(normalizeQuality("-7")).toBe("min7");
 
     // dim variants
     expect(normalizeQuality("dim")).toBe("dim");
     expect(normalizeQuality("diminished")).toBe("dim");
     expect(normalizeQuality("m7b5")).toBe("dim");
+    expect(normalizeQuality("°")).toBe("dim");
+    expect(normalizeQuality("o")).toBe("dim");
+
+    // dim7 variants
+    expect(normalizeQuality("dim7")).toBe("dim7");
+    expect(normalizeQuality("diminished7")).toBe("dim7");
+    expect(normalizeQuality("°7")).toBe("dim7");
+    expect(normalizeQuality("o7")).toBe("dim7");
 
     // aug variants
     expect(normalizeQuality("aug")).toBe("aug");
     expect(normalizeQuality("augmented")).toBe("aug");
+    expect(normalizeQuality("+")).toBe("aug");
 
     // sus variants
     expect(normalizeQuality("sus2")).toBe("sus2");
+    expect(normalizeQuality("suspended2")).toBe("sus2");
     expect(normalizeQuality("sus4")).toBe("sus4");
+    expect(normalizeQuality("suspended4")).toBe("sus4");
+    expect(normalizeQuality("sus")).toBe("sus4");
   });
 
   it("rejects unsupported aliases", () => {

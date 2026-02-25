@@ -14,6 +14,8 @@ const QUALITY_MAP: Record<string, ChordQuality> = {
   "Δ7": "maj7",
   M7: "maj7",
   m7: "min7",
+  "-7": "min7",
+  minor7: "min7",
   min7: "min7",
   "7": "7",
   major7: "maj7",
@@ -21,10 +23,20 @@ const QUALITY_MAP: Record<string, ChordQuality> = {
   m7b5: "dim",
   dim: "dim",
   diminished: "dim",
+  "°": "dim",
+  o: "dim",
+  dim7: "dim7",
+  diminished7: "dim7",
+  "°7": "dim7",
+  o7: "dim7",
   aug: "aug",
+  "+": "aug",
   augmented: "aug",
   sus2: "sus2",
-  sus4: "sus4"
+  suspended2: "sus2",
+  sus4: "sus4",
+  suspended4: "sus4",
+  sus: "sus4"
 };
 
 const ENHARMONIC_ROOT: Record<string, string> = {
