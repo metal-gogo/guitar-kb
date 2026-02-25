@@ -44,3 +44,13 @@ export interface RawChordRecord {
   pitch_classes: string[];
   voicings: Voicing[];
 }
+
+export type ParserFn = (html: string, url: string) => RawChordRecord;
+
+export interface SourceRegistryEntry {
+  id: string;
+  displayName: string;
+  baseUrl: string;
+  cacheDir: string;
+  parse: ParserFn;
+}
