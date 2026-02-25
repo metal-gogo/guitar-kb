@@ -30,24 +30,28 @@ describe("parseGuitarChordOrg", () => {
           qualityRaw: "major",
           formula: ["1", "3", "5"],
           pitchClasses: ["C", "E", "G"],
+          expectedVoicings: 3,
         },
         {
           slug: "c-minor",
           qualityRaw: "minor",
           formula: ["1", "b3", "5"],
           pitchClasses: ["C", "Eb", "G"],
+          expectedVoicings: 3,
         },
         {
           slug: "c7",
           qualityRaw: "7",
           formula: ["1", "3", "5", "b7"],
           pitchClasses: ["C", "E", "G", "Bb"],
+          expectedVoicings: 3,
         },
         {
           slug: "cmaj7",
           qualityRaw: "maj7",
           formula: ["1", "3", "5", "7"],
           pitchClasses: ["C", "E", "G", "B"],
+          expectedVoicings: 3,
         },
       ];
 
@@ -61,7 +65,7 @@ describe("parseGuitarChordOrg", () => {
         expect(parsed.quality_raw).toBe(testCase.qualityRaw);
         expect(parsed.formula).toEqual(testCase.formula);
         expect(parsed.pitch_classes).toEqual(testCase.pitchClasses);
-        expect(parsed.voicings.length).toBeGreaterThan(0);
+        expect(parsed.voicings.length).toBe(testCase.expectedVoicings);
         expect(parsed.voicings[0]?.source_refs?.[0]).toEqual({ source: "guitar-chord-org", url });
 
         if (testCase.slug === "c-major") {
