@@ -73,6 +73,7 @@
           "id",
           "frets",
           "base_fret",
+          "position",
           "source_refs"
         ],
         "properties": {
@@ -106,6 +107,15 @@
           "base_fret": {
             "type": "integer",
             "minimum": 0
+          },
+          "position": {
+            "type": "string",
+            "enum": [
+              "open",
+              "barre",
+              "upper",
+              "unknown"
+            ]
           },
           "tags": {
             "type": "array",

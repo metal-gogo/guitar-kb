@@ -73,6 +73,40 @@ export function toChordId(root: string, quality: ChordQuality): string {
   return id;
 }
 
+export function derivePosition(frets: Array<number | null>): "open" | "barre" | "upper" | "unknown" {
+  const playedFrets = frets.filter((fret): fret is number => fret !== null);
+
+  if (playedFrets.length === 0) {
+    return "unknown";
+  }
+
+  const hasOpenString = playedFrets.includes(0);
+  const highestFret = Math.max(...playedFrets);
+  const positiveFrets = playedFrets.filter((fret) => fret > 0);
+  const lowestPositiveFret = positiveFrets.length > 0 ? Math.min(...positiveFrets) : 0;
+
+  if (hasOpenString && highestFret <= 5) {
+    return "open";
+  }
+
+  if (lowestPositiveFret >= 1) {
+    const fretCounts = positiveFrets.reduce<Map<number, number>>((counts, fret) => {
+      counts.set(fret, (counts.get(fret) ?? 0) + 1);
+      return counts;
+    }, new Map<number, number>());
+    const maxSameFretCount = Math.max(...fretCounts.values());
+    if (maxSameFretCount >= 4) {
+      return "barre";
+    }
+  }
+
+  if (lowestPositiveFret >= 5) {
+    return "upper";
+  }
+
+  return "unknown";
+}
+
 export function normalizeRecords(raw: RawChordRecord[]): ChordRecord[] {
   const merged = new Map<string, ChordRecord>();
 
@@ -99,7 +133,8 @@ export function normalizeRecords(raw: RawChordRecord[]): ChordRecord[] {
         tuning: ["E", "A", "D", "G", "B", "E"],
         voicings: input.voicings.map((voicing, index) => ({
           ...voicing,
-          id: `${id}:v${index + 1}:${input.source}`
+          id: `${id}:v${index + 1}:${input.source}`,
+          position: derivePosition(voicing.frets)
         })),
         notes: {
           summary: `${input.root} ${quality} chord with formula ${input.formula.join("-")}.`
@@ -112,7 +147,8 @@ export function normalizeRecords(raw: RawChordRecord[]): ChordRecord[] {
     existing.aliases = [...new Set([...(existing.aliases ?? []), ...input.aliases])];
     existing.voicings.push(...input.voicings.map((voicing, index) => ({
       ...voicing,
-      id: `${id}:v${existing.voicings.length + index + 1}:${input.source}`
+      id: `${id}:v${existing.voicings.length + index + 1}:${input.source}`,
+      position: derivePosition(voicing.frets)
     })));
     existing.source_refs.push(sourceRef);
     existing.voicings.sort((a, b) => a.id.localeCompare(b.id));

@@ -7,11 +7,14 @@ export interface SourceRef {
   note?: string;
 }
 
+export type VoicingPosition = "open" | "barre" | "upper" | "unknown";
+
 export interface Voicing {
   id: string;
   frets: Array<number | null>;
   fingers?: Array<number | null>;
   base_fret: number;
+  position?: VoicingPosition;
   tags?: string[];
   difficulty?: string;
   source_refs?: SourceRef[];
