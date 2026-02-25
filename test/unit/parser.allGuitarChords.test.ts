@@ -6,10 +6,10 @@ const readFixture = (slug: string): string =>
   readFileSync(`test/fixtures/sources/all-guitar-chords/${slug}.html`, "utf8");
 
 const URL_BY_SLUG: Record<string, string> = {
-  "c-major": "https://all-guitar-chords.com/chords/index/c/major",
-  "c-minor": "https://all-guitar-chords.com/chords/index/c/minor",
-  c7: "https://all-guitar-chords.com/chords/index/c/dominant-7th",
-  cmaj7: "https://all-guitar-chords.com/chords/index/c/major-7th",
+  "c-major": "https://www.all-guitar-chords.com/chords/index/c/major",
+  "c-minor": "https://www.all-guitar-chords.com/chords/index/c/minor",
+  c7: "https://www.all-guitar-chords.com/chords/index/c/dominant-7th",
+  cmaj7: "https://www.all-guitar-chords.com/chords/index/c/major-7th",
 };
 
 const BASE_URL = URL_BY_SLUG["c-major"];
