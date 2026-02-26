@@ -19,6 +19,9 @@ export const ValidationErrorCode = {
 
   /** A voicing has all strings muted (no played strings). */
   VOICING_ALL_STRINGS_MUTED: "VOICING_ALL_STRINGS_MUTED",
+
+  /** A required provenance field (source_refs, source, or url) is absent or empty. */
+  PROVENANCE_MISSING: "PROVENANCE_MISSING",
 } as const;
 
 /** Union of all {@link ValidationErrorCode} values. */
