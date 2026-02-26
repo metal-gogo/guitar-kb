@@ -453,3 +453,177 @@ describe("detectAliasCollisions", () => {
     expect(() => normalizeRecords(raw)).toThrow(AliasCollisionError);
   });
 });
+
+describe("normalization round-trip stability", () => {
+  /** Fixtures shared across round-trip tests */
+  const baseRaw: RawChordRecord[] = [
+    {
+      source: "round-trip",
+      url: "https://example.com/cmaj",
+      symbol: "C",
+      root: "C",
+      quality_raw: "major",
+      aliases: ["C", "Cmaj"],
+      formula: ["1", "3", "5"],
+      pitch_classes: ["C", "E", "G"],
+      voicings: [{ id: "v-cmaj-1", frets: [null, 3, 2, 0, 1, 0], base_fret: 1 }],
+    },
+    {
+      source: "round-trip",
+      url: "https://example.com/cmin",
+      symbol: "Cm",
+      root: "C",
+      quality_raw: "minor",
+      aliases: ["Cm", "Cmin"],
+      formula: ["1", "b3", "5"],
+      pitch_classes: ["C", "Eb", "G"],
+      voicings: [{ id: "v-cmin-1", frets: [null, 3, 5, 5, 4, 3], base_fret: 3 }],
+    },
+    {
+      source: "round-trip",
+      url: "https://example.com/c-sharp-maj",
+      symbol: "C#",
+      root: "C#",
+      quality_raw: "major",
+      aliases: ["C#", "C#maj"],
+      formula: ["1", "3", "5"],
+      pitch_classes: ["C#", "E#", "G#"],
+      voicings: [{ id: "v-csharpmaj-1", frets: [null, 4, 6, 6, 6, 4], base_fret: 4 }],
+    },
+    {
+      source: "round-trip",
+      url: "https://example.com/db-maj",
+      symbol: "Db",
+      root: "Db",
+      quality_raw: "major",
+      aliases: ["Db", "Dbmaj"],
+      formula: ["1", "3", "5"],
+      pitch_classes: ["Db", "F", "Ab"],
+      voicings: [{ id: "v-dbmaj-1", frets: [null, 4, 6, 6, 6, 4], base_fret: 4 }],
+    },
+  ];
+
+  it("produces deep-equal output on repeated calls with the same raw input", () => {
+    const result1 = normalizeRecords(baseRaw);
+    const result2 = normalizeRecords(baseRaw);
+    expect(JSON.stringify(result1)).toBe(JSON.stringify(result2));
+  });
+
+  it("canonical IDs are identical and unique across repeated calls", () => {
+    const ids1 = normalizeRecords(baseRaw).map((c) => c.id);
+    const ids2 = normalizeRecords(baseRaw).map((c) => c.id);
+    expect(ids1).toEqual(ids2);
+    expect(new Set(ids1).size).toBe(ids1.length);
+  });
+
+  it("alias arrays are identical in content and order across repeated calls", () => {
+    const run1 = normalizeRecords(baseRaw);
+    const run2 = normalizeRecords(baseRaw);
+    for (let i = 0; i < run1.length; i++) {
+      expect(run1[i]!.aliases).toEqual(run2[i]!.aliases);
+    }
+  });
+
+  it("enharmonic equivalents are stable across repeated calls", () => {
+    const run1 = normalizeRecords(baseRaw);
+    const run2 = normalizeRecords(baseRaw);
+    const enharmonic1 = run1.map((c) => ({ id: c.id, enharmonic: c.enharmonic_equivalents ?? [] }));
+    const enharmonic2 = run2.map((c) => ({ id: c.id, enharmonic: c.enharmonic_equivalents ?? [] }));
+    expect(enharmonic1).toEqual(enharmonic2);
+    // C# and Db should be mutual enharmonic equivalents
+    const cSharp = run1.find((c) => c.id === "chord:C#:maj");
+    const db = run1.find((c) => c.id === "chord:Db:maj");
+    expect(cSharp?.enharmonic_equivalents).toContain("chord:Db:maj");
+    expect(db?.enharmonic_equivalents).toContain("chord:C#:maj");
+  });
+
+  it("formula array preserves original raw order (not sorted externally)", () => {
+    const raw: RawChordRecord[] = [
+      {
+        source: "round-trip",
+        url: "https://example.com/c7",
+        symbol: "C7",
+        root: "C",
+        quality_raw: "7",
+        aliases: ["C7"],
+        formula: ["1", "3", "5", "b7"],
+        pitch_classes: ["C", "E", "G", "Bb"],
+        voicings: [],
+      },
+    ];
+    const result = normalizeRecords(raw);
+    expect(result[0]!.formula).toEqual(["1", "3", "5", "b7"]);
+    // stability: second call must produce the same order
+    expect(normalizeRecords(raw)[0]!.formula).toEqual(["1", "3", "5", "b7"]);
+  });
+
+  it("pitch_classes array preserves original raw order across repeated calls", () => {
+    const raw: RawChordRecord[] = [
+      {
+        source: "round-trip",
+        url: "https://example.com/cmaj7",
+        symbol: "Cmaj7",
+        root: "C",
+        quality_raw: "maj7",
+        aliases: ["Cmaj7"],
+        formula: ["1", "3", "5", "7"],
+        pitch_classes: ["C", "E", "G", "B"],
+        voicings: [],
+      },
+    ];
+    const r1 = normalizeRecords(raw);
+    const r2 = normalizeRecords(raw);
+    expect(r1[0]!.pitch_classes).toEqual(["C", "E", "G", "B"]);
+    expect(r1[0]!.pitch_classes).toEqual(r2[0]!.pitch_classes);
+  });
+
+  it("JSON serialize → parse round-trip preserves id, aliases, formula, pitch_classes, enharmonic_equivalents", () => {
+    const result = normalizeRecords(baseRaw);
+    const serialized = JSON.stringify(result);
+    const parsed = JSON.parse(serialized) as ChordRecord[];
+    for (let i = 0; i < result.length; i++) {
+      const original = result[i]!;
+      const restored = parsed[i]!;
+      expect(restored.id).toBe(original.id);
+      expect(restored.aliases).toEqual(original.aliases);
+      expect(restored.formula).toEqual(original.formula);
+      expect(restored.pitch_classes).toEqual(original.pitch_classes);
+      expect(restored.enharmonic_equivalents ?? []).toEqual(original.enharmonic_equivalents ?? []);
+    }
+  });
+
+  it("merged record from two sources has stable deduplicated aliases", () => {
+    const raw: RawChordRecord[] = [
+      {
+        source: "source-a",
+        url: "https://example.com/cmaj-a",
+        symbol: "C",
+        root: "C",
+        quality_raw: "major",
+        aliases: ["C", "Cmaj", "CMajor"],
+        formula: ["1", "3", "5"],
+        pitch_classes: ["C", "E", "G"],
+        voicings: [{ id: "v-a-1", frets: [null, 3, 2, 0, 1, 0], base_fret: 1 }],
+      },
+      {
+        source: "source-b",
+        url: "https://example.com/cmaj-b",
+        symbol: "C",
+        root: "C",
+        quality_raw: "maj",
+        aliases: ["C", "Cmaj", "CΔ"],      // "C" and "Cmaj" are duplicates
+        formula: ["1", "3", "5"],
+        pitch_classes: ["C", "E", "G"],
+        voicings: [{ id: "v-b-1", frets: [null, 3, 2, 0, 1, 0], base_fret: 1 }],
+      },
+    ];
+    const r1 = normalizeRecords(raw);
+    const r2 = normalizeRecords(raw);
+    expect(r1).toHaveLength(1);
+    // duplicates removed
+    const aliases = r1[0]!.aliases ?? [];
+    expect(new Set(aliases).size).toBe(aliases.length);
+    // identical across runs
+    expect(r2[0]!.aliases).toEqual(aliases);
+  });
+});
