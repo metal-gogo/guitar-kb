@@ -66,22 +66,22 @@ function checkBranchName(): CheckResult {
 }
 
 function checkLint(): CheckResult {
-  const { ok, output } = run("npm run lint --silent 2>&1");
+  const { ok, output } = run("npm run lint 2>&1");
   return { name: "lint", passed: ok, output: ok ? undefined : output };
 }
 
 function checkTest(): CheckResult {
-  const { ok, output } = run("npm test -- --reporter=verbose 2>&1 | tail -20");
+  const { ok, output } = run("npm test 2>&1");
   return { name: "test", passed: ok, output: ok ? undefined : output };
 }
 
 function checkBuild(): CheckResult {
-  const { ok, output } = run("npm run build --silent 2>&1");
+  const { ok, output } = run("npm run build 2>&1");
   return { name: "build", passed: ok, output: ok ? undefined : output };
 }
 
 function checkValidate(): CheckResult {
-  const { ok, output } = run("npm run validate --silent 2>&1");
+  const { ok, output } = run("npm run validate 2>&1");
   return { name: "validate", passed: ok, output: ok ? undefined : output };
 }
 
