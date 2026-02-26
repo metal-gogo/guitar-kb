@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { validateChordRecords } from "../../src/validate/schema.js";
+import { checkProvenanceCoverage } from "../../src/validate/provenance.js";
 import { ValidationError, ValidationErrorCode } from "../../src/validate/errors.js";
 import type { ChordRecord } from "../../src/types/model.js";
 
@@ -305,5 +306,124 @@ describe("ValidationError codes", () => {
       expect(e).toBeInstanceOf(ValidationError);
       expect((e as ValidationError).code).toBe(ValidationErrorCode.VOICING_ALL_STRINGS_MUTED);
     }
+  });
+});
+
+describe("checkProvenanceCoverage", () => {
+  function makeRecord(overrides: Partial<ChordRecord> = {}): ChordRecord {
+    return {
+      id: "chord:C:maj",
+      root: "C",
+      quality: "maj",
+      aliases: ["C"],
+      formula: ["1", "3", "5"],
+      pitch_classes: ["C", "E", "G"],
+      voicings: [
+        {
+          id: "v-cmaj-1",
+          frets: [null, 3, 2, 0, 1, 0],
+          base_fret: 1,
+          source_refs: [{ source: "unit", url: "https://example.com/v1" }],
+        },
+      ],
+      source_refs: [{ source: "unit", url: "https://example.com" }],
+      ...overrides,
+    } as ChordRecord;
+  }
+
+  it("passes when all provenance fields are present and non-empty", () => {
+    expect(() => checkProvenanceCoverage([makeRecord()])).not.toThrow();
+  });
+
+  it("throws PROVENANCE_MISSING for empty chord-level source_refs", () => {
+    const bad = makeRecord({ source_refs: [] });
+    expect(() => checkProvenanceCoverage([bad])).toThrow(ValidationError);
+    try {
+      checkProvenanceCoverage([bad]);
+    } catch (e) {
+      expect(e).toBeInstanceOf(ValidationError);
+      expect((e as ValidationError).code).toBe(ValidationErrorCode.PROVENANCE_MISSING);
+      expect((e as ValidationError).message).toContain("chord:C:maj");
+      expect((e as ValidationError).message).toContain("source_refs is empty");
+    }
+  });
+
+  it("includes chord ID and path in the error message for missing source field", () => {
+    const bad = makeRecord({
+      source_refs: [{ source: "", url: "https://example.com" }],
+    });
+    try {
+      checkProvenanceCoverage([bad]);
+      throw new Error("Expected throw");
+    } catch (e) {
+      expect(e).toBeInstanceOf(ValidationError);
+      expect((e as ValidationError).code).toBe(ValidationErrorCode.PROVENANCE_MISSING);
+      expect((e as ValidationError).message).toContain("chord:C:maj › source_refs[0].source is empty");
+    }
+  });
+
+  it("includes chord ID and path in the error message for missing url field", () => {
+    const bad = makeRecord({
+      source_refs: [{ source: "unit", url: "" }],
+    });
+    try {
+      checkProvenanceCoverage([bad]);
+      throw new Error("Expected throw");
+    } catch (e) {
+      expect(e).toBeInstanceOf(ValidationError);
+      expect((e as ValidationError).code).toBe(ValidationErrorCode.PROVENANCE_MISSING);
+      expect((e as ValidationError).message).toContain("chord:C:maj › source_refs[0].url is empty");
+    }
+  });
+
+  it("throws PROVENANCE_MISSING for empty voicing-level source_refs", () => {
+    const bad = makeRecord({
+      voicings: [
+        {
+          id: "v-cmaj-1",
+          frets: [null, 3, 2, 0, 1, 0],
+          base_fret: 1,
+          source_refs: [],
+        },
+      ],
+    });
+    try {
+      checkProvenanceCoverage([bad]);
+      throw new Error("Expected throw");
+    } catch (e) {
+      expect(e).toBeInstanceOf(ValidationError);
+      expect((e as ValidationError).code).toBe(ValidationErrorCode.PROVENANCE_MISSING);
+      expect((e as ValidationError).message).toContain("voicing v-cmaj-1");
+      expect((e as ValidationError).message).toContain("source_refs is empty");
+    }
+  });
+
+  it("throws PROVENANCE_MISSING when voicing source_ref has empty source", () => {
+    const bad = makeRecord({
+      voicings: [
+        {
+          id: "v-cmaj-1",
+          frets: [null, 3, 2, 0, 1, 0],
+          base_fret: 1,
+          source_refs: [{ source: "  ", url: "https://example.com/v1" }],
+        },
+      ],
+    });
+    try {
+      checkProvenanceCoverage([bad]);
+      throw new Error("Expected throw");
+    } catch (e) {
+      expect(e).toBeInstanceOf(ValidationError);
+      expect((e as ValidationError).code).toBe(ValidationErrorCode.PROVENANCE_MISSING);
+      expect((e as ValidationError).message).toContain("voicing v-cmaj-1 › source_refs[0].source is empty");
+    }
+  });
+
+  it("passes across multiple valid records without throwing", () => {
+    const records = [
+      makeRecord(),
+      makeRecord({ id: "chord:D:maj", source_refs: [{ source: "other", url: "https://other.com" }] }),
+    ] as ChordRecord[];
+    expect(() => checkProvenanceCoverage(records)).not.toThrow();
   });
 });

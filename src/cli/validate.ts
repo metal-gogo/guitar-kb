@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { validateChordRecords } from "../validate/schema.js";
 import { checkSchemaCompatibility } from "../validate/compat.js";
+import { checkProvenanceCoverage } from "../validate/provenance.js";
 import type { ChordRecord } from "../types/model.js";
 
 async function main(): Promise<void> {
@@ -14,6 +15,10 @@ async function main(): Promise<void> {
     .map((line) => line.trim())
     .filter((line) => line.length > 0)
     .map((line) => JSON.parse(line) as ChordRecord);
+
+  // 2. Provenance coverage check (before AJV so missing provenance fields yield
+  //    actionable chord/voicing paths rather than generic JSON Schema errors)
+  checkProvenanceCoverage(records);
 
   await validateChordRecords(records);
   process.stdout.write(`Validated ${records.length} chord records\n`);
