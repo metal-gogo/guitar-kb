@@ -1,0 +1,20 @@
+{
+  "chord.required": ["id", "root", "quality", "aliases", "formula", "pitch_classes", "voicings", "source_refs"],
+  "chord.id.pattern": "^chord:[A-G](#|b)?:[a-z0-9]+$",
+  "chord.root.pattern": "^[A-G](#|b)?$",
+  "chord.aliases.minItems": 1,
+  "chord.formula.minItems": 1,
+  "chord.pitch_classes.minItems": 1,
+  "chord.pitch_classes.items.pattern": "^[A-G](#|b)?$",
+  "chord.voicings.minItems": 1,
+  "chord.source_refs.minItems": 1,
+  "voicing.required": ["id", "frets", "base_fret", "position", "source_refs"],
+  "voicing.frets.minItems": 6,
+  "voicing.frets.maxItems": 6,
+  "voicing.frets.items.minimum": 0,
+  "voicing.position.enum": ["open", "barre", "upper", "unknown"],
+  "voicing.source_refs.minItems": 1,
+  "sourceRef.required": ["source", "url"],
+  "sourceRef.source.minLength": 1,
+  "sourceRef.url.minLength": 1
+}
