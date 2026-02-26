@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { validateChordRecords } from "../../src/validate/schema.js";
+import { ValidationError, ValidationErrorCode } from "../../src/validate/errors.js";
 import type { ChordRecord } from "../../src/types/model.js";
 
 describe("validateChordRecords", () => {
@@ -221,5 +222,88 @@ describe("validateChordRecords", () => {
     } as unknown as ChordRecord;
 
     await expect(validateChordRecords([invalid])).rejects.toThrow(/Schema validation failed/);
+  });
+});
+
+describe("ValidationError codes", () => {
+  function validRecord(): ChordRecord {
+    return {
+      id: "chord:C:maj",
+      root: "C",
+      quality: "maj",
+      aliases: ["C"],
+      formula: ["1", "3", "5"],
+      pitch_classes: ["C", "E", "G"],
+      voicings: [{ id: "v1", frets: [null, 3, 2, 0, 1, 0], base_fret: 1, position: "open", source_refs: [{ source: "unit", url: "https://example.com/v1" }] }],
+      source_refs: [{ source: "unit", url: "https://example.com" }],
+    } as unknown as ChordRecord;
+  }
+
+  it("throws ValidationError with code SCHEMA_INVALID for a schema-level failure", async () => {
+    const bad = { ...validRecord(), source_refs: [] } as unknown as ChordRecord;
+    try {
+      await validateChordRecords([bad]);
+      throw new Error("Expected throw");
+    } catch (e) {
+      expect(e).toBeInstanceOf(ValidationError);
+      expect((e as ValidationError).code).toBe(ValidationErrorCode.SCHEMA_INVALID);
+    }
+  });
+
+  it("throws ValidationError with code VOICING_STRING_COUNT_MISMATCH", async () => {
+    const bad = {
+      ...validRecord(),
+      tuning: ["A", "D", "G", "B", "E"],
+      voicings: [{ id: "v1", frets: [null, 3, 2, 0, 1, 0], base_fret: 1, position: "open", source_refs: [{ source: "unit", url: "https://example.com/v1" }] }],
+    } as unknown as ChordRecord;
+    try {
+      await validateChordRecords([bad]);
+      throw new Error("Expected throw");
+    } catch (e) {
+      expect(e).toBeInstanceOf(ValidationError);
+      expect((e as ValidationError).code).toBe(ValidationErrorCode.VOICING_STRING_COUNT_MISMATCH);
+    }
+  });
+
+  it("throws ValidationError with code VOICING_INVALID_FRET_VALUE", async () => {
+    const bad = {
+      ...validRecord(),
+      voicings: [{ id: "v1", frets: [null, 3, 2, 0, 1, "x"] as unknown as Array<number | null>, base_fret: 1, position: "open", source_refs: [{ source: "unit", url: "https://example.com/v1" }] }],
+    } as unknown as ChordRecord;
+    try {
+      await validateChordRecords([bad]);
+      throw new Error("Expected throw");
+    } catch (e) {
+      expect(e).toBeInstanceOf(ValidationError);
+      expect((e as ValidationError).code).toBe(ValidationErrorCode.VOICING_INVALID_FRET_VALUE);
+    }
+  });
+
+  it("throws ValidationError with code VOICING_FRET_OUT_OF_RANGE", async () => {
+    const bad = {
+      ...validRecord(),
+      voicings: [{ id: "v1", frets: [null, 25, 2, 0, 1, 0], base_fret: 1, position: "open", source_refs: [{ source: "unit", url: "https://example.com/v1" }] }],
+    } as unknown as ChordRecord;
+    try {
+      await validateChordRecords([bad]);
+      throw new Error("Expected throw");
+    } catch (e) {
+      expect(e).toBeInstanceOf(ValidationError);
+      expect((e as ValidationError).code).toBe(ValidationErrorCode.VOICING_FRET_OUT_OF_RANGE);
+    }
+  });
+
+  it("throws ValidationError with code VOICING_ALL_STRINGS_MUTED", async () => {
+    const bad = {
+      ...validRecord(),
+      voicings: [{ id: "v1", frets: [null, null, null, null, null, null], base_fret: 1, position: "unknown", source_refs: [{ source: "unit", url: "https://example.com/v1" }] }],
+    } as unknown as ChordRecord;
+    try {
+      await validateChordRecords([bad]);
+      throw new Error("Expected throw");
+    } catch (e) {
+      expect(e).toBeInstanceOf(ValidationError);
+      expect((e as ValidationError).code).toBe(ValidationErrorCode.VOICING_ALL_STRINGS_MUTED);
+    }
   });
 });
