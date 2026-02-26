@@ -8,7 +8,8 @@
     "build": "tsx src/cli/build.ts",
     "validate": "tsx src/cli/validate.ts",
     "lint": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "preflight": "npm run lint && npm test && npm run build && npm run validate"
   },
   "repository": {
     "type": "git",
