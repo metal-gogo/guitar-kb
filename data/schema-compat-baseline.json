@@ -1,0 +1,21 @@
+{
+  "$schema": "https://raw.githubusercontent.com/metal-gogo/guitar-kb/main/chords.schema.json",
+  "description": "Schema compatibility baseline — lists the minimum set of required fields that MUST remain required in chords.schema.json. Any field listed here that is removed from the schema's required[] array is treated as a breaking change by the compatibility checker.",
+  "chord_required": [
+    "id",
+    "root",
+    "quality",
+    "aliases",
+    "formula",
+    "pitch_classes",
+    "voicings",
+    "source_refs"
+  ],
+  "voicing_required": [
+    "id",
+    "frets",
+    "base_fret",
+    "position",
+    "source_refs"
+  ]
+}
