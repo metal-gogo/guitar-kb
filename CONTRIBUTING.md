@@ -121,3 +121,40 @@ Run all in sequence before opening a PR:
 ```bash
 npm run lint && npm test && npm run build && npm run validate
 ```
+
+---
+
+## PR Readiness Auto-Check
+
+Run before opening a PR to get a full pass/fail checklist:
+
+```bash
+npm run pr-ready
+```
+
+This command checks:
+
+1. **Working tree is clean** — no uncommitted or unstaged changes
+2. **Branch name matches convention** — must follow `feat|fix|chore|test|docs|refactor/<slug>`
+3. **lint** — TypeScript compilation (no type errors)
+4. **test** — full Vitest suite
+5. **build** — docs + SVG + JSONL generation
+6. **validate** — schema + provenance coverage on generated JSONL
+
+All checks run even if earlier ones fail, so you see the full picture in one pass.
+The command exits `0` when all pass, `1` when any fail.
+
+**Example output (all passing):**
+
+```
+PR Readiness Check
+==================
+✓  working tree is clean
+✓  branch name matches convention (feat/42-my-feature)
+✓  lint
+✓  test
+✓  build
+✓  validate
+
+All checks passed. Ready to open a PR.
+```
