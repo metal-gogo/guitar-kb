@@ -16,6 +16,7 @@ const URL_BY_SLUG = {
   "f-major": "https://www.guitar-chord.org/f-maj.html",
   "d-sharp-major": "https://www.guitar-chord.org/d-sharp-maj.html",
   "f-sharp-major": "https://www.guitar-chord.org/f-sharp-maj.html",
+  "g-sharp-major": "https://www.guitar-chord.org/g-sharp-maj.html",
   "c-minor": "https://www.guitar-chord.org/c-min.html",
   c7: "https://www.guitar-chord.org/c-7.html",
   cmaj7: "https://www.guitar-chord.org/c-maj7.html",
@@ -122,6 +123,14 @@ describe("parseGuitarChordOrg", () => {
           qualityRaw: "major",
           formula: ["1", "3", "5"],
           pitchClasses: ["F#", "A#", "C#"],
+          expectedVoicings: 3,
+        },
+        {
+          slug: "g-sharp-major",
+          root: "G#",
+          qualityRaw: "major",
+          formula: ["1", "3", "5"],
+          pitchClasses: ["G#", "C", "D#"],
           expectedVoicings: 3,
         },
         {
@@ -338,6 +347,24 @@ describe("parseGuitarChordOrg", () => {
       expect(parsed.voicings.map((voicing) => voicing.base_fret)).toEqual([6, 11, 6]);
       expect(parsed.voicings.map((voicing) => voicing.id)).toEqual([
         "barre-6",
+        "barre-11",
+        "triad",
+      ]);
+    });
+
+    it("extracts G# major voicing frets and base-fret values in source order", () => {
+      const url = URL_BY_SLUG["g-sharp-major"];
+      const html = readFixture("g-sharp-major");
+      const parsed = parseGuitarChordOrg(html, url);
+
+      expect(parsed.voicings.map((voicing) => voicing.frets)).toEqual([
+        [4, 6, 6, 5, 4, 4],
+        [null, 11, 13, 13, 13, 11],
+        [null, null, 6, 5, 4, 4],
+      ]);
+      expect(parsed.voicings.map((voicing) => voicing.base_fret)).toEqual([4, 11, 4]);
+      expect(parsed.voicings.map((voicing) => voicing.id)).toEqual([
+        "barre-4",
         "barre-11",
         "triad",
       ]);
