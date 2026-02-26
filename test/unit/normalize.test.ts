@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { derivePosition, normalizeQuality, normalizeRecords } from "../../src/ingest/normalize/normalize.js";
-import type { RawChordRecord } from "../../src/types/model.js";
+import { AliasCollisionError, detectAliasCollisions, derivePosition, normalizeQuality, normalizeRecords } from "../../src/ingest/normalize/normalize.js";
+import type { ChordRecord, RawChordRecord } from "../../src/types/model.js";
 
 describe("normalizeQuality", () => {
   it("maps canonical aliases", () => {
@@ -349,5 +349,107 @@ describe("normalizeRecords", () => {
 
     const normalized = normalizeRecords(raw);
     expect(normalized[0]?.voicings[0]?.position).toBe("open");
+  });
+});
+
+describe("detectAliasCollisions", () => {
+  function makeChord(id: string, root: string, quality: "maj" | "min" | "7" | "maj7", aliases: string[]): ChordRecord {
+    return {
+      id,
+      root,
+      quality,
+      aliases,
+      enharmonic_equivalents: [],
+      formula: ["1", "3", "5"],
+      pitch_classes: [],
+      tuning: ["E", "A", "D", "G", "B", "E"],
+      voicings: [],
+      notes: { summary: "" },
+      source_refs: [{ source: "unit", url: "https://example.com" }],
+    };
+  }
+
+  it("passes when all aliases are unique across chords", () => {
+    const chords = [
+      makeChord("chord:C:maj", "C", "maj", ["C", "Cmaj", "CM"]),
+      makeChord("chord:C:min", "C", "min", ["Cm", "Cmin"]),
+      makeChord("chord:C:7", "C", "7", ["C7"]),
+    ];
+    expect(() => detectAliasCollisions(chords)).not.toThrow();
+  });
+
+  it("passes when an alias is shared only between mutual enharmonic equivalents", () => {
+    // Db is a valid alias for both C# major and Db major — they are the same chord enharmonically
+    const cSharp = { ...makeChord("chord:C#:maj", "C#", "maj", ["C#", "Db", "C#maj", "Dbmaj"]), enharmonic_equivalents: ["chord:Db:maj"] };
+    const dbMaj  = { ...makeChord("chord:Db:maj", "Db", "maj", ["Db", "C#", "Dbmaj", "C#maj"]), enharmonic_equivalents: ["chord:C#:maj"] };
+    expect(() => detectAliasCollisions([cSharp, dbMaj])).not.toThrow();
+  });
+
+  it("throws AliasCollisionError when two non-enharmonic chords share an alias", () => {
+    const chords = [
+      makeChord("chord:C:maj", "C", "maj", ["C", "Cmaj"]),
+      makeChord("chord:C:min", "C", "min", ["C", "Cm"]), // "C" collides with chord:C:maj
+    ];
+    expect(() => detectAliasCollisions(chords)).toThrow(AliasCollisionError);
+  });
+
+  it("includes all offending aliases in the error message", () => {
+    const chords = [
+      makeChord("chord:C:maj", "C", "maj", ["C", "Shared"]),
+      makeChord("chord:C:min", "C", "min", ["Cm", "Shared"]),
+    ];
+    let error: AliasCollisionError | undefined;
+    try {
+      detectAliasCollisions(chords);
+    } catch (e) {
+      error = e as AliasCollisionError;
+    }
+    expect(error).toBeInstanceOf(AliasCollisionError);
+    expect(error?.message).toContain("\"Shared\"");
+    expect(error?.message).toContain("chord:C:maj");
+    expect(error?.message).toContain("chord:C:min");
+  });
+
+  it("reports collision via structured collisions property", () => {
+    const chords = [
+      makeChord("chord:C:maj", "C", "maj", ["C"]),
+      makeChord("chord:D:maj", "D", "maj", ["C"]),
+    ];
+    let error: AliasCollisionError | undefined;
+    try {
+      detectAliasCollisions(chords);
+    } catch (e) {
+      error = e as AliasCollisionError;
+    }
+    expect(error?.collisions).toHaveLength(1);
+    expect(error?.collisions[0]).toEqual({ alias: "C", chordIds: ["chord:C:maj", "chord:D:maj"] });
+  });
+
+  it("normalizeRecords throws AliasCollisionError when source aliases would collide", () => {
+    const raw: RawChordRecord[] = [
+      {
+        source: "unit",
+        url: "https://example.com/c-major",
+        root: "C",
+        quality_raw: "major",
+        symbol: "C",
+        aliases: ["SharedAlias"],
+        formula: ["1", "3", "5"],
+        pitch_classes: ["C", "E", "G"],
+        voicings: []
+      },
+      {
+        source: "unit",
+        url: "https://example.com/d-major",
+        root: "D",
+        quality_raw: "major",
+        symbol: "D",
+        aliases: ["SharedAlias"], // same alias for a different chord
+        formula: ["1", "3", "5"],
+        pitch_classes: ["D", "F#", "A"],
+        voicings: []
+      },
+    ];
+    expect(() => normalizeRecords(raw)).toThrow(AliasCollisionError);
   });
 });

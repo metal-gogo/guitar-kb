@@ -2,6 +2,70 @@ import type { ChordQuality, ChordRecord, RawChordRecord, SourceRef, VoicingPosit
 import { assertCanonicalChordId } from "../../types/guards.js";
 import { compareChordOrder } from "../../utils/sort.js";
 
+/** Thrown when two distinct chords share the same alias. */
+export class AliasCollisionError extends Error {
+  readonly collisions: ReadonlyArray<{ alias: string; chordIds: string[] }>;
+
+  constructor(collisions: Array<{ alias: string; chordIds: string[] }>) {
+    const lines = collisions
+      .map(({ alias, chordIds }) => `  "${alias}" → ${chordIds.join(", ")}`)
+      .join("\n");
+    super(`Normalization alias collision detected:\n${lines}`);
+    this.name = "AliasCollisionError";
+    this.collisions = collisions;
+  }
+}
+
+/**
+ * Scans `chords` for any alias that maps to more than one canonical chord ID.
+ *
+ * Collisions between chords that are declared mutual enharmonic equivalents are
+ * permitted and silently skipped — e.g. "Db" appearing in both `chord:C#:maj`
+ * and `chord:Db:maj` is expected.  Any other collision throws
+ * {@link AliasCollisionError}.
+ */
+export function detectAliasCollisions(chords: ChordRecord[]): void {
+  // Build a lookup: chordId → set of its enharmonic equivalents
+  const enharmonicMap = new Map<string, Set<string>>();
+  for (const chord of chords) {
+    enharmonicMap.set(chord.id, new Set(chord.enharmonic_equivalents ?? []));
+  }
+
+  /** Returns true when every pair in `ids` is a mutual enharmonic equivalent. */
+  function allEnharmonic(ids: string[]): boolean {
+    for (let i = 0; i < ids.length; i++) {
+      for (let j = i + 1; j < ids.length; j++) {
+        const a = ids[i]!;
+        const b = ids[j]!;
+        if (!enharmonicMap.get(a)?.has(b) || !enharmonicMap.get(b)?.has(a)) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
+  const aliasToIds = new Map<string, string[]>();
+  for (const chord of chords) {
+    for (const alias of chord.aliases ?? []) {
+      const existing = aliasToIds.get(alias);
+      if (existing) {
+        existing.push(chord.id);
+      } else {
+        aliasToIds.set(alias, [chord.id]);
+      }
+    }
+  }
+
+  const collisions = [...aliasToIds.entries()]
+    .filter(([, ids]) => ids.length > 1 && !allEnharmonic(ids))
+    .map(([alias, chordIds]) => ({ alias, chordIds }));
+
+  if (collisions.length > 0) {
+    throw new AliasCollisionError(collisions);
+  }
+}
+
 const QUALITY_MAP: Record<string, ChordQuality> = {
   m: "min",
   minor: "min",
@@ -260,5 +324,7 @@ export function normalizeRecords(raw: RawChordRecord[]): ChordRecord[] {
     existing.voicings.sort((a, b) => a.id.localeCompare(b.id));
   }
 
-  return [...merged.values()].sort(compareChordOrder);
+  const result = [...merged.values()].sort(compareChordOrder);
+  detectAliasCollisions(result);
+  return result;
 }
