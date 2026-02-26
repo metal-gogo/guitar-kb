@@ -114,16 +114,36 @@ npm run lint
 npm test
 ```
 
+### Release gate (pre-merge verification)
+
+Run all quality gates in a single command:
+
+```bash
+npm run preflight
+```
+
+This runs `lint → test → build → validate` in sequence and fails fast on the
+first error. `build` includes the ingest pipeline if
+`data/generated/chords.normalized.json` is absent.
+
+To include a full source refresh before the gate:
+
+```bash
+npm run ingest && npm run preflight
+```
+
 ## Typical local workflows
 
 ### Full clean local verification (recommended before PR)
 
 ```bash
-npm run lint
-npm test
-npm run ingest
-npm run build
-npm run validate
+npm run preflight
+```
+
+For a full source refresh first:
+
+```bash
+npm run ingest && npm run preflight
 ```
 
 ### Fast artifact refresh during development
@@ -160,7 +180,13 @@ See `AGENTS.md` for full operating policy.
 
 ## CI and review gates
 
-PRs are expected to pass:
+PRs are expected to pass the full quality gate. Run locally before pushing:
+
+```bash
+npm run preflight
+```
+
+Individual steps:
 
 - `npm run lint`
 - `npm test`
