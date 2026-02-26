@@ -1,9 +1,13 @@
 import { readFile } from "node:fs/promises";
 import { Ajv2020 } from "ajv/dist/2020.js";
 import type { ChordRecord } from "../types/model.js";
+import { ValidationError, ValidationErrorCode } from "./errors.js";
 
-function throwVoicingGuard(recordId: string, voicingIndex: number, reason: string): never {
-  throw new Error(`Schema validation failed for ${recordId}\nVoicing guard failed at voicing[${voicingIndex}]: ${reason}`);
+function throwVoicingGuard(recordId: string, voicingIndex: number, code: ValidationErrorCode, reason: string): never {
+  throw new ValidationError(
+    code,
+    `Schema validation failed for ${recordId}\nVoicing guard failed at voicing[${voicingIndex}]: ${reason}`,
+  );
 }
 
 function validateVoicingGuards(record: ChordRecord): void {
@@ -19,7 +23,7 @@ function validateVoicingGuards(record: ChordRecord): void {
     }
 
     if (voicing.frets.length !== tuningStringCount) {
-      throwVoicingGuard(record.id, voicingIndex, `expected ${tuningStringCount} strings, received ${voicing.frets.length}`);
+      throwVoicingGuard(record.id, voicingIndex, ValidationErrorCode.VOICING_STRING_COUNT_MISMATCH, `expected ${tuningStringCount} strings, received ${voicing.frets.length}`);
     }
 
     let hasPlayedString = false;
@@ -29,18 +33,18 @@ function validateVoicingGuards(record: ChordRecord): void {
       }
 
       if (typeof fret !== "number" || !Number.isInteger(fret)) {
-        throwVoicingGuard(record.id, voicingIndex, `string ${stringIndex} has non-integer fret value`);
+        throwVoicingGuard(record.id, voicingIndex, ValidationErrorCode.VOICING_INVALID_FRET_VALUE, `string ${stringIndex} has non-integer fret value`);
       }
 
       if (fret < 0 || fret > 24) {
-        throwVoicingGuard(record.id, voicingIndex, `string ${stringIndex} has out-of-range fret ${fret}`);
+        throwVoicingGuard(record.id, voicingIndex, ValidationErrorCode.VOICING_FRET_OUT_OF_RANGE, `string ${stringIndex} has out-of-range fret ${fret}`);
       }
 
       hasPlayedString = true;
     }
 
     if (!hasPlayedString) {
-      throwVoicingGuard(record.id, voicingIndex, "all strings are muted");
+      throwVoicingGuard(record.id, voicingIndex, ValidationErrorCode.VOICING_ALL_STRINGS_MUTED, "all strings are muted");
     }
   }
 }
@@ -73,7 +77,7 @@ export async function validateChordRecords(records: ChordRecord[]): Promise<void
     const valid = validate(record);
     if (!valid) {
       const details = ajv.errorsText(validate.errors, { separator: "\n" });
-      throw new Error(`Schema validation failed for ${recordId}\n${details}`);
+      throw new ValidationError(ValidationErrorCode.SCHEMA_INVALID, `Schema validation failed for ${recordId}\n${details}`);
     }
   }
 }
