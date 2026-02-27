@@ -125,9 +125,7 @@ npm run lint && npm test && npm run build && npm run validate
 
 ---
 
-## Further Reading
-
-- [Parser Fixture Index and Minimization Guide](docs/contributing/parser-fixtures.md) — fixture inventory, minimization rules, and how to add new fixtures
+## PR Readiness Auto-Check
 
 Run before opening a PR to get a full pass/fail checklist:
 
@@ -161,3 +159,8 @@ PR Readiness Check
 
 All checks passed. Ready to open a PR.
 ```
+---
+
+## Further Reading
+
+- [Parser Fixture Index and Minimization Guide](docs/contributing/parser-fixtures.md) — fixture inventory, minimization rules, and how to add new fixtures
