@@ -84,6 +84,19 @@ jobs:
           exit $code
         continue-on-error: true
 
+      - name: docs changelog snapshot
+        id: docs_changelog
+        if: steps.install.outcome == 'success'
+        run: |
+          set +e
+          npm run docs-changelog -- \
+            --out .artifacts/docs-changelog.txt \
+            --json .artifacts/docs-changelog.json
+          code=$?
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          exit $code
+        continue-on-error: true
+
       - name: validate
         id: validate
         if: steps.install.outcome == 'success'
@@ -104,6 +117,7 @@ jobs:
           STATUS_FLAKY_SUMMARY="${{ steps.flaky_summary.outcome }}"
           STATUS_INGEST="${{ steps.ingest.outcome }}"
           STATUS_BUILD="${{ steps.build.outcome }}"
+          STATUS_DOCS_CHANGELOG="${{ steps.docs_changelog.outcome }}"
           STATUS_VALIDATE="${{ steps.validate.outcome }}"
 
           EXIT_INSTALL="${{ steps.install.outputs.exit_code }}"
@@ -112,6 +126,7 @@ jobs:
           EXIT_FLAKY_SUMMARY="${{ steps.flaky_summary.outputs.exit_code }}"
           EXIT_INGEST="${{ steps.ingest.outputs.exit_code }}"
           EXIT_BUILD="${{ steps.build.outputs.exit_code }}"
+          EXIT_DOCS_CHANGELOG="${{ steps.docs_changelog.outputs.exit_code }}"
           EXIT_VALIDATE="${{ steps.validate.outputs.exit_code }}"
 
           [ -z "$EXIT_INSTALL" ] && EXIT_INSTALL="n/a"
@@ -120,6 +135,7 @@ jobs:
           [ -z "$EXIT_FLAKY_SUMMARY" ] && EXIT_FLAKY_SUMMARY="n/a"
           [ -z "$EXIT_INGEST" ] && EXIT_INGEST="n/a"
           [ -z "$EXIT_BUILD" ] && EXIT_BUILD="n/a"
+          [ -z "$EXIT_DOCS_CHANGELOG" ] && EXIT_DOCS_CHANGELOG="n/a"
           [ -z "$EXIT_VALIDATE" ] && EXIT_VALIDATE="n/a"
 
           icon() {
@@ -144,11 +160,13 @@ jobs:
             echo "| flaky-summary | \`npm run ci:flaky-summary\` | $(icon "$STATUS_FLAKY_SUMMARY") $STATUS_FLAKY_SUMMARY | $EXIT_FLAKY_SUMMARY |"
             echo "| ingest   | \`npm run ingest\` | $(icon "$STATUS_INGEST") $STATUS_INGEST | $EXIT_INGEST |"
             echo "| build    | \`npm run build\` | $(icon "$STATUS_BUILD") $STATUS_BUILD | $EXIT_BUILD |"
+            echo "| docs-changelog | \`npm run docs-changelog\` | $(icon "$STATUS_DOCS_CHANGELOG") $STATUS_DOCS_CHANGELOG | $EXIT_DOCS_CHANGELOG |"
             echo "| validate | \`npm run validate\` | $(icon "$STATUS_VALIDATE") $STATUS_VALIDATE | $EXIT_VALIDATE |"
             echo ""
             if [ "$STATUS_INSTALL" = "failure" ] || [ "$STATUS_LINT" = "failure" ] || [ "$STATUS_TEST" = "failure" ] || \
                [ "$STATUS_FLAKY_SUMMARY" = "failure" ] || \
                [ "$STATUS_INGEST" = "failure" ] || [ "$STATUS_BUILD" = "failure" ] || \
+               [ "$STATUS_DOCS_CHANGELOG" = "failure" ] || \
                [ "$STATUS_VALIDATE" = "failure" ]; then
               echo "## Remediation Hints"
               echo ""
@@ -158,6 +176,7 @@ jobs:
               [ "$STATUS_FLAKY_SUMMARY" = "failure" ] && echo "- **flaky-summary failed**: run \`npm run ci:flaky-summary -- --input .artifacts/vitest-results.json\` and verify vitest JSON is present."
               [ "$STATUS_INGEST"   = "failure" ] && echo "- **ingest failed**: run \`npm run ingest\` locally; verify cached HTML under \`data/sources/\` is present (\`npm run audit-cache\`)."
               [ "$STATUS_BUILD"    = "failure" ] && echo "- **build failed**: run \`npm run build\` locally; check docs/SVG generator errors."
+              [ "$STATUS_DOCS_CHANGELOG" = "failure" ] && echo "- **docs-changelog failed**: run \`npm run docs-changelog\` locally and verify docs outputs exist after \`npm run build\`."
               [ "$STATUS_VALIDATE" = "failure" ] && echo "- **validate failed**: run \`npm run validate\` locally; check \`chords.schema.json\` compliance and provenance."
             fi
           } > "$SUMMARY_FILE"
@@ -183,6 +202,17 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
 
+      - name: upload docs changelog artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: docs-changelog-snapshot
+          path: |
+            .artifacts/docs-changelog.txt
+            .artifacts/docs-changelog.json
+          if-no-files-found: warn
+          retention-days: 7
+
       - name: fail if any step failed
         if: |
           steps.install.outcome == 'failure' ||
@@ -191,6 +221,7 @@ jobs:
           steps.flaky_summary.outcome == 'failure' ||
           steps.ingest.outcome == 'failure' ||
           steps.build.outcome == 'failure' ||
+          steps.docs_changelog.outcome == 'failure' ||
           steps.validate.outcome == 'failure'
         run: |
           echo "One or more CI steps failed. See ci-summary.md artifact for details."
