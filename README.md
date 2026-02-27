@@ -122,6 +122,21 @@ For reproducible output in CI logs, pin an explicit `as-of` timestamp:
 npm run source-freshness -- --as-of 2026-02-27T00:00:00.000Z --max-age-days 30
 ```
 
+### Snapshot generated docs changes
+
+```bash
+npm run docs-changelog
+```
+
+Compares generated docs outputs against a baseline snapshot and reports
+deterministic `added/changed/removed` file lists.
+
+To update the baseline after an intentional docs regeneration:
+
+```bash
+npm run docs-changelog -- --write-baseline
+```
+
 ### Lint and tests
 
 ```bash
