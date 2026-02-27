@@ -1,12 +1,17 @@
 import type { ChordRecord } from "../../types/model.js";
 import { compareChordOrder } from "../../utils/sort.js";
+import {
+  relativeChordIndexPath,
+  relativeChordPagePath,
+  relativeVoicingDiagramPath,
+} from "./paths.js";
 
 function pagePathForChordId(chordId: string): string {
-  return `./${chordId.replace(/:/g, "__").replace(/#/g, "%23")}.md`;
+  return relativeChordPagePath(chordId);
 }
 
 function diagramPathForVoicingId(voicingId: string): string {
-  return `../diagrams/${voicingId.replace(/:/g, "__").replace(/#/g, "%23")}.svg`;
+  return relativeVoicingDiagramPath(voicingId);
 }
 
 function formatNavLinks(ids: string[], byId: Map<string, ChordRecord>): string {
@@ -93,7 +98,7 @@ export function chordIndexMarkdown(chords: ChordRecord[]): string {
 
   const sections = Array.from(grouped.entries()).map(([root, rootChords]) => {
     const lines = rootChords.map((chord) => {
-      const pagePath = `./chords/${chord.id.replace(/:/g, "__").replace(/#/g, "%23")}.md`;
+      const pagePath = relativeChordIndexPath(chord.id);
       const aliases = (chord.aliases ?? []).join(", ") || "none";
       const formula = chord.formula.join("-");
       return `- [${chord.quality}](${pagePath}) (${chord.root} ${chord.quality}; aliases: ${aliases}; formula: ${formula})`;
