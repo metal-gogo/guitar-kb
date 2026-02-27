@@ -26,6 +26,7 @@ jobs:
 
       - name: lint
         id: lint
+        if: steps.install.outcome == 'success'
         run: |
           set +e
           npm run lint
@@ -36,6 +37,7 @@ jobs:
 
       - name: test
         id: test
+        if: steps.install.outcome == 'success'
         run: |
           set +e
           npm test
@@ -46,6 +48,7 @@ jobs:
 
       - name: ingest
         id: ingest
+        if: steps.install.outcome == 'success'
         run: |
           set +e
           npm run ingest
@@ -56,6 +59,7 @@ jobs:
 
       - name: build
         id: build
+        if: steps.install.outcome == 'success'
         run: |
           set +e
           npm run build
@@ -66,6 +70,7 @@ jobs:
 
       - name: validate
         id: validate
+        if: steps.install.outcome == 'success'
         run: |
           set +e
           npm run validate
@@ -98,7 +103,15 @@ jobs:
           [ -z "$EXIT_BUILD" ] && EXIT_BUILD="n/a"
           [ -z "$EXIT_VALIDATE" ] && EXIT_VALIDATE="n/a"
 
-          icon() { [ "$1" = "success" ] && echo "✅" || echo "❌"; }
+          icon() {
+            case "$1" in
+              success) echo "✅" ;;
+              failure) echo "❌" ;;
+              skipped) echo "⏭" ;;
+              cancelled) echo "⏹" ;;
+              *) echo "❔" ;;
+            esac
+          }
 
           SUMMARY_FILE="ci-summary.md"
           {
@@ -113,17 +126,17 @@ jobs:
             echo "| build    | \`npm run build\` | $(icon "$STATUS_BUILD") $STATUS_BUILD | $EXIT_BUILD |"
             echo "| validate | \`npm run validate\` | $(icon "$STATUS_VALIDATE") $STATUS_VALIDATE | $EXIT_VALIDATE |"
             echo ""
-            if [ "$STATUS_INSTALL" != "success" ] || [ "$STATUS_LINT" != "success" ] || [ "$STATUS_TEST" != "success" ] || \
-               [ "$STATUS_INGEST" != "success" ] || [ "$STATUS_BUILD" != "success" ] || \
-               [ "$STATUS_VALIDATE" != "success" ]; then
+            if [ "$STATUS_INSTALL" = "failure" ] || [ "$STATUS_LINT" = "failure" ] || [ "$STATUS_TEST" = "failure" ] || \
+               [ "$STATUS_INGEST" = "failure" ] || [ "$STATUS_BUILD" = "failure" ] || \
+               [ "$STATUS_VALIDATE" = "failure" ]; then
               echo "## Remediation Hints"
               echo ""
-              [ "$STATUS_INSTALL"  != "success" ] && echo "- **install failed**: run \`npm ci\` locally; check your Node.js version and network access."
-              [ "$STATUS_LINT"     != "success" ] && echo "- **lint failed**: run \`npm run lint\` locally and fix TypeScript errors."
-              [ "$STATUS_TEST"     != "success" ] && echo "- **test failed**: run \`npm test\` locally; check for regressions in parsers, normalization, or SVG output."
-              [ "$STATUS_INGEST"   != "success" ] && echo "- **ingest failed**: run \`npm run ingest\` locally; verify cached HTML under \`data/sources/\` is present (\`npm run audit-cache\`)."
-              [ "$STATUS_BUILD"    != "success" ] && echo "- **build failed**: run \`npm run build\` locally; check docs/SVG generator errors."
-              [ "$STATUS_VALIDATE" != "success" ] && echo "- **validate failed**: run \`npm run validate\` locally; check \`chords.schema.json\` compliance and provenance."
+              [ "$STATUS_INSTALL"  = "failure" ] && echo "- **install failed**: run \`npm ci\` locally; check your Node.js version and network access."
+              [ "$STATUS_LINT"     = "failure" ] && echo "- **lint failed**: run \`npm run lint\` locally and fix TypeScript errors."
+              [ "$STATUS_TEST"     = "failure" ] && echo "- **test failed**: run \`npm test\` locally; check for regressions in parsers, normalization, or SVG output."
+              [ "$STATUS_INGEST"   = "failure" ] && echo "- **ingest failed**: run \`npm run ingest\` locally; verify cached HTML under \`data/sources/\` is present (\`npm run audit-cache\`)."
+              [ "$STATUS_BUILD"    = "failure" ] && echo "- **build failed**: run \`npm run build\` locally; check docs/SVG generator errors."
+              [ "$STATUS_VALIDATE" = "failure" ] && echo "- **validate failed**: run \`npm run validate\` locally; check \`chords.schema.json\` compliance and provenance."
             fi
           } > "$SUMMARY_FILE"
 
@@ -139,12 +152,12 @@ jobs:
 
       - name: fail if any step failed
         if: |
-          steps.install.outcome != 'success' ||
-          steps.lint.outcome != 'success' ||
-          steps.test.outcome != 'success' ||
-          steps.ingest.outcome != 'success' ||
-          steps.build.outcome != 'success' ||
-          steps.validate.outcome != 'success'
+          steps.install.outcome == 'failure' ||
+          steps.lint.outcome == 'failure' ||
+          steps.test.outcome == 'failure' ||
+          steps.ingest.outcome == 'failure' ||
+          steps.build.outcome == 'failure' ||
+          steps.validate.outcome == 'failure'
         run: |
           echo "One or more CI steps failed. See ci-summary.md artifact for details."
           exit 1
