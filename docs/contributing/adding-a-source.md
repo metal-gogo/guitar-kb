@@ -10,8 +10,10 @@ into the GCKB ingest pipeline.
 - The source URL is stable and publicly accessible.
 - You have reviewed the [legal and content safety rules](../../AGENTS.md#2-legal--content-safety-rules-non-negotiable):
   - Only factual data (chord names, fret values, notes) may be extracted.
-  - Source HTML must be cached in `data/sources/<source-id>/`; **do not commit raw
-    HTML to git** (add it to `.gitignore` if needed).
+  - Source HTML must be cached in `data/sources/<source-id>/`, and cache files under
+    `data/sources/**/*.html` are committed to support deterministic, offline builds.
+    These cache artifacts must be **minimized/synthetic only** (no copied prose,
+    diagrams, or images; just the minimal HTML needed for parsing).
   - Every voicing record must carry `source_refs` with a `source` identifier and the
     page URL.
 
@@ -24,15 +26,13 @@ into the GCKB ingest pipeline.
 - [ ] Pick a short, lowercase, hyphenated identifier, e.g. `my-chord-source`.
 - [ ] The ID must be unique across `SOURCE_REGISTRY` in
   [`src/ingest/sourceRegistry.ts`](../../src/ingest/sourceRegistry.ts).
-- [ ] Add the new ID to the `source` union type in
-  [`src/types/model.ts`](../../src/types/model.ts) — see the `IngestTarget.source`
-  field.
+- [ ] Add the new ID to the `IngestTarget["source"]` union in
+  [`src/config.ts`](../../src/config.ts).
 
-### 2. Add the source to `config.ts`
+### 2. Add the source targets to `config.ts`
 
 In [`src/config.ts`](../../src/config.ts):
 
-- [ ] Add `"<your-source-id>"` to the `IngestTarget["source"]` union.
 - [ ] Add entries to `MVP_TARGETS` (or a parallel targets array) for each
   chord / root combination you want to ingest.  Each entry must include:
   ```ts
@@ -74,7 +74,7 @@ import type { RawChordRecord, RawVoicing } from "../../types/model.js";
  * @param html - Raw HTML string from the cached page.
  * @param url  - Canonical page URL (used in source_refs provenance).
  */
-export function parse<CamelCaseSourceId>(html: string, url: string): RawChordRecord {
+export function parseMyNewSource(html: string, url: string): RawChordRecord {
   const $ = load(html);
 
   // --- locate the root chord container ---
@@ -107,6 +107,15 @@ export function parse<CamelCaseSourceId>(html: string, url: string): RawChordRec
   return { source: "<your-source-id>", url, symbol, root, quality_raw: qualityRaw,
            aliases, formula, pitch_classes: pitchClasses, voicings };
 }
+
+// Helper — implement to match your source's fret-list separator:
+function parseVoicingList(value: string): Array<number | null> {
+  // e.g. split by "," (guitar-chord-org) or "-" (all-guitar-chords)
+  return value.split(",").map((v) => {
+    const n = v.trim().toLowerCase();
+    return n === "x" || n === "" ? null : Number.parseInt(n, 10);
+  });
+}
 ```
 
 Parser requirements:
@@ -121,7 +130,7 @@ Parser requirements:
 In [`src/ingest/sourceRegistry.ts`](../../src/ingest/sourceRegistry.ts):
 
 ```ts
-import { parse<CamelCaseSourceId> } from "./parsers/<camelCaseSourceId>.js";
+import { parseMyNewSource } from "./parsers/myNewSource.js";
 
 export const SOURCE_REGISTRY: ReadonlyArray<SourceRegistryEntry> = [
   // ... existing entries ...
@@ -130,7 +139,7 @@ export const SOURCE_REGISTRY: ReadonlyArray<SourceRegistryEntry> = [
     displayName: "<Human Readable Name>",
     baseUrl:     "https://...",
     cacheDir:    "<your-source-id>",
-    parse:       parse<CamelCaseSourceId>,
+    parse:       parseMyNewSource,
   },
 ];
 ```
@@ -141,8 +150,8 @@ export const SOURCE_REGISTRY: ReadonlyArray<SourceRegistryEntry> = [
 ### 6. Add test fixtures and parser unit tests
 
 - [ ] Save a **minimal** cached HTML page to
-  `test/fixtures/sources/<your-source-id>/<root>-<quality>.html`.
-  Follow the [Parser Fixture Index and Minimization Guide](parser-fixtures.md).
+  `test/fixtures/sources/<your-source-id>/`, following the naming conventions in
+  the [Parser Fixture Index and Minimization Guide](parser-fixtures.md).
 - [ ] Add a test file `test/unit/parser.<camelCaseSourceId>.test.ts` that:
   - Loads the fixture HTML.
   - Calls your parser with a representative URL.
@@ -177,8 +186,8 @@ All four commands must pass with no errors before opening a PR.
 
 | # | Step | File(s) affected |
 |---|------|-----------------|
-| 1 | Choose source ID, add to `source` union | `src/types/model.ts` |
-| 2 | Add targets to `config.ts` | `src/config.ts` |
+| 1 | Choose source ID, add to `IngestTarget["source"]` union | `src/config.ts` |
+| 2 | Add ingest targets to `MVP_TARGETS` | `src/config.ts` |
 | 3 | Cache HTML via `npm run ingest --refresh` | `data/sources/<id>/` |
 | 4 | Write parser returning `RawChordRecord` with provenance | `src/ingest/parsers/<id>.ts` |
 | 5 | Register in `SOURCE_REGISTRY` | `src/ingest/sourceRegistry.ts` |
