@@ -34,8 +34,16 @@ async function main(): Promise<void> {
   );
   if (coverage.missingCanonicalIds.length > 0) {
     process.stdout.write(`Missing root-quality canonical IDs (${coverage.missingCanonicalIds.length}):\n`);
+    process.stdout.write(
+      `Missing severity counts: critical=${coverage.missingSeverityCounts.critical} high=${coverage.missingSeverityCounts.high} medium=${coverage.missingSeverityCounts.medium} low=${coverage.missingSeverityCounts.low}\n`,
+    );
     for (const id of coverage.missingCanonicalIds) {
       process.stdout.write(`MISSING ${id}\n`);
+    }
+    for (const missing of coverage.missingTagged) {
+      process.stdout.write(
+        `MISSING_TAG ${missing.canonicalId} severity=${missing.severity} tags=${missing.tags.join(",")}\n`,
+      );
     }
   } else {
     process.stdout.write("Missing root-quality canonical IDs (0): none\n");

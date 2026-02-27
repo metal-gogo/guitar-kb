@@ -34,6 +34,13 @@ describe("buildRootQualityCoverageReport", () => {
     expect(report.observedCombinations).toBe(4);
     expect(report.coveragePercent).toBe(100);
     expect(report.missingCanonicalIds).toEqual([]);
+    expect(report.missingTagged).toEqual([]);
+    expect(report.missingSeverityCounts).toEqual({
+      critical: 0,
+      high: 0,
+      medium: 0,
+      low: 0,
+    });
     expect(report.unexpectedCanonicalIds).toEqual([]);
   });
 
@@ -47,6 +54,14 @@ describe("buildRootQualityCoverageReport", () => {
     expect(report.expectedCombinations).toBe(4);
     expect(report.observedCombinations).toBe(2);
     expect(report.missingCanonicalIds).toEqual(["chord:C:min", "chord:D:maj"]);
+    expect(report.missingTagged.map((entry) => entry.canonicalId)).toEqual(["chord:C:min", "chord:D:maj"]);
+    expect(report.missingTagged.every((entry) => entry.severity === "critical")).toBe(true);
+    expect(report.missingSeverityCounts).toEqual({
+      critical: 2,
+      high: 0,
+      medium: 0,
+      low: 0,
+    });
   });
 
   it("deduplicates observed canonical IDs", () => {
@@ -73,5 +88,47 @@ describe("buildRootQualityCoverageReport", () => {
     expect(report.expectedCombinations).toBe(1);
     expect(report.observedCombinations).toBe(1);
     expect(report.unexpectedCanonicalIds).toEqual(["chord:C:7", "chord:E:maj"]);
+  });
+
+  it("classifies missing IDs into deterministic severity buckets", () => {
+    const report = buildRootQualityCoverageReport([], {
+      roots: ["C"],
+      qualities: ["maj", "min7", "dim", "sus2"],
+    });
+
+    expect(report.missingCanonicalIds).toEqual([
+      "chord:C:maj",
+      "chord:C:min7",
+      "chord:C:dim",
+      "chord:C:sus2",
+    ]);
+    expect(report.missingTagged).toEqual([
+      {
+        canonicalId: "chord:C:maj",
+        severity: "critical",
+        tags: ["severity:critical", "quality:maj"],
+      },
+      {
+        canonicalId: "chord:C:min7",
+        severity: "high",
+        tags: ["severity:high", "quality:min7"],
+      },
+      {
+        canonicalId: "chord:C:dim",
+        severity: "medium",
+        tags: ["severity:medium", "quality:dim"],
+      },
+      {
+        canonicalId: "chord:C:sus2",
+        severity: "low",
+        tags: ["severity:low", "quality:sus2"],
+      },
+    ]);
+    expect(report.missingSeverityCounts).toEqual({
+      critical: 1,
+      high: 1,
+      medium: 1,
+      low: 1,
+    });
   });
 });
