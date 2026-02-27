@@ -1,3 +1,5 @@
+import { SOURCE_REGISTRY } from "../ingest/sourceRegistry.js";
+
 interface BaseCliOptions {
   chord?: string;
   source?: string;
@@ -10,6 +12,8 @@ export interface IngestCliOptions extends BaseCliOptions {
 
 export interface BuildCliOptions extends BaseCliOptions {
 }
+
+const KNOWN_SOURCE_IDS = SOURCE_REGISTRY.map((entry) => entry.id).join(", ");
 
 const INGEST_HELP = `
 Usage: npm run ingest [-- [OPTIONS]]
@@ -24,7 +28,7 @@ Options:
                     Example: npm run ingest -- --chord c-major
 
   --source <id>     Process only the specified source.
-                    Known sources: guitar-chord-org, all-guitar-chords.
+                    Known sources: ${KNOWN_SOURCE_IDS}.
                     Example: npm run ingest -- --source guitar-chord-org
 
   --refresh         Re-fetch all source pages from the network, overwriting
@@ -59,7 +63,7 @@ Options:
 
   --source <id>     Build only chords that have at least one voicing from the
                     specified source.
-                    Known sources: guitar-chord-org, all-guitar-chords.
+                    Known sources: ${KNOWN_SOURCE_IDS}.
                     Example: npm run build -- --source guitar-chord-org
 
   --dry-run         Report how many chords would be built without writing any

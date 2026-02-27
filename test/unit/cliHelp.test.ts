@@ -1,5 +1,6 @@
 import { describe, expect, it, vi, afterEach } from "vitest";
 import { parseIngestCliOptions, parseBuildCliOptions, INGEST_HELP, BUILD_HELP } from "../../src/cli/options.js";
+import { SOURCE_REGISTRY } from "../../src/ingest/sourceRegistry.js";
 
 describe("CLI help flags", () => {
   afterEach(() => {
@@ -66,6 +67,13 @@ describe("CLI help flags", () => {
   it("INGEST_HELP and BUILD_HELP each include at least one npm run example", () => {
     expect(INGEST_HELP).toContain("npm run ingest");
     expect(BUILD_HELP).toContain("npm run build");
+  });
+
+  it("help text source list is derived from the source registry", () => {
+    for (const source of SOURCE_REGISTRY) {
+      expect(INGEST_HELP).toContain(source.id);
+      expect(BUILD_HELP).toContain(source.id);
+    }
   });
 
   it("parseIngestCliOptions: normal flags still parse correctly (no help flag)", () => {
