@@ -1,7 +1,8 @@
-import { readFile } from "node:fs/promises";
+import { readFile, writeFile } from "node:fs/promises";
 import { validateChordRecords } from "../validate/schema.js";
 import { checkSchemaCompatibility } from "../validate/compat.js";
 import { checkProvenanceCoverage } from "../validate/provenance.js";
+import { buildEnharmonicReport, formatEnharmonicReport } from "../validate/enharmonic.js";
 import type { ChordRecord } from "../types/model.js";
 
 async function main(): Promise<void> {
@@ -22,6 +23,20 @@ async function main(): Promise<void> {
 
   await validateChordRecords(records);
   process.stdout.write(`Validated ${records.length} chord records\n`);
+
+  // 3. Enharmonic equivalence report
+  const report = buildEnharmonicReport(records);
+  const reportMd = formatEnharmonicReport(report);
+  await writeFile("data/enharmonic-report.md", reportMd, "utf8");
+  if (report.asymmetries.length > 0) {
+    process.stderr.write(
+      `Warning: ${report.asymmetries.length} enharmonic asymmetry(ies) detected — see data/enharmonic-report.md\n`,
+    );
+  } else {
+    process.stdout.write(
+      `Enharmonic report: ${report.pairs.length} symmetric pair(s), no asymmetries\n`,
+    );
+  }
 }
 
 main().catch((error: unknown) => {
