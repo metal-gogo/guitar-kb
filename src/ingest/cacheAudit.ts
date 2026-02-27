@@ -1,9 +1,9 @@
 import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import { MVP_TARGETS } from "../config.js";
 import { sanitizeSlug } from "./fetch/cache.js";
 import { pathExists } from "../utils/fs.js";
+import { expectedCacheKeys } from "./cacheTargets.js";
 
 export type CacheEntryStatus = "ok" | "missing" | "corrupt";
 
@@ -28,25 +28,6 @@ const MINIMUM_VALID_HTML_BYTES = 64;
 
 function computeChecksum(content: Buffer): string {
   return createHash("sha256").update(content).digest("hex");
-}
-
-/** Build sorted list of unique (source, slug) pairs expected in the cache. */
-function expectedCacheKeys(): Array<{ source: string; slug: string }> {
-  const seen = new Set<string>();
-  const result: Array<{ source: string; slug: string }> = [];
-  for (const target of MVP_TARGETS) {
-    const key = `${target.source}::${target.slug}`;
-    if (!seen.has(key)) {
-      seen.add(key);
-      result.push({ source: target.source, slug: target.slug });
-    }
-  }
-  // Deterministic ordering: source asc, then slug asc
-  result.sort((a, b) => {
-    const sourceCmp = a.source.localeCompare(b.source);
-    return sourceCmp !== 0 ? sourceCmp : a.slug.localeCompare(b.slug);
-  });
-  return result;
 }
 
 /**

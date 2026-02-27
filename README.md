@@ -107,6 +107,21 @@ npm run validate
 
 Validates every `data/chords.jsonl` record against `chords.schema.json`.
 
+### Report source cache freshness
+
+```bash
+npm run source-freshness
+```
+
+Reports per-source cache freshness from `data/sources/` using file mtimes.
+Default stale threshold is `30` days.
+
+For reproducible output in CI logs, pin an explicit `as-of` timestamp:
+
+```bash
+npm run source-freshness -- --as-of 2026-02-27T00:00:00.000Z --max-age-days 30
+```
+
 ### Lint and tests
 
 ```bash
