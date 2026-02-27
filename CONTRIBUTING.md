@@ -114,6 +114,7 @@ npm test              # Vitest (all test files)
 npm run build         # Full build: docs + SVG + JSONL
 npm run validate      # Schema validation on generated JSONL
 npm run ingest        # Re-parse cached HTML sources
+npm run audit-cache   # Audit data/sources/ cache entries for missing/corrupt files
 ```
 
 Run all in sequence before opening a PR:
@@ -124,7 +125,9 @@ npm run lint && npm test && npm run build && npm run validate
 
 ---
 
-## PR Readiness Auto-Check
+## Further Reading
+
+- [Parser Fixture Index and Minimization Guide](docs/contributing/parser-fixtures.md) — fixture inventory, minimization rules, and how to add new fixtures
 
 Run before opening a PR to get a full pass/fail checklist:
 
