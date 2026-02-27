@@ -7,7 +7,10 @@ const MARKDOWN_LINK_RE = /\[([^\]]*)\]\(([^)]+)\)/g;
 export interface BrokenLink {
   sourceFile: string;
   linkText: string;
+  /** The original link target exactly as written in the markdown (may include #fragment). */
   linkTarget: string;
+  /** The path portion of linkTarget with any #fragment stripped — used for file resolution. */
+  linkPath: string;
   resolvedPath: string;
 }
 
@@ -18,8 +21,8 @@ export interface LinkCheckResult {
 }
 
 /** Extract all relative (non-http/https) markdown link targets from a file. */
-function extractRelativeLinks(markdown: string): Array<{ text: string; target: string }> {
-  const links: Array<{ text: string; target: string }> = [];
+function extractRelativeLinks(markdown: string): Array<{ text: string; target: string; pathPart: string }> {
+  const links: Array<{ text: string; target: string; pathPart: string }> = [];
   let match: RegExpExecArray | null;
   MARKDOWN_LINK_RE.lastIndex = 0;
   while ((match = MARKDOWN_LINK_RE.exec(markdown)) !== null) {
@@ -28,10 +31,10 @@ function extractRelativeLinks(markdown: string): Array<{ text: string; target: s
     if (target.startsWith("http://") || target.startsWith("https://") || target.startsWith("#")) {
       continue;
     }
-    // Strip fragment (#...) before checking path existence
+    // Separate the path part from any #fragment for file resolution
     const pathPart = target.includes("#") ? target.slice(0, target.indexOf("#")) : target;
     if (pathPart.length > 0) {
-      links.push({ text, target: pathPart });
+      links.push({ text, target, pathPart });
     }
   }
   return links;
@@ -55,17 +58,18 @@ export async function checkDocLinks(markdownFiles: string[]): Promise<LinkCheckR
       continue;
     }
 
-    checkedFiles++;
+    checkedFiles += 1;
     const links = extractRelativeLinks(content);
-    for (const { text, target } of links) {
+    for (const { text, target, pathPart } of links) {
       checkedLinks++;
-      const resolvedPath = path.resolve(path.dirname(file), target);
+      const resolvedPath = path.resolve(path.dirname(file), pathPart);
       const exists = await pathExists(resolvedPath);
       if (!exists) {
         brokenLinks.push({
           sourceFile: file,
           linkText: text,
           linkTarget: target,
+          linkPath: pathPart,
           resolvedPath,
         });
       }

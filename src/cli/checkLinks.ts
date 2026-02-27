@@ -3,23 +3,21 @@ import path from "node:path";
 import { checkDocLinks } from "../validate/links.js";
 
 async function gatherMarkdownFiles(dir: string): Promise<string[]> {
-  let entries: Array<{ name: string; isDirectory(): boolean; isFile(): boolean }>;
   try {
-    const raw = await readdir(dir, { withFileTypes: true, encoding: "utf8" });
-    entries = raw as Array<{ name: string; isDirectory(): boolean; isFile(): boolean }>;
+    const entries = await readdir(dir, { withFileTypes: true, encoding: "utf8" });
+    const files: string[] = [];
+    for (const entry of entries.slice().sort((a, b) => a.name.localeCompare(b.name))) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        files.push(...(await gatherMarkdownFiles(full)));
+      } else if (entry.isFile() && entry.name.endsWith(".md")) {
+        files.push(full);
+      }
+    }
+    return files;
   } catch {
     return [];
   }
-  const files: string[] = [];
-  for (const entry of entries.slice().sort((a, b) => a.name.localeCompare(b.name))) {
-    const full = path.join(dir, entry.name);
-    if (entry.isDirectory()) {
-      files.push(...(await gatherMarkdownFiles(full)));
-    } else if (entry.isFile() && entry.name.endsWith(".md")) {
-      files.push(full);
-    }
-  }
-  return files;
 }
 
 async function main(): Promise<void> {
