@@ -172,4 +172,5 @@ All checks passed. Ready to open a PR.
 - [Source Freshness Report](docs/contributing/source-freshness-report.md) — stale cache detection by source with deterministic CI log output
 - [Parser Confidence Annotations](docs/contributing/parser-confidence-annotations.md) — high/medium/low parser quality signals and debugging workflow
 - [Docs Changelog Snapshot](docs/contributing/docs-changelog-snapshot.md) — deterministic added/changed/removed summaries for generated docs outputs
+- [Ingestion Troubleshooting Decision Tree](docs/contributing/ingestion-troubleshooting-decision-tree.md) — parser/cache/network decision path with exact remediation commands
 - [Adding a New Chord Source](docs/contributing/adding-a-source.md) — step-by-step checklist for integrating a new provider into the ingest pipeline
