@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { MVP_TARGETS } from "../config.js";
+import { sanitizeSlug } from "./fetch/cache.js";
 import { pathExists } from "../utils/fs.js";
 
 export type CacheEntryStatus = "ok" | "missing" | "corrupt";
@@ -57,7 +58,7 @@ export async function auditCache(cacheBase = "data/sources"): Promise<CacheAudit
   const entries: CacheEntry[] = [];
 
   for (const { source, slug } of keys) {
-    const filePath = path.join(cacheBase, source, `${slug}.html`);
+    const filePath = path.join(cacheBase, source, `${sanitizeSlug(slug)}.html`);
     const exists = await pathExists(filePath);
 
     if (!exists) {
@@ -65,7 +66,15 @@ export async function auditCache(cacheBase = "data/sources"): Promise<CacheAudit
       continue;
     }
 
-    const content = await readFile(filePath);
+    let content: Buffer;
+    try {
+      content = await readFile(filePath);
+    } catch (err) {
+      const isNotFound = err instanceof Error && (err as NodeJS.ErrnoException).code === "ENOENT";
+      entries.push({ source, slug, filePath, status: isNotFound ? "missing" : "corrupt" });
+      continue;
+    }
+
     const checksum = computeChecksum(content);
 
     if (content.length < MINIMUM_VALID_HTML_BYTES) {
