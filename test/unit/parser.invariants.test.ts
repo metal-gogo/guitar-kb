@@ -73,6 +73,18 @@ function assertCoherenceInvariants(parsed: RawChordRecord, label: string): void 
       `${label}: voicings[${vi}] must have at least one source_ref`,
     ).toBe(true);
   }
+
+  // 9. parser confidence annotation must exist and reference the same source
+  expect(parsed.parser_confidence, `${label}: parser_confidence must be present`).toBeDefined();
+  expect(parsed.parser_confidence?.source, `${label}: parser_confidence.source mismatch`).toBe(parsed.source);
+  expect(
+    ["high", "medium", "low"].includes(parsed.parser_confidence?.level ?? ""),
+    `${label}: parser_confidence.level must be high|medium|low`,
+  ).toBe(true);
+  expect(
+    (parsed.parser_confidence?.checks.length ?? 0) > 0,
+    `${label}: parser_confidence.checks must be non-empty`,
+  ).toBe(true);
 }
 
 function readFixture(source: "guitar-chord-org" | "all-guitar-chords", slug: string): string {

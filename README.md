@@ -85,6 +85,12 @@ To refresh remote source pages while ingesting:
 npm run ingest -- --refresh
 ```
 
+To include parser confidence annotations for debugging:
+
+```bash
+npm run ingest -- --include-parser-confidence
+```
+
 ### Build outputs
 
 ```bash

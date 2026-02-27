@@ -10,6 +10,7 @@ describe("CLI options parsing", () => {
       "--chord",
       "chord:C:maj7",
       "--dry-run",
+      "--include-parser-confidence",
     ]);
 
     expect(options).toEqual({
@@ -17,6 +18,7 @@ describe("CLI options parsing", () => {
       source: "all-guitar-chords",
       chord: "chord:C:maj7",
       dryRun: true,
+      includeParserConfidence: true,
     });
   });
 

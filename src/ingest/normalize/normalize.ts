@@ -1,4 +1,11 @@
-import type { ChordQuality, ChordRecord, RawChordRecord, SourceRef, VoicingPosition } from "../../types/model.js";
+import type {
+  ChordQuality,
+  ChordRecord,
+  ParserConfidence,
+  RawChordRecord,
+  SourceRef,
+  VoicingPosition,
+} from "../../types/model.js";
 import { assertCanonicalChordId } from "../../types/guards.js";
 import { compareChordOrder } from "../../utils/sort.js";
 
@@ -268,8 +275,37 @@ export function derivePosition(frets: Array<number | null>): VoicingPosition {
   return "unknown";
 }
 
-export function normalizeRecords(raw: RawChordRecord[]): ChordRecord[] {
+export interface NormalizeRecordsOptions {
+  includeParserConfidence?: boolean;
+}
+
+function mergeParserConfidence(
+  existing: ParserConfidence[] | undefined,
+  confidence: ParserConfidence | undefined,
+): ParserConfidence[] | undefined {
+  if (!confidence) {
+    return existing;
+  }
+
+  const next = existing ? [...existing] : [];
+  if (!next.some((entry) => entry.source === confidence.source)) {
+    next.push(confidence);
+  }
+  next.sort((a, b) => {
+    if (a.source < b.source) {
+      return -1;
+    }
+    if (a.source > b.source) {
+      return 1;
+    }
+    return 0;
+  });
+  return next;
+}
+
+export function normalizeRecords(raw: RawChordRecord[], options: NormalizeRecordsOptions = {}): ChordRecord[] {
   const merged = new Map<string, ChordRecord>();
+  const includeParserConfidence = options.includeParserConfidence ?? false;
 
   for (const input of raw) {
     const quality = normalizeQuality(input.quality_raw);
@@ -287,6 +323,9 @@ export function normalizeRecords(raw: RawChordRecord[]): ChordRecord[] {
       source: input.source,
       url: input.url
     };
+    const parserConfidence = includeParserConfidence
+      ? mergeParserConfidence(undefined, input.parser_confidence)
+      : undefined;
 
     const existing = merged.get(id);
     if (!existing) {
@@ -309,6 +348,7 @@ export function normalizeRecords(raw: RawChordRecord[]): ChordRecord[] {
         notes: {
           summary: `${input.root} ${quality} chord with formula ${formula.join("-")}.`
         },
+        ...(parserConfidence ? { parser_confidence: parserConfidence } : {}),
         source_refs: [sourceRef]
       });
       continue;
@@ -322,6 +362,12 @@ export function normalizeRecords(raw: RawChordRecord[]): ChordRecord[] {
     })));
     existing.source_refs.push(sourceRef);
     existing.voicings.sort((a, b) => a.id.localeCompare(b.id));
+    if (includeParserConfidence) {
+      existing.parser_confidence = mergeParserConfidence(
+        existing.parser_confidence,
+        input.parser_confidence,
+      );
+    }
   }
 
   const result = [...merged.values()].sort(compareChordOrder);

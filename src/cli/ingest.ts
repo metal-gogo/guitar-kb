@@ -12,6 +12,7 @@ async function main(): Promise<void> {
     chord: options.chord,
     source: options.source,
     dryRun: options.dryRun,
+    includeParserConfidence: options.includeParserConfidence,
   });
 
   if (options.dryRun) {

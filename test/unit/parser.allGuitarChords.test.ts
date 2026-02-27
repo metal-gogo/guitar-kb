@@ -161,6 +161,8 @@ describe("parseAllGuitarChords", () => {
       expect(parsed.pitch_classes).toEqual(testCase.pitchClasses);
       expect(parsed.voicings.length).toBe(testCase.expectedVoicings);
       expect(parsed.voicings[0]?.source_refs?.[0]).toEqual({ source: "all-guitar-chords", url });
+      expect(parsed.parser_confidence?.level).toBe("high");
+      expect(parsed.parser_confidence?.checks).toContain("all_voicings_complete");
     });
 
     it("extracts A major voicing frets and base-fret values in source order", () => {
@@ -398,6 +400,7 @@ describe("parseAllGuitarChords", () => {
       expect(parsed.pitch_classes).toEqual([]);
       expect(parsed.aliases).toEqual([]);
       expect(parsed.voicings).toEqual([]);
+      expect(parsed.parser_confidence?.level).toBe("low");
     });
 
     it("falls back to safe defaults for voicings with missing attributes", () => {
@@ -419,6 +422,8 @@ describe("parseAllGuitarChords", () => {
       expect(full.base_fret).toBe(3);
       expect(full.frets).toEqual([null, 3, 5, 5, 5, 3]);
       expect(full.fingers).toEqual([0, 1, 3, 3, 3, 1]);
+      expect(parsed.parser_confidence?.level).toBe("medium");
+      expect(parsed.parser_confidence?.checks).not.toContain("all_voicings_complete");
     });
 
     it("produces deterministic output on repeated parses of the same fixture", () => {

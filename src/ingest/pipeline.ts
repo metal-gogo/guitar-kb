@@ -11,6 +11,7 @@ export interface IngestPipelineOptions {
   chord?: string;
   source?: string;
   dryRun?: boolean;
+  includeParserConfidence?: boolean;
 }
 
 interface PipelineIngestTarget {
@@ -99,7 +100,9 @@ export async function ingestNormalizedChordsWithTargets(
     rawRecords.push(sourceEntry.parse(html, target.url));
   }
 
-  return normalizeRecords(rawRecords);
+  return normalizeRecords(rawRecords, {
+    includeParserConfidence: options.includeParserConfidence ?? false,
+  });
 }
 
 export async function ingestNormalizedChords(options: IngestPipelineOptions = {}): Promise<ChordRecord[]> {
