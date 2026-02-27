@@ -1,6 +1,7 @@
 import { mkdir, readFile, rm } from "node:fs/promises";
 import path from "node:path";
 import { chordIndexMarkdown, chordMarkdown } from "../build/docs/generateDocs.js";
+import { chordDocFileName, voicingDiagramFileName } from "../build/docs/paths.js";
 import { buildDocsSitemap } from "../build/docs/generateSitemap.js";
 import { writeChordJsonl } from "../build/output/writeJsonl.js";
 import { generateChordSvg } from "../build/svg/generateSvg.js";
@@ -14,6 +15,7 @@ import { parseBuildCliOptions } from "./options.js";
 import { MVP_TARGETS } from "../config.js";
 
 const NORMALIZED_PATH = path.join("data", "generated", "chords.normalized.json");
+const DEFAULT_SITEMAP_GENERATED_AT = "1970-01-01T00:00:00.000Z";
 
 interface BuildRuntimeOptions {
   chord?: string;
@@ -104,18 +106,22 @@ async function main(): Promise<void> {
   await mkdir(path.join("docs", "diagrams"), { recursive: true });
   await writeText(path.join("docs", "index.md"), chordIndexMarkdown(chords));
 
-  const sitemap = buildDocsSitemap(chords, new Date().toISOString());
+  const sitemapGeneratedAt =
+    process.env.DOCS_SITEMAP_GENERATED_AT ??
+    process.env.BUILD_TIMESTAMP ??
+    DEFAULT_SITEMAP_GENERATED_AT;
+  const sitemap = buildDocsSitemap(chords, sitemapGeneratedAt);
   await writeJson(path.join("docs", "sitemap.json"), sitemap);
 
   for (const chord of chords) {
     await writeText(
-      path.join("docs", "chords", `${chord.id.replace(/:/g, "__").replace(/#/g, "%23")}.md`),
+      path.join("docs", "chords", chordDocFileName(chord.id)),
       chordMarkdown(chord, chords),
     );
     for (const voicing of chord.voicings) {
       const svg = generateChordSvg(voicing, chord.tuning);
       await writeText(
-        path.join("docs", "diagrams", `${voicing.id.replace(/:/g, "__").replace(/#/g, "%23")}.svg`),
+        path.join("docs", "diagrams", voicingDiagramFileName(voicing.id)),
         svg,
       );
     }

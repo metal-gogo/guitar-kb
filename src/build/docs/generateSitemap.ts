@@ -1,5 +1,6 @@
 import type { ChordRecord } from "../../types/model.js";
 import { compareChordOrder } from "../../utils/sort.js";
+import { docsChordPath, docsVoicingDiagramPath } from "./paths.js";
 
 export interface SitemapVoicingEntry {
   id: string;
@@ -26,11 +27,11 @@ export interface DocsSitemap {
 }
 
 function chordDocPath(chordId: string): string {
-  return `docs/chords/${chordId.replace(/:/g, "__").replace(/#/g, "%23")}.md`;
+  return docsChordPath(chordId);
 }
 
 function voicingDiagramPath(voicingId: string): string {
-  return `docs/diagrams/${voicingId.replace(/:/g, "__").replace(/#/g, "%23")}.svg`;
+  return docsVoicingDiagramPath(voicingId);
 }
 
 function enharmonicIds(chord: ChordRecord, byId: Map<string, ChordRecord>): string[] {
