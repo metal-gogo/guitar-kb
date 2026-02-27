@@ -7,9 +7,10 @@
     "ingest": "tsx src/cli/ingest.ts",
     "build": "tsx src/cli/build.ts",
     "validate": "tsx src/cli/validate.ts",
+    "ci:flaky-summary": "tsx src/ci/flakySummary.ts",
     "lint": "tsc --noEmit",
     "test": "vitest run",
-        "preflight": "npm run lint && npm test && npm run build && npm run validate",
+    "preflight": "npm run lint && npm test && npm run build && npm run validate",
     "pr-ready": "tsx src/cli/prReady.ts",
     "audit-cache": "tsx src/cli/auditCache.ts",
     "check-links": "tsx src/cli/checkLinks.ts"
