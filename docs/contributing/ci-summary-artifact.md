@@ -31,6 +31,7 @@ Artifacts are retained for **7 days** and then deleted automatically by GitHub.
 
 | Step     | Status   |
 |----------|----------|
+| install  | ✅ success |
 | lint     | ✅ success |
 | test     | ✅ success |
 | ingest   | ✅ success |
@@ -55,7 +56,8 @@ On failure, a **Remediation Hints** section is appended:
 
 | Failing step | Local command | Common causes |
 |---|---|---|
-| `lint` | `npm run lint` | TypeScript type errors, ESLint violations |
+| `install` | `npm ci` | Outdated `package-lock.json`, network issues, Node.js version mismatch |
+| `lint` | `npm run lint` | TypeScript type errors |
 | `test` | `npm test` | Parser, normalization, SVG, or schema regressions |
 | `ingest` | `npm run ingest` | Missing cached HTML; run `npm run audit-cache` to diagnose |
 | `build` | `npm run build` | Docs or SVG generator errors |
@@ -74,4 +76,4 @@ identical `ci-summary.md` output. The artifact name is always `ci-summary`.
 
 - [CONTRIBUTING.md — CI Checks](../../CONTRIBUTING.md#ci-checks)
 - [Parser Fixture Index and Minimization Guide](parser-fixtures.md)
-- [Adding a New Chord Source](adding-a-source.md)
+- [Adding a New Chord Source](adding-a-source.md) — includes cache minimization and fixture guidelines
