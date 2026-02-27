@@ -2,7 +2,6 @@ import { stat } from "node:fs/promises";
 import path from "node:path";
 import { expectedCacheKeys } from "./cacheTargets.js";
 import { sanitizeSlug } from "./fetch/cache.js";
-import { pathExists } from "../utils/fs.js";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 export const DEFAULT_MAX_AGE_DAYS = 30;
@@ -28,6 +27,7 @@ export interface SourceFreshnessSummary {
 export interface StaleTargetEntry {
   source: string;
   slug: string;
+  cachePath: string;
   filePath: string;
   fetchedAt: string;
   ageDays: number;
@@ -130,13 +130,8 @@ export async function buildSourceFreshnessReport(options: SourceFreshnessOptions
     const summary = ensureSource(source);
     summary.expectedTargets += 1;
 
-    const filePath = path.join(cacheBase, source, `${sanitizeSlug(slug)}.html`);
-    const exists = await pathExists(filePath);
-
-    if (!exists) {
-      summary.missingTargets += 1;
-      continue;
-    }
+    const sanitizedSlug = sanitizeSlug(slug);
+    const filePath = path.join(cacheBase, source, `${sanitizedSlug}.html`);
 
     let fetchedAtMs: number;
     try {
@@ -166,6 +161,7 @@ export async function buildSourceFreshnessReport(options: SourceFreshnessOptions
       staleTargets.push({
         source,
         slug,
+        cachePath: `${source}/${sanitizedSlug}.html`,
         filePath,
         fetchedAt: new Date(fetchedAtMs).toISOString(),
         ageDays: (asOfMs - fetchedAtMs) / DAY_MS,
@@ -239,7 +235,7 @@ export function formatSourceFreshnessReport(report: SourceFreshnessReport): stri
 
   for (const stale of report.staleTargets) {
     lines.push(
-      `STALE ${stale.source}/${stale.slug}.html fetched_at=${stale.fetchedAt} age_days=${stale.ageDays.toFixed(2)}`,
+      `STALE ${stale.cachePath} fetched_at=${stale.fetchedAt} age_days=${stale.ageDays.toFixed(2)}`,
     );
   }
 

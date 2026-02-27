@@ -12,11 +12,11 @@ vi.mock("../../src/config.js", async (importOriginal) => {
   return {
     ...actual,
     MVP_TARGETS: [
-      { source: "alpha-source", slug: "c-major", chordId: "chord:C:maj", url: "" },
-      { source: "alpha-source", slug: "d-major", chordId: "chord:D:maj", url: "" },
-      { source: "beta-source", slug: "e-minor", chordId: "chord:E:min", url: "" },
+      { source: "all-guitar-chords", slug: "c-major", chordId: "chord:C:maj", url: "" },
+      { source: "all-guitar-chords", slug: "d-major", chordId: "chord:D:maj", url: "" },
+      { source: "guitar-chord-org", slug: "e-minor", chordId: "chord:E:min", url: "" },
       // duplicate on purpose to verify de-duping in expected target list
-      { source: "alpha-source", slug: "c-major", chordId: "chord:C:maj", url: "" },
+      { source: "all-guitar-chords", slug: "c-major", chordId: "chord:C:maj", url: "" },
     ],
   };
 });
@@ -45,12 +45,12 @@ describe("source freshness report", () => {
   it("summarizes per-source freshness and stale counts deterministically", async () => {
     const cacheBase = path.join(tempDir, "data", "sources");
     await writeFileWithMtime(
-      path.join(cacheBase, "alpha-source", "c-major.html"),
+      path.join(cacheBase, "all-guitar-chords", "c-major.html"),
       "<html>alpha stale</html>",
       "2026-01-18T00:00:00.000Z",
     );
     await writeFileWithMtime(
-      path.join(cacheBase, "beta-source", "e-minor.html"),
+      path.join(cacheBase, "guitar-chord-org", "e-minor.html"),
       "<html>beta fresh</html>",
       "2026-02-24T00:00:00.000Z",
     );
@@ -68,7 +68,7 @@ describe("source freshness report", () => {
 
     expect(report.sources).toEqual([
       {
-        source: "alpha-source",
+        source: "all-guitar-chords",
         expectedTargets: 2,
         presentTargets: 1,
         missingTargets: 1,
@@ -77,7 +77,7 @@ describe("source freshness report", () => {
         newestFetchedAt: "2026-01-18T00:00:00.000Z",
       },
       {
-        source: "beta-source",
+        source: "guitar-chord-org",
         expectedTargets: 1,
         presentTargets: 1,
         missingTargets: 0,
@@ -89,9 +89,10 @@ describe("source freshness report", () => {
 
     expect(report.staleTargets).toEqual([
       {
-        source: "alpha-source",
+        source: "all-guitar-chords",
         slug: "c-major",
-        filePath: path.join(cacheBase, "alpha-source", "c-major.html"),
+        cachePath: "all-guitar-chords/c-major.html",
+        filePath: path.join(cacheBase, "all-guitar-chords", "c-major.html"),
         fetchedAt: "2026-01-18T00:00:00.000Z",
         ageDays: 40,
       },
@@ -101,12 +102,12 @@ describe("source freshness report", () => {
   it("formats report output with stable line ordering", async () => {
     const cacheBase = path.join(tempDir, "data", "sources");
     await writeFileWithMtime(
-      path.join(cacheBase, "beta-source", "e-minor.html"),
+      path.join(cacheBase, "guitar-chord-org", "e-minor.html"),
       "<html>beta stale</html>",
       "2026-01-01T00:00:00.000Z",
     );
     await writeFileWithMtime(
-      path.join(cacheBase, "alpha-source", "c-major.html"),
+      path.join(cacheBase, "all-guitar-chords", "c-major.html"),
       "<html>alpha fresh</html>",
       "2026-02-26T00:00:00.000Z",
     );
@@ -121,9 +122,9 @@ describe("source freshness report", () => {
     expect(formatted).toContain("AS_OF 2026-02-27T00:00:00.000Z");
     expect(formatted).toContain("MAX_AGE_DAYS 20.00");
     expect(formatted).toContain("STALE_TARGETS 1");
-    expect(formatted).toContain("SOURCE alpha-source");
-    expect(formatted).toContain("SOURCE beta-source");
-    expect(formatted).toContain("STALE beta-source/e-minor.html");
+    expect(formatted).toContain("SOURCE all-guitar-chords");
+    expect(formatted).toContain("SOURCE guitar-chord-org");
+    expect(formatted).toContain("STALE guitar-chord-org/e-minor.html");
   });
 
   it("rejects invalid max-age values", async () => {
