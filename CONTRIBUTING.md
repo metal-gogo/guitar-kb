@@ -115,6 +115,7 @@ npm run build         # Full build: docs + SVG + JSONL
 npm run validate      # Schema validation on generated JSONL
 npm run ingest        # Re-parse cached HTML sources
 npm run audit-cache   # Audit data/sources/ cache entries for missing/corrupt files
+npm run source-freshness # Report per-source cache age and stale targets
 ```
 
 Run all in sequence before opening a PR:
@@ -166,4 +167,5 @@ All checks passed. Ready to open a PR.
 - [Parser Fixture Index and Minimization Guide](docs/contributing/parser-fixtures.md) — fixture inventory, minimization rules, and how to add new fixtures
 - [CI Run Summary Artifact](docs/contributing/ci-summary-artifact.md) — how to read and use the per-run diagnostic artifact uploaded by CI
 - [Copilot Review Retrigger and Recovery Runbook](docs/contributing/copilot-review-runbook.md) — operational flow for pending/failed Copilot checks, retriggers, and merge gating
+- [Source Freshness Report](docs/contributing/source-freshness-report.md) — stale cache detection by source with deterministic CI log output
 - [Adding a New Chord Source](docs/contributing/adding-a-source.md) — step-by-step checklist for integrating a new provider into the ingest pipeline
