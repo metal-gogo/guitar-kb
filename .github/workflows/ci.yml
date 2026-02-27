@@ -15,8 +15,86 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
-      - run: npm run lint
-      - run: npm test
-      - run: npm run ingest
-      - run: npm run build
-      - run: npm run validate
+
+      - name: lint
+        id: lint
+        run: npm run lint
+        continue-on-error: true
+
+      - name: test
+        id: test
+        run: npm test
+        continue-on-error: true
+
+      - name: ingest
+        id: ingest
+        run: npm run ingest
+        continue-on-error: true
+
+      - name: build
+        id: build
+        run: npm run build
+        continue-on-error: true
+
+      - name: validate
+        id: validate
+        run: npm run validate
+        continue-on-error: true
+
+      - name: generate summary
+        if: always()
+        run: |
+          STATUS_LINT="${{ steps.lint.outcome }}"
+          STATUS_TEST="${{ steps.test.outcome }}"
+          STATUS_INGEST="${{ steps.ingest.outcome }}"
+          STATUS_BUILD="${{ steps.build.outcome }}"
+          STATUS_VALIDATE="${{ steps.validate.outcome }}"
+
+          icon() { [ "$1" = "success" ] && echo "✅" || echo "❌"; }
+
+          SUMMARY_FILE="ci-summary.md"
+          {
+            echo "# CI Run Summary"
+            echo ""
+            echo "| Step | Status |"
+            echo "|------|--------|"
+            echo "| lint     | $(icon "$STATUS_LINT") $STATUS_LINT |"
+            echo "| test     | $(icon "$STATUS_TEST") $STATUS_TEST |"
+            echo "| ingest   | $(icon "$STATUS_INGEST") $STATUS_INGEST |"
+            echo "| build    | $(icon "$STATUS_BUILD") $STATUS_BUILD |"
+            echo "| validate | $(icon "$STATUS_VALIDATE") $STATUS_VALIDATE |"
+            echo ""
+            if [ "$STATUS_LINT" != "success" ] || [ "$STATUS_TEST" != "success" ] || \
+               [ "$STATUS_INGEST" != "success" ] || [ "$STATUS_BUILD" != "success" ] || \
+               [ "$STATUS_VALIDATE" != "success" ]; then
+              echo "## Remediation Hints"
+              echo ""
+              [ "$STATUS_LINT"     != "success" ] && echo "- **lint failed**: run \`npm run lint\` locally and fix TypeScript/ESLint errors."
+              [ "$STATUS_TEST"     != "success" ] && echo "- **test failed**: run \`npm test\` locally; check for regressions in parsers, normalization, or SVG output."
+              [ "$STATUS_INGEST"   != "success" ] && echo "- **ingest failed**: run \`npm run ingest\` locally; verify cached HTML under \`data/sources/\` is present (\`npm run audit-cache\`)."
+              [ "$STATUS_BUILD"    != "success" ] && echo "- **build failed**: run \`npm run build\` locally; check docs/SVG generator errors."
+              [ "$STATUS_VALIDATE" != "success" ] && echo "- **validate failed**: run \`npm run validate\` locally; check \`chords.schema.json\` compliance and provenance."
+            fi
+          } > "$SUMMARY_FILE"
+
+          cat "$SUMMARY_FILE" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: upload summary artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-summary
+          path: ci-summary.md
+          retention-days: 7
+
+      - name: fail if any step failed
+        if: |
+          steps.lint.outcome != 'success' ||
+          steps.test.outcome != 'success' ||
+          steps.ingest.outcome != 'success' ||
+          steps.build.outcome != 'success' ||
+          steps.validate.outcome != 'success'
+        run: |
+          echo "One or more CI steps failed. See ci-summary.md artifact for details."
+          exit 1
+
