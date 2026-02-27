@@ -42,6 +42,7 @@ function extractRelativeLinks(markdown: string): Array<{ text: string; target: s
  * Each link target is resolved relative to its containing file.
  */
 export async function checkDocLinks(markdownFiles: string[]): Promise<LinkCheckResult> {
+  let checkedFiles = 0;
   let checkedLinks = 0;
   const brokenLinks: BrokenLink[] = [];
 
@@ -54,6 +55,7 @@ export async function checkDocLinks(markdownFiles: string[]): Promise<LinkCheckR
       continue;
     }
 
+    checkedFiles++;
     const links = extractRelativeLinks(content);
     for (const { text, target } of links) {
       checkedLinks++;
@@ -71,7 +73,7 @@ export async function checkDocLinks(markdownFiles: string[]): Promise<LinkCheckR
   }
 
   return {
-    checkedFiles: markdownFiles.length,
+    checkedFiles,
     checkedLinks,
     brokenLinks,
   };

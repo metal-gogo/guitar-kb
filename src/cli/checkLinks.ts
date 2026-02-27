@@ -11,7 +11,7 @@ async function gatherMarkdownFiles(dir: string): Promise<string[]> {
     return [];
   }
   const files: string[] = [];
-  for (const entry of entries) {
+  for (const entry of entries.slice().sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0))) {
     const full = path.join(dir, entry.name);
     if (entry.isDirectory()) {
       files.push(...(await gatherMarkdownFiles(full)));
