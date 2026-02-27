@@ -11,7 +11,8 @@
     "test": "vitest run",
         "preflight": "npm run lint && npm test && npm run build && npm run validate",
     "pr-ready": "tsx src/cli/prReady.ts",
-    "audit-cache": "tsx src/cli/auditCache.ts"
+    "audit-cache": "tsx src/cli/auditCache.ts",
+    "check-links": "tsx src/cli/checkLinks.ts"
   },
   "repository": {
     "type": "git",
