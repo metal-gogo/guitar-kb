@@ -16,32 +16,62 @@ jobs:
           cache: npm
       - name: install
         id: install
-        run: npm ci
+        run: |
+          set +e
+          npm ci
+          code=$?
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          exit $code
         continue-on-error: true
 
       - name: lint
         id: lint
-        run: npm run lint
+        run: |
+          set +e
+          npm run lint
+          code=$?
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          exit $code
         continue-on-error: true
 
       - name: test
         id: test
-        run: npm test
+        run: |
+          set +e
+          npm test
+          code=$?
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          exit $code
         continue-on-error: true
 
       - name: ingest
         id: ingest
-        run: npm run ingest
+        run: |
+          set +e
+          npm run ingest
+          code=$?
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          exit $code
         continue-on-error: true
 
       - name: build
         id: build
-        run: npm run build
+        run: |
+          set +e
+          npm run build
+          code=$?
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          exit $code
         continue-on-error: true
 
       - name: validate
         id: validate
-        run: npm run validate
+        run: |
+          set +e
+          npm run validate
+          code=$?
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          exit $code
         continue-on-error: true
 
       - name: generate summary
@@ -54,20 +84,34 @@ jobs:
           STATUS_BUILD="${{ steps.build.outcome }}"
           STATUS_VALIDATE="${{ steps.validate.outcome }}"
 
+          EXIT_INSTALL="${{ steps.install.outputs.exit_code }}"
+          EXIT_LINT="${{ steps.lint.outputs.exit_code }}"
+          EXIT_TEST="${{ steps.test.outputs.exit_code }}"
+          EXIT_INGEST="${{ steps.ingest.outputs.exit_code }}"
+          EXIT_BUILD="${{ steps.build.outputs.exit_code }}"
+          EXIT_VALIDATE="${{ steps.validate.outputs.exit_code }}"
+
+          [ -z "$EXIT_INSTALL" ] && EXIT_INSTALL="n/a"
+          [ -z "$EXIT_LINT" ] && EXIT_LINT="n/a"
+          [ -z "$EXIT_TEST" ] && EXIT_TEST="n/a"
+          [ -z "$EXIT_INGEST" ] && EXIT_INGEST="n/a"
+          [ -z "$EXIT_BUILD" ] && EXIT_BUILD="n/a"
+          [ -z "$EXIT_VALIDATE" ] && EXIT_VALIDATE="n/a"
+
           icon() { [ "$1" = "success" ] && echo "✅" || echo "❌"; }
 
           SUMMARY_FILE="ci-summary.md"
           {
             echo "# CI Run Summary"
             echo ""
-            echo "| Step | Status |"
-            echo "|------|--------|"
-            echo "| install  | $(icon "$STATUS_INSTALL") $STATUS_INSTALL |"
-            echo "| lint     | $(icon "$STATUS_LINT") $STATUS_LINT |"
-            echo "| test     | $(icon "$STATUS_TEST") $STATUS_TEST |"
-            echo "| ingest   | $(icon "$STATUS_INGEST") $STATUS_INGEST |"
-            echo "| build    | $(icon "$STATUS_BUILD") $STATUS_BUILD |"
-            echo "| validate | $(icon "$STATUS_VALIDATE") $STATUS_VALIDATE |"
+            echo "| Step | Command | Status | Exit code |"
+            echo "|------|---------|--------|-----------|"
+            echo "| install  | \`npm ci\` | $(icon "$STATUS_INSTALL") $STATUS_INSTALL | $EXIT_INSTALL |"
+            echo "| lint     | \`npm run lint\` | $(icon "$STATUS_LINT") $STATUS_LINT | $EXIT_LINT |"
+            echo "| test     | \`npm test\` | $(icon "$STATUS_TEST") $STATUS_TEST | $EXIT_TEST |"
+            echo "| ingest   | \`npm run ingest\` | $(icon "$STATUS_INGEST") $STATUS_INGEST | $EXIT_INGEST |"
+            echo "| build    | \`npm run build\` | $(icon "$STATUS_BUILD") $STATUS_BUILD | $EXIT_BUILD |"
+            echo "| validate | \`npm run validate\` | $(icon "$STATUS_VALIDATE") $STATUS_VALIDATE | $EXIT_VALIDATE |"
             echo ""
             if [ "$STATUS_INSTALL" != "success" ] || [ "$STATUS_LINT" != "success" ] || [ "$STATUS_TEST" != "success" ] || \
                [ "$STATUS_INGEST" != "success" ] || [ "$STATUS_BUILD" != "success" ] || \
@@ -104,4 +148,3 @@ jobs:
         run: |
           echo "One or more CI steps failed. See ci-summary.md artifact for details."
           exit 1
-

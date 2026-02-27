@@ -29,14 +29,14 @@ Artifacts are retained for **7 days** and then deleted automatically by GitHub.
 ```markdown
 # CI Run Summary
 
-| Step     | Status   |
-|----------|----------|
-| install  | ✅ success |
-| lint     | ✅ success |
-| test     | ✅ success |
-| ingest   | ✅ success |
-| build    | ✅ success |
-| validate | ✅ success |
+| Step     | Command            | Status       | Exit code |
+|----------|--------------------|--------------|-----------|
+| install  | `npm ci`           | ✅ success   | 0 |
+| lint     | `npm run lint`     | ✅ success   | 0 |
+| test     | `npm test`         | ✅ success   | 0 |
+| ingest   | `npm run ingest`   | ✅ success   | 0 |
+| build    | `npm run build`    | ✅ success   | 0 |
+| validate | `npm run validate` | ✅ success   | 0 |
 ```
 
 On failure, a **Remediation Hints** section is appended:
@@ -49,6 +49,8 @@ On failure, a **Remediation Hints** section is appended:
 - **validate failed**: run `npm run validate` locally; check `chords.schema.json`
   compliance and provenance.
 ```
+
+When a step is skipped before execution, the exit code appears as `n/a`.
 
 ---
 
