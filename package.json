@@ -14,6 +14,7 @@
     "pr-ready": "tsx src/cli/prReady.ts",
     "audit-cache": "tsx src/cli/auditCache.ts",
     "source-freshness": "tsx src/cli/sourceFreshness.ts",
+    "docs-changelog": "tsx src/cli/docsChangelogSnapshot.ts",
     "check-links": "tsx src/cli/checkLinks.ts"
   },
   "repository": {
