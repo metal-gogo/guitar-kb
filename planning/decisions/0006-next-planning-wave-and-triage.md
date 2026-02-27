@@ -55,7 +55,7 @@ We create a new planning wave with **12 tasks** and enforce these rules:
 
 ### Issued Tracking IDs
 
-- Parent planning issue: #84
+- Parent planning issue: #84 (historical baseline; superseded)
 - Child tasks:
   - #85 release gate script for pre-merge verification
   - #86 deterministic artifact drift check in CI
@@ -69,6 +69,19 @@ We create a new planning wave with **12 tasks** and enforce these rules:
   - #99 source registry contributor template
   - #100 PR template validation evidence checklist
   - #101 planning prompt refresh for next seeding cycle
+
+### Historical Status Update (2026-02-27)
+
+Wave `#84` is retained as an audit trail of the original seed set, but it is no
+longer the active planning parent. Later waves superseded it:
+
+- Wave B parent: #102
+- Wave C parent: #113
+- Feedback correction wave parent: #124
+
+Operationally, execution ordering is controlled by current open issues plus
+their `priority/*` and `status/*` labels rather than by the historical parent
+issue from this ADR.
 
 ---
 
