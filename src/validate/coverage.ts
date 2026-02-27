@@ -46,7 +46,7 @@ export function buildRootQualityCoverageReport(
 
   const unexpectedCanonicalIds = Array.from(observed)
     .filter((id) => !expected.has(id))
-    .sort((a, b) => a.localeCompare(b));
+    .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
 
   const expectedCombinations = expected.size;
   const observedCombinations = expectedCombinations - missingCanonicalIds.length;
