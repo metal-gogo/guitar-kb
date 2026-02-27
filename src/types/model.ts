@@ -8,6 +8,13 @@ export interface SourceRef {
 }
 
 export type VoicingPosition = "open" | "barre" | "upper" | "unknown";
+export type ParserConfidenceLevel = "high" | "medium" | "low";
+
+export interface ParserConfidence {
+  source: string;
+  level: ParserConfidenceLevel;
+  checks: string[];
+}
 
 export interface RawVoicing {
   id: string;
@@ -43,6 +50,7 @@ export interface ChordRecord {
   notes?: {
     summary?: string;
   };
+  parser_confidence?: ParserConfidence[];
   source_refs: SourceRef[];
 }
 
@@ -56,6 +64,7 @@ export interface RawChordRecord {
   formula: string[];
   pitch_classes: string[];
   voicings: RawVoicing[];
+  parser_confidence?: ParserConfidence;
 }
 
 export type ParserFn = (html: string, url: string) => RawChordRecord;

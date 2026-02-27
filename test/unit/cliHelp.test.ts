@@ -56,6 +56,7 @@ describe("CLI help flags", () => {
     expect(INGEST_HELP).toContain("--source");
     expect(INGEST_HELP).toContain("--refresh");
     expect(INGEST_HELP).toContain("--dry-run");
+    expect(INGEST_HELP).toContain("--include-parser-confidence");
   });
 
   it("BUILD_HELP mentions --chord, --source, --dry-run flags", () => {
@@ -82,6 +83,7 @@ describe("CLI help flags", () => {
     expect(opts.chord).toBe("c-major");
     expect(opts.source).toBe("guitar-chord-org");
     expect(opts.dryRun).toBe(false);
+    expect(opts.includeParserConfidence).toBe(false);
   });
 
   it("parseBuildCliOptions: normal flags still parse correctly (no help flag)", () => {

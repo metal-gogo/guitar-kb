@@ -172,6 +172,8 @@ describe("parseGuitarChordOrg", () => {
         expect(parsed.pitch_classes).toEqual(testCase.pitchClasses);
         expect(parsed.voicings.length).toBe(testCase.expectedVoicings);
         expect(parsed.voicings[0]?.source_refs?.[0]).toEqual({ source: "guitar-chord-org", url });
+        expect(parsed.parser_confidence?.level).toBe("high");
+        expect(parsed.parser_confidence?.checks).toContain("all_voicings_complete");
 
         if (testCase.slug === "c-major") {
           const firstVoicing = parsed.voicings[0];
@@ -416,6 +418,7 @@ describe("parseGuitarChordOrg", () => {
       expect(parsed.pitch_classes).toEqual([]);
       expect(parsed.aliases).toEqual([]);
       expect(parsed.voicings).toEqual([]);
+      expect(parsed.parser_confidence?.level).toBe("low");
     });
 
     it("falls back to safe defaults for voicings with missing attributes", () => {
@@ -437,6 +440,8 @@ describe("parseGuitarChordOrg", () => {
       expect(full.base_fret).toBe(2);
       expect(full.frets).toEqual([null, 1, 2, 3, null, null]);
       expect(full.fingers).toEqual([0, 1, 2, 3, 0, 0]);
+      expect(parsed.parser_confidence?.level).toBe("medium");
+      expect(parsed.parser_confidence?.checks).not.toContain("all_voicings_complete");
     });
 
     it("produces deterministic output on repeated parses of the same fixture", () => {

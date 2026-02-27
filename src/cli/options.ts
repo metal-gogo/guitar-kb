@@ -8,6 +8,7 @@ interface BaseCliOptions {
 
 export interface IngestCliOptions extends BaseCliOptions {
   refresh: boolean;
+  includeParserConfidence: boolean;
 }
 
 export interface BuildCliOptions extends BaseCliOptions {
@@ -39,6 +40,12 @@ Options:
                     Useful for smoke-testing the parsing pipeline.
                     Example: npm run ingest -- --dry-run
 
+  --include-parser-confidence
+                    Include parser confidence annotations in
+                    data/generated/chords.normalized.json for debugging.
+                    Default is off to avoid schema changes in final outputs.
+                    Example: npm run ingest -- --include-parser-confidence
+
   --help, -h        Print this help message and exit.
 
 Examples:
@@ -46,6 +53,7 @@ Examples:
   npm run ingest -- --chord c-major
   npm run ingest -- --source all-guitar-chords --dry-run
   npm run ingest -- --refresh
+  npm run ingest -- --include-parser-confidence
 `.trimStart();
 
 const BUILD_HELP = `
@@ -103,6 +111,7 @@ export function parseIngestCliOptions(argv: string[]): IngestCliOptions {
   }
   return {
     refresh: argv.includes("--refresh"),
+    includeParserConfidence: argv.includes("--include-parser-confidence"),
     chord: readFlagValue(argv, "--chord"),
     source: readFlagValue(argv, "--source"),
     dryRun: argv.includes("--dry-run"),

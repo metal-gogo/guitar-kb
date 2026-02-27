@@ -215,6 +215,62 @@ describe("normalizeRecords", () => {
     ]);
   });
 
+  it("omits parser confidence from normalized outputs by default", () => {
+    const raw: RawChordRecord[] = [
+      {
+        source: "source-a",
+        url: "https://example.com/c-major-a",
+        symbol: "C",
+        root: "C",
+        quality_raw: "major",
+        aliases: ["C"],
+        formula: ["1", "3", "5"],
+        pitch_classes: ["C", "E", "G"],
+        voicings: [{ id: "v1", frets: [null, 3, 2, 0, 1, 0], base_fret: 1 }],
+        parser_confidence: { source: "source-a", level: "high", checks: ["has_root"] },
+      },
+    ];
+
+    const normalized = normalizeRecords(raw);
+    expect(normalized[0]?.parser_confidence).toBeUndefined();
+  });
+
+  it("includes parser confidence when explicitly enabled", () => {
+    const raw: RawChordRecord[] = [
+      {
+        source: "source-b",
+        url: "https://example.com/c-major-b",
+        symbol: "C",
+        root: "C",
+        quality_raw: "major",
+        aliases: ["C"],
+        formula: ["1", "3", "5"],
+        pitch_classes: ["C", "E", "G"],
+        voicings: [{ id: "v1", frets: [null, 3, 2, 0, 1, 0], base_fret: 1 }],
+        parser_confidence: { source: "source-b", level: "medium", checks: ["has_root"] },
+      },
+      {
+        source: "source-a",
+        url: "https://example.com/c-major-a",
+        symbol: "C",
+        root: "C",
+        quality_raw: "major",
+        aliases: ["C"],
+        formula: ["1", "3", "5"],
+        pitch_classes: ["C", "E", "G"],
+        voicings: [{ id: "v2", frets: [3, 3, 5, 5, 5, 3], base_fret: 3 }],
+        parser_confidence: { source: "source-a", level: "high", checks: ["has_root", "has_quality"] },
+      },
+    ];
+
+    const normalized = normalizeRecords(raw, { includeParserConfidence: true });
+    expect(normalized).toHaveLength(1);
+    expect(normalized[0]?.parser_confidence).toEqual([
+      { source: "source-a", level: "high", checks: ["has_root", "has_quality"] },
+      { source: "source-b", level: "medium", checks: ["has_root"] },
+    ]);
+  });
+
   it("produces the same canonical ID for equivalent quality alias inputs", () => {
     const qualityVariants = ["major", "maj", "M", "Δ", ""];
     const ids = qualityVariants.map((quality_raw) => {
