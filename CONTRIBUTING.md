@@ -170,5 +170,6 @@ All checks passed. Ready to open a PR.
 - [Flaky Test Summary Artifact](docs/contributing/flaky-test-summary.md) — how to interpret instability signatures and per-file non-pass counts
 - [Copilot Review Retrigger and Recovery Runbook](docs/contributing/copilot-review-runbook.md) — operational flow for pending/failed Copilot checks, retriggers, and merge gating
 - [Source Freshness Report](docs/contributing/source-freshness-report.md) — stale cache detection by source with deterministic CI log output
+- [Parser Confidence Annotations](docs/contributing/parser-confidence-annotations.md) — high/medium/low parser quality signals and debugging workflow
 - [Docs Changelog Snapshot](docs/contributing/docs-changelog-snapshot.md) — deterministic added/changed/removed summaries for generated docs outputs
 - [Adding a New Chord Source](docs/contributing/adding-a-source.md) — step-by-step checklist for integrating a new provider into the ingest pipeline
