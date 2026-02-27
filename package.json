@@ -12,6 +12,7 @@
         "preflight": "npm run lint && npm test && npm run build && npm run validate",
     "pr-ready": "tsx src/cli/prReady.ts",
     "audit-cache": "tsx src/cli/auditCache.ts",
+    "source-freshness": "tsx src/cli/sourceFreshness.ts",
     "check-links": "tsx src/cli/checkLinks.ts"
   },
   "repository": {
