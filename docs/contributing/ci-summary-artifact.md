@@ -78,4 +78,3 @@ identical `ci-summary.md` output. The artifact name is always `ci-summary`.
 
 - [CONTRIBUTING.md — CI Checks](../../CONTRIBUTING.md#ci-checks)
 - [Parser Fixture Index and Minimization Guide](parser-fixtures.md)
-- [Adding a New Chord Source](adding-a-source.md) — includes cache minimization and fixture guidelines
