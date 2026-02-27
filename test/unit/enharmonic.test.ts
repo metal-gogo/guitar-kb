@@ -48,6 +48,16 @@ describe("buildEnharmonicReport", () => {
     expect(report.pairs).toHaveLength(1);
   });
 
+  it("flags a self-reference as an asymmetry (data error)", () => {
+    const records = [makeRecord("chord:C:maj", ["chord:C:maj"])];
+    const report = buildEnharmonicReport(records);
+    expect(report.pairs).toHaveLength(0);
+    expect(report.asymmetries).toHaveLength(1);
+    expect(report.asymmetries[0]!.from).toBe("chord:C:maj");
+    expect(report.asymmetries[0]!.to).toBe("chord:C:maj");
+    expect(report.asymmetries[0]!.reason).toMatch(/self-reference/);
+  });
+
   it("flags asymmetry when the counterpart does not reciprocate", () => {
     const records = [
       makeRecord("chord:C#:maj", ["chord:Db:maj"]),

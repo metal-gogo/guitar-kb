@@ -64,6 +64,16 @@ export function buildEnharmonicReport(records: ChordRecord[]): EnharmonicReport 
   // Collect all declared equivalences, classify as symmetric or asymmetric
   for (const record of records) {
     for (const equiv of record.enharmonic_equivalents ?? []) {
+      // Self-references are a data error — record as asymmetry
+      if (equiv === record.id) {
+        asymmetries.push({
+          from: record.id,
+          to: equiv,
+          reason: `"${record.id}" declares itself as an enharmonic equivalent (self-reference)`,
+        });
+        continue;
+      }
+
       const [a, b] = [record.id, equiv].sort();
       const pairKey = `${a}|${b}`;
 
@@ -96,11 +106,11 @@ export function buildEnharmonicReport(records: ChordRecord[]): EnharmonicReport 
     }
   }
 
-  // Sort deterministically
-  pairs.sort((x, y) => x.a.localeCompare(y.a) || x.b.localeCompare(y.b));
-  asymmetries.sort(
-    (x, y) => x.from.localeCompare(y.from) || x.to.localeCompare(y.to),
-  );
+  // Sort deterministically using locale-independent string comparison
+  // to ensure consistent output regardless of runtime locale/ICU settings.
+  const cmp = (x: string, y: string): number => (x < y ? -1 : x > y ? 1 : 0);
+  pairs.sort((x, y) => cmp(x.a, y.a) || cmp(x.b, y.b));
+  asymmetries.sort((x, y) => cmp(x.from, y.from) || cmp(x.to, y.to));
 
   return { pairs, asymmetries, totalRecords: records.length, recordsWithEnharmonics };
 }
