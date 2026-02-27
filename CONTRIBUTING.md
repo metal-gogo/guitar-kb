@@ -164,3 +164,4 @@ All checks passed. Ready to open a PR.
 ## Further Reading
 
 - [Parser Fixture Index and Minimization Guide](docs/contributing/parser-fixtures.md) — fixture inventory, minimization rules, and how to add new fixtures
+- [Adding a New Chord Source](docs/contributing/adding-a-source.md) — step-by-step checklist for integrating a new provider into the ingest pipeline
