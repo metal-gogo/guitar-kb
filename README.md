@@ -241,6 +241,7 @@ Copilot review gate:
 - **Schema validation failure**: inspect failing record shape against `chords.schema.json`.
 - **Parser regressions**: verify source fixtures in `test/fixtures/sources/*` and run parser unit tests.
 - **Unexpected artifact differences**: rebuild from cached inputs and compare sorted outputs.
+- **Ingest failures or cache inconsistencies**: follow the [Ingestion Troubleshooting Decision Tree](docs/contributing/ingestion-troubleshooting-decision-tree.md).
 
 ## Project status
 
