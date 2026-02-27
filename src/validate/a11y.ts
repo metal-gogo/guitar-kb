@@ -71,6 +71,15 @@ export function checkMarkdownContent(file: string, content: string): A11yViolati
   const lines = content.split("\n");
 
   const h1Lines = lines.filter((line) => /^# \S/.test(line));
+  const firstNonBlankLine = lines.find((line) => line.trim().length > 0) ?? "";
+
+  if (firstNonBlankLine.length > 0 && !/^# \S/.test(firstNonBlankLine)) {
+    violations.push({
+      file,
+      rule: "md-h1-first-nonblank",
+      message: `Markdown page must start with an H1 heading as the first non-blank line`,
+    });
+  }
 
   if (h1Lines.length === 0) {
     violations.push({
@@ -102,7 +111,7 @@ async function collectFiles(dir: string, ext: string): Promise<string[]> {
     return [];
   }
   const files: string[] = [];
-  for (const entry of entries.slice().sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0))) {
+  for (const entry of entries.slice().sort((a, b) => a.name.localeCompare(b.name))) {
     const full = path.join(dir, entry.name);
     if (entry.isDirectory()) {
       files.push(...(await collectFiles(full, ext)));
@@ -130,6 +139,8 @@ export async function runA11yLint(
   const svgFiles = await collectFiles(diagramsDir, ".svg");
   const mdFiles = await collectFiles(chordsDir, ".md");
   const violations: A11yViolation[] = [];
+  let checkedSvgs = 0;
+  let checkedMarkdowns = 0;
 
   for (const file of svgFiles) {
     let content: string;
@@ -138,6 +149,7 @@ export async function runA11yLint(
     } catch {
       continue;
     }
+    checkedSvgs += 1;
     violations.push(...checkSvgContent(file, content));
   }
 
@@ -148,12 +160,13 @@ export async function runA11yLint(
     } catch {
       continue;
     }
+    checkedMarkdowns += 1;
     violations.push(...checkMarkdownContent(file, content));
   }
 
   return {
-    checkedSvgs: svgFiles.length,
-    checkedMarkdowns: mdFiles.length,
+    checkedSvgs,
+    checkedMarkdowns,
     violations,
   };
 }

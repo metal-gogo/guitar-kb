@@ -88,6 +88,12 @@ describe("checkMarkdownContent", () => {
     expect(violations.some((v) => v.rule === "md-single-h1")).toBe(true);
   });
 
+  it("flags when first non-blank line is not an H1 heading", () => {
+    const md = `<!-- comment -->\n# C maj\n\nBody`;
+    const violations = checkMarkdownContent("test.md", md);
+    expect(violations.some((v) => v.rule === "md-h1-first-nonblank")).toBe(true);
+  });
+
   it("does not flag a single H1 with text", () => {
     const violations = checkMarkdownContent("test.md", goodMd);
     expect(violations.find((v) => v.rule === "md-single-h1")).toBeUndefined();
