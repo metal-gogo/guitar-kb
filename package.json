@@ -10,7 +10,8 @@
     "lint": "tsc --noEmit",
     "test": "vitest run",
         "preflight": "npm run lint && npm test && npm run build && npm run validate",
-        "pr-ready": "tsx src/cli/prReady.ts"
+    "pr-ready": "tsx src/cli/prReady.ts",
+    "audit-cache": "tsx src/cli/auditCache.ts"
   },
   "repository": {
     "type": "git",

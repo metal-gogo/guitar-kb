@@ -8,7 +8,7 @@ interface FetchOptions {
   delayMs: number;
 }
 
-function sanitizeSlug(slug: string): string {
+export function sanitizeSlug(slug: string): string {
   return slug.replace(/[^a-z0-9-]/gi, "-").toLowerCase();
 }
 
