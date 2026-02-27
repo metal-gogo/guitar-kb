@@ -165,4 +165,5 @@ All checks passed. Ready to open a PR.
 
 - [Parser Fixture Index and Minimization Guide](docs/contributing/parser-fixtures.md) — fixture inventory, minimization rules, and how to add new fixtures
 - [CI Run Summary Artifact](docs/contributing/ci-summary-artifact.md) — how to read and use the per-run diagnostic artifact uploaded by CI
+- [Copilot Review Retrigger and Recovery Runbook](docs/contributing/copilot-review-runbook.md) — operational flow for pending/failed Copilot checks, retriggers, and merge gating
 - [Adding a New Chord Source](docs/contributing/adding-a-source.md) — step-by-step checklist for integrating a new provider into the ingest pipeline
