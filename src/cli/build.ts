@@ -1,6 +1,7 @@
 import { mkdir, readFile, rm } from "node:fs/promises";
 import path from "node:path";
 import { chordIndexMarkdown, chordMarkdown } from "../build/docs/generateDocs.js";
+import { buildDocsSitemap } from "../build/docs/generateSitemap.js";
 import { writeChordJsonl } from "../build/output/writeJsonl.js";
 import { generateChordSvg } from "../build/svg/generateSvg.js";
 import { ingestNormalizedChords } from "../ingest/pipeline.js";
@@ -102,6 +103,9 @@ async function main(): Promise<void> {
   await mkdir(path.join("docs", "chords"), { recursive: true });
   await mkdir(path.join("docs", "diagrams"), { recursive: true });
   await writeText(path.join("docs", "index.md"), chordIndexMarkdown(chords));
+
+  const sitemap = buildDocsSitemap(chords, new Date().toISOString());
+  await writeJson(path.join("docs", "sitemap.json"), sitemap);
 
   for (const chord of chords) {
     await writeText(
