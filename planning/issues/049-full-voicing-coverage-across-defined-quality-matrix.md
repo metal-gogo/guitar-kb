@@ -2,7 +2,7 @@
 
 ## Triage Labels
 
-- `status/backlog`
+- `status/in-progress`
 - `priority/p0`
 - `area/ingest`
 
@@ -25,11 +25,11 @@ all defined qualities, with deterministic ordering and no parser-side truncation
 
 ## Acceptance Criteria
 
-- [ ] No parser-imposed voicing cap remains for defined-quality targets.
-- [ ] Representative regression tests assert complete voicing extraction against fixtures.
-- [ ] Repeated ingest/build runs produce stable voicing counts and ordering.
-- [ ] `npm test -- test/unit/parser.guitarChordOrg.test.ts test/unit/parser.allGuitarChords.test.ts test/unit/pipelineIdempotency.test.ts` exits `0`.
-- [ ] `npm run ingest && npm run build && npm run validate` exits `0`.
+- [x] No parser-imposed voicing cap remains for defined-quality targets.
+- [x] Representative regression tests assert complete voicing extraction against fixtures.
+- [x] Repeated ingest/build runs produce stable voicing counts and ordering.
+- [x] `npm test -- test/unit/parser.guitarChordOrg.test.ts test/unit/parser.allGuitarChords.test.ts test/unit/pipelineIdempotency.test.ts` exits `0`.
+- [x] `npm run ingest && npm run build && npm run validate` exits `0`.
 - [ ] All Copilot inline review comments addressed
 - [ ] `require-copilot-review` CI check green before merge
 
