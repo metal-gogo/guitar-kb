@@ -143,6 +143,25 @@ describe("buildRootQualityCoverageReport", () => {
 
     expect(report.matrixVersion).toBe("coverage-matrix/v1");
     expect(report.expectedRoots).toEqual([...COVERAGE_MATRIX_CONTRACT.roots]);
+    expect(report.expectedRoots).toEqual([
+      "C",
+      "C#",
+      "Db",
+      "D",
+      "D#",
+      "Eb",
+      "E",
+      "F",
+      "F#",
+      "Gb",
+      "G",
+      "G#",
+      "Ab",
+      "A",
+      "A#",
+      "Bb",
+      "B",
+    ]);
     expect(report.expectedQualities).toEqual([...COVERAGE_MATRIX_CONTRACT.qualities]);
     expect(report.expectedQualities).toEqual([
       "maj",
