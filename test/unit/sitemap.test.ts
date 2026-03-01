@@ -43,10 +43,10 @@ describe("buildDocsSitemap", () => {
     expect(entry.aliases).toEqual(expect.arrayContaining(["C", "Cmaj"]));
   });
 
-  it("path uses __ separator and %23 for #", () => {
+  it("path uses __ separator and -sharp token for #", () => {
     const chord = buildChord({ id: "chord:C#:maj", root: "C#" });
     const { entries } = buildDocsSitemap([chord], FIXED_TS);
-    expect(entries[0].path).toBe("docs/chords/chord__C%23__maj.md");
+    expect(entries[0].path).toBe("docs/chords/chord__C-sharp__maj.md");
   });
 
   it("path is correct for a plain chord", () => {
@@ -64,7 +64,7 @@ describe("buildDocsSitemap", () => {
     );
   });
 
-  it("diagram path uses __ separator and %23 for #", () => {
+  it("diagram path uses __ separator and -sharp token for #", () => {
     const chord = buildChord({
       id: "chord:C#:maj",
       root: "C#",
@@ -72,7 +72,7 @@ describe("buildDocsSitemap", () => {
     });
     const { entries } = buildDocsSitemap([chord], FIXED_TS);
     expect(entries[0].voicings[0].diagram_path).toBe(
-      "docs/diagrams/C%23/maj/v1.svg",
+      "docs/diagrams/C-sharp/maj/v1.svg",
     );
   });
 
