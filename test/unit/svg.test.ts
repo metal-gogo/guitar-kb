@@ -142,6 +142,7 @@ describe("generateChordSvg", () => {
       });
       // 3 fretted strings: frets[1]=3, frets[2]=2, frets[4]=1
       expect(countOccurrences(svg, "<circle")).toBe(3);
+      expect(countOccurrences(svg, 'class="dot-fret-label"')).toBe(3);
     });
   });
 
@@ -193,24 +194,41 @@ describe("generateChordSvg", () => {
       expect(svg).toContain('>G<');
     });
 
-    it("renders base fret label when base_fret > 1", () => {
+    it("renders explicit base fret label when base_fret > 1", () => {
       const svg = generateChordSvg({
         id: "chord:C:maj:v2",
         frets: [8, 10, 10, 9, 8, 8],
         base_fret: 8,
       });
 
-      expect(svg).toContain('>8fr<');
+      expect(svg).toContain('class="base-fret-label"');
+      expect(svg).toContain('>base 8fr<');
     });
 
-    it("does not render redundant base fret label when base_fret is 1", () => {
+    it("renders explicit base fret label when base_fret is 1", () => {
       const svg = generateChordSvg({
         id: "chord:C:maj:v1",
         frets: [null, 3, 2, 0, 1, 0],
         base_fret: 1,
       });
 
-      expect(svg).not.toContain('>1fr<');
+      expect(svg).toContain('class="base-fret-label"');
+      expect(svg).toContain('>base 1fr<');
+    });
+
+    it("renders deterministic fret scale labels for the visible grid", () => {
+      const svg = generateChordSvg({
+        id: "chord:D:min:v2",
+        frets: [5, 7, 7, 5, 5, 5],
+        base_fret: 5,
+      });
+
+      expect(countOccurrences(svg, 'class="fret-scale-label"')).toBe(5);
+      expect(svg).toContain('>5<');
+      expect(svg).toContain('>6<');
+      expect(svg).toContain('>7<');
+      expect(svg).toContain('>8<');
+      expect(svg).toContain('>9<');
     });
   });
 

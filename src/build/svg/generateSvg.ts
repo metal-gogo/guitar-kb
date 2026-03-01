@@ -22,7 +22,10 @@ export function generateChordSvg(voicing: Voicing, tuning?: string[]): string {
         return "";
       }
       const y = 40 + (fret - voicing.base_fret + 0.5) * 32;
-      return `<circle cx="${stringX[index]}" cy="${y}" r="8" fill="#111827" />`;
+      return [
+        `<circle cx="${stringX[index]}" cy="${y}" r="8" fill="#111827" />`,
+        `<text class="dot-fret-label" x="${stringX[index]}" y="${y + 3}" text-anchor="middle" font-size="7" fill="white">${fret}</text>`,
+      ].join("\n");
     })
     .filter(Boolean)
     .join("\n");
@@ -45,18 +48,23 @@ export function generateChordSvg(voicing: Voicing, tuning?: string[]): string {
     })
     .join("\n");
 
-  const fretLabel = voicing.base_fret > 1
-    ? `<text x="6" y="58" text-anchor="start" font-size="12" fill="#111827">${voicing.base_fret}fr</text>`
-    : "";
+  const fretScaleLabels = Array.from({ length: 5 }, (_, offset) => {
+    const fretNumber = voicing.base_fret + offset;
+    const y = 40 + (offset + 0.5) * 32 + 4;
+    return `<text class="fret-scale-label" x="6" y="${y}" text-anchor="start" font-size="10" fill="#111827">${fretNumber}</text>`;
+  }).join("\n");
+
+  const baseFretLabel = `<text class="base-fret-label" x="6" y="24" text-anchor="start" font-size="10" fill="#111827">base ${voicing.base_fret}fr</text>`;
 
   return `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" role="img" aria-label="${voicing.id}">
   <rect x="0" y="0" width="${width}" height="${height}" fill="white" />
   ${verticalLines}
   ${horizontalLines}
+  ${fretScaleLabels}
   ${dots}
   ${openMuted}
-  ${fretLabel}
+  ${baseFretLabel}
   ${stringLabels}
 </svg>`;
 }
