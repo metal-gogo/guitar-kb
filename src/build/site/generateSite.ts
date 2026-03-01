@@ -1,6 +1,17 @@
 import { voicingDiagramRelativePath, encodeIdForPathSegment } from "../docs/paths.js";
 import type { ChordRecord } from "../../types/model.js";
+import { sharpAliasForFlatCanonicalRoot, toFlatCanonicalRoot } from "../../types/guards.js";
 import { compareChordOrder } from "../../utils/sort.js";
+
+type NotationMode = "flat" | "sharp";
+
+interface RootAliases {
+  flat: string;
+  sharp?: string;
+}
+
+const NOTATION_DEFAULT: NotationMode = "flat";
+const NOTATION_STORAGE_KEY = "gckb-notation";
 
 function escapeHtml(value: string): string {
   return value
@@ -51,6 +62,145 @@ function rootAnchorId(root: string): string {
   return `root-${token || "x"}`;
 }
 
+function rootAliasesForRoot(root: string): RootAliases {
+  const canonicalRoot = toFlatCanonicalRoot(root);
+  if (!canonicalRoot) {
+    return { flat: root };
+  }
+  return {
+    flat: canonicalRoot,
+    ...(sharpAliasForFlatCanonicalRoot(canonicalRoot) ? { sharp: sharpAliasForFlatCanonicalRoot(canonicalRoot) } : {}),
+  };
+}
+
+function rootAliasesForChord(chord: ChordRecord): RootAliases {
+  const fallback = rootAliasesForRoot(chord.root);
+  return {
+    flat: chord.root_display?.flat ?? fallback.flat,
+    ...(chord.root_display?.sharp ?? fallback.sharp ? { sharp: chord.root_display?.sharp ?? fallback.sharp } : {}),
+  };
+}
+
+function rootLabelSpan(aliases: RootAliases): string {
+  const attrs = [
+    "class=\"root-label\"",
+    `data-root-flat=\"${escapeHtml(aliases.flat)}\"`,
+  ];
+  if (aliases.sharp) {
+    attrs.push(`data-root-sharp=\"${escapeHtml(aliases.sharp)}\"`);
+  }
+  return `<span ${attrs.join(" ")}>${escapeHtml(aliases.flat)}</span>`;
+}
+
+function chordDisplayName(chord: ChordRecord): string {
+  return `${rootLabelSpan(rootAliasesForChord(chord))} ${escapeHtml(chord.quality)}`;
+}
+
+function sharpAliasChordId(chord: ChordRecord): string | null {
+  const sharpRoot = rootAliasesForChord(chord).sharp;
+  if (!sharpRoot) {
+    return null;
+  }
+  return `chord:${sharpRoot}:${chord.quality}`;
+}
+
+function notationToggleHtml(): string {
+  return [
+    "<div class=\"notation-toggle\" role=\"group\" aria-label=\"Notation preference\">",
+    "  <span class=\"notation-toggle__label\">Notation</span>",
+    "  <button type=\"button\" data-notation-toggle=\"flat\" aria-pressed=\"true\">Flat</button>",
+    "  <button type=\"button\" data-notation-toggle=\"sharp\" aria-pressed=\"false\">Sharp</button>",
+    "</div>",
+  ].join("\n");
+}
+
+function runtimeAliasMap(
+  chords: ReadonlyArray<ChordRecord>,
+  hrefForChordId: (chordId: string) => string,
+): Readonly<Record<string, string>> {
+  const map: Record<string, string> = {};
+  for (const chord of chords) {
+    const sharpAliasId = sharpAliasChordId(chord);
+    if (!sharpAliasId) {
+      continue;
+    }
+
+    const canonicalHref = hrefForChordId(chord.id);
+    map[sharpAliasId.toLowerCase()] = canonicalHref;
+    map[sharpAliasId.replace(/^chord:/, "").toLowerCase()] = canonicalHref;
+  }
+  return map;
+}
+
+function runtimeScript(aliasMap: Readonly<Record<string, string>>): string {
+  return [
+    "<script>",
+    "(function(){",
+    `  const NOTATION_DEFAULT = \"${NOTATION_DEFAULT}\";`,
+    `  const STORAGE_KEY = \"${NOTATION_STORAGE_KEY}\";`,
+    `  const ALIAS_MAP = ${JSON.stringify(aliasMap)};`,
+    "  const params = new URLSearchParams(window.location.search);",
+    "  const chordParam = params.get(\"chord\");",
+    "  if (chordParam) {",
+    "    const requested = chordParam.trim().toLowerCase();",
+    "    const normalized = requested.startsWith(\"chord:\") ? requested : `chord:${requested}`;",
+    "    const target = ALIAS_MAP[requested] || ALIAS_MAP[normalized];",
+    "    if (target) {",
+    "      const nextParams = new URLSearchParams(window.location.search);",
+    "      nextParams.delete(\"chord\");",
+    "      if (!nextParams.has(\"notation\") && requested.includes(\"#\")) {",
+    "        nextParams.set(\"notation\", \"sharp\");",
+    "      }",
+    "      const suffix = nextParams.toString();",
+    "      window.location.replace(`${target}${suffix ? `?${suffix}` : \"\"}`);",
+    "      return;",
+    "    }",
+    "  }",
+    "  function loadNotation() {",
+    "    const queryValue = params.get(\"notation\");",
+    "    if (queryValue === \"flat\" || queryValue === \"sharp\") {",
+    "      return queryValue;",
+    "    }",
+    "    try {",
+    "      const stored = window.localStorage.getItem(STORAGE_KEY);",
+    "      if (stored === \"flat\" || stored === \"sharp\") {",
+    "        return stored;",
+    "      }",
+    "    } catch {}",
+    "    return NOTATION_DEFAULT;",
+    "  }",
+    "  function applyNotation(mode) {",
+    "    document.documentElement.setAttribute(\"data-notation\", mode);",
+    "    for (const label of document.querySelectorAll(\"[data-root-flat]\")) {",
+    "      const flat = label.getAttribute(\"data-root-flat\") || \"\";",
+    "      const sharp = label.getAttribute(\"data-root-sharp\") || \"\";",
+    "      label.textContent = mode === \"sharp\" && sharp ? sharp : flat;",
+    "    }",
+    "    for (const toggle of document.querySelectorAll(\"[data-notation-toggle]\")) {",
+    "      const selected = toggle.getAttribute(\"data-notation-toggle\") === mode;",
+    "      toggle.setAttribute(\"aria-pressed\", selected ? \"true\" : \"false\");",
+    "      toggle.classList.toggle(\"is-active\", selected);",
+    "    }",
+    "  }",
+    "  const initialNotation = loadNotation();",
+    "  applyNotation(initialNotation);",
+    "  for (const toggle of document.querySelectorAll(\"[data-notation-toggle]\")) {",
+    "    toggle.addEventListener(\"click\", () => {",
+    "      const nextNotation = toggle.getAttribute(\"data-notation-toggle\");",
+    "      if (nextNotation !== \"flat\" && nextNotation !== \"sharp\") {",
+    "        return;",
+    "      }",
+    "      try {",
+    "        window.localStorage.setItem(STORAGE_KEY, nextNotation);",
+    "      } catch {}",
+    "      applyNotation(nextNotation);",
+    "    });",
+    "  }",
+    "})();",
+    "</script>",
+  ].join("\n");
+}
+
 function enharmonicLinkIds(chord: ChordRecord, allChords: ChordRecord[]): string[] {
   const byId = new Map(allChords.map((entry) => [entry.id, entry]));
   const related = new Set<string>();
@@ -85,7 +235,7 @@ function relatedQualityLinkIds(chord: ChordRecord, allChords: ChordRecord[]): st
     .map((candidate) => candidate.id);
 }
 
-function htmlFrame(title: string, stylesheetHref: string, body: string): string {
+function htmlFrame(title: string, stylesheetHref: string, body: string, runtimeBehaviorScript = ""): string {
   return [
     "<!doctype html>",
     '<html lang="en">',
@@ -98,6 +248,7 @@ function htmlFrame(title: string, stylesheetHref: string, body: string): string 
     "<body>",
     "  <div class=\"aurora\" aria-hidden=\"true\"></div>",
     `  <main class="page">${body}</main>`,
+    runtimeBehaviorScript,
     "</body>",
     "</html>",
     "",
@@ -148,6 +299,35 @@ export function siteStylesheet(): string {
     "}",
     ".hero h1 { margin: 0 0 8px; font-size: clamp(1.8rem, 3vw, 2.5rem); }",
     ".hero p { margin: 0; color: var(--muted); }",
+    ".notation-toggle {",
+    "  margin-top: 14px;",
+    "  display: inline-flex;",
+    "  align-items: center;",
+    "  gap: 8px;",
+    "  padding: 6px;",
+    "  border: 1px solid var(--line);",
+    "  border-radius: 999px;",
+    "  background: #fff;",
+    "}",
+    ".notation-toggle__label {",
+    "  font-size: 0.85rem;",
+    "  color: var(--muted);",
+    "  margin: 0 4px 0 6px;",
+    "}",
+    ".notation-toggle button {",
+    "  border: 0;",
+    "  border-radius: 999px;",
+    "  padding: 5px 11px;",
+    "  font-size: 0.82rem;",
+    "  background: transparent;",
+    "  color: var(--ink);",
+    "  cursor: pointer;",
+    "}",
+    ".notation-toggle button.is-active {",
+    "  background: var(--accent-soft);",
+    "  color: var(--accent);",
+    "  font-weight: 600;",
+    "}",
     ".chip-row {",
     "  margin-top: 18px;",
     "  display: flex;",
@@ -200,22 +380,31 @@ export function siteStylesheet(): string {
 
 export function siteIndexHtml(chords: ReadonlyArray<ChordRecord>): string {
   const sorted = chords.slice().sort(compareChordOrder);
-  const grouped = new Map<string, ChordRecord[]>();
+  const grouped = new Map<string, { chords: ChordRecord[]; aliases: RootAliases }>();
 
   for (const chord of sorted) {
-    const group = grouped.get(chord.root) ?? [];
-    group.push(chord);
-    grouped.set(chord.root, group);
+    const existing = grouped.get(chord.root);
+    if (existing) {
+      existing.chords.push(chord);
+      continue;
+    }
+    grouped.set(chord.root, {
+      chords: [chord],
+      aliases: rootAliasesForChord(chord),
+    });
   }
 
   const roots = Array.from(grouped.keys());
   const rootChips = roots
-    .map((root) => `<a class="chip" href="#${escapeHtml(rootAnchorId(root))}">${escapeHtml(root)}</a>`)
+    .map((root) => {
+      const aliases = grouped.get(root)?.aliases ?? rootAliasesForRoot(root);
+      return `<a class="chip" href="#${escapeHtml(rootAnchorId(root))}">${rootLabelSpan(aliases)}</a>`;
+    })
     .join("");
 
   const rootSections = Array.from(grouped.entries())
-    .map(([root, rootChords]) => {
-      const rows = rootChords.map((chord) => {
+    .map(([root, group]) => {
+      const rows = group.chords.map((chord) => {
         const aliases = (chord.aliases ?? []).join(", ") || "none";
         return [
           "<li>",
@@ -229,7 +418,7 @@ export function siteIndexHtml(chords: ReadonlyArray<ChordRecord>): string {
 
       return [
         `<section id="${escapeHtml(rootAnchorId(root))}" class="card">`,
-        `  <h2>${escapeHtml(root)}</h2>`,
+        `  <h2>${rootLabelSpan(group.aliases)}</h2>`,
         "  <ul class=\"quality-list\">",
         rows,
         "  </ul>",
@@ -242,6 +431,7 @@ export function siteIndexHtml(chords: ReadonlyArray<ChordRecord>): string {
     "<header class=\"hero\">",
     "  <h1>Guitar Chord Knowledge Base</h1>",
     `  <p>Browse ${sorted.length} canonical chords by root and quality.</p>`,
+    `  ${notationToggleHtml()}`,
     `  <p class="meta"><a href="${escapeHtml(privacyHrefFromIndex())}">Privacy notice</a> · <a href="${escapeHtml(licenseHrefFromIndex())}">License</a></p>`,
     `  <nav class="chip-row" aria-label="Root navigation">${rootChips}</nav>`,
   "</header>",
@@ -250,7 +440,12 @@ export function siteIndexHtml(chords: ReadonlyArray<ChordRecord>): string {
     "</section>",
   ].join("\n");
 
-  return htmlFrame("Guitar Chord Knowledge Base", "./assets/site.css", body);
+  return htmlFrame(
+    "Guitar Chord Knowledge Base",
+    "./assets/site.css",
+    body,
+    runtimeScript(runtimeAliasMap(sorted, chordHrefFromIndex)),
+  );
 }
 
 function renderChordLinkList(ids: string[], byId: Map<string, ChordRecord>): string {
@@ -263,7 +458,7 @@ function renderChordLinkList(ids: string[], byId: Map<string, ChordRecord>): str
       if (!chord) {
         return "";
       }
-      return `<li><a href="${escapeHtml(chordHrefFromChordPage(chord.id))}">${escapeHtml(`${chord.root} ${chord.quality}`)}</a></li>`;
+      return `<li><a href="${escapeHtml(chordHrefFromChordPage(chord.id))}">${chordDisplayName(chord)}</a></li>`;
     })
     .filter((line) => line.length > 0)
     .join("\n");
@@ -299,7 +494,8 @@ export function siteChordHtml(chord: ChordRecord, allChords: ReadonlyArray<Chord
   const body = [
     "<header class=\"hero\">",
     `  <p><a class="back-link" href="../index.html">← Back to index</a> · <a class="back-link" href="${escapeHtml(privacyHrefFromChordPage())}">Privacy notice</a> · <a class="back-link" href="${escapeHtml(licenseHrefFromChordPage())}">License</a></p>`,
-    `  <h1>${escapeHtml(`${chord.root} ${chord.quality}`)}</h1>`,
+    `  <h1>${chordDisplayName(chord)}</h1>`,
+    `  ${notationToggleHtml()}`,
     `  <p class="meta">${escapeHtml(chord.id)}</p>`,
   "</header>",
     "<section class=\"grid section\">",
@@ -330,11 +526,50 @@ export function siteChordHtml(chord: ChordRecord, allChords: ReadonlyArray<Chord
     "</section>",
   ].join("\n");
 
-  return htmlFrame(`${chord.root} ${chord.quality} | GCKB`, "../assets/site.css", body);
+  return htmlFrame(
+    `${chord.root} ${chord.quality} | GCKB`,
+    "../assets/site.css",
+    body,
+    runtimeScript(runtimeAliasMap(sortedAll, chordHrefFromChordPage)),
+  );
 }
 
 export function siteChordFileName(chordId: string): string {
   return chordFileName(chordId);
+}
+
+export function siteAliasRedirectHtml(aliasChordId: string, canonicalChordId: string): string {
+  const target = `./${siteChordFileName(canonicalChordId)}`;
+  const body = [
+    "<header class=\"hero\">",
+    "  <p><a class=\"back-link\" href=\"../index.html\">← Back to index</a></p>",
+    "  <h1>Enharmonic Redirect</h1>",
+    `  <p class="meta">${escapeHtml(aliasChordId)} routes to ${escapeHtml(canonicalChordId)}.</p>`,
+    "</header>",
+    "<section class=\"grid section\">",
+    "  <article class=\"card\">",
+    "    <h2>Redirecting</h2>",
+    `    <p><a href="${escapeHtml(target)}">Continue to canonical page</a></p>`,
+    "  </article>",
+    "</section>",
+    "<script>",
+    "(function(){",
+    "  const params = new URLSearchParams(window.location.search);",
+    "  if (!params.has(\"notation\")) {",
+    "    params.set(\"notation\", \"sharp\");",
+    "  }",
+    `  const target = ${JSON.stringify(target)};`,
+    "  const suffix = params.toString();",
+    "  window.location.replace(`${target}${suffix ? `?${suffix}` : \"\"}`);",
+    "})();",
+    "</script>",
+  ].join("\n");
+
+  return htmlFrame(
+    `${aliasChordId} → ${canonicalChordId} | GCKB`,
+    "../assets/site.css",
+    body,
+  );
 }
 
 export function sitePrivacyHtml(): string {

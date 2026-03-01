@@ -3,7 +3,14 @@ import path from "node:path";
 import { chordIndexMarkdown, chordMarkdown, licenseMarkdown, privacyNoticeMarkdown } from "../../src/build/docs/generateDocs.js";
 import { encodeIdForPathSegment, voicingDiagramRelativePath } from "../../src/build/docs/paths.js";
 import { coverageDashboardMarkdown } from "../../src/build/docs/generateCoverage.js";
-import { siteChordFileName, siteChordHtml, siteIndexHtml, siteLicenseHtml, sitePrivacyHtml } from "../../src/build/site/generateSite.js";
+import {
+  siteAliasRedirectHtml,
+  siteChordFileName,
+  siteChordHtml,
+  siteIndexHtml,
+  siteLicenseHtml,
+  sitePrivacyHtml,
+} from "../../src/build/site/generateSite.js";
 import { buildRootQualityCoverageReport } from "../../src/validate/coverage.js";
 import type { ChordRecord } from "../../src/types/model.js";
 
@@ -429,6 +436,12 @@ describe("site generation", () => {
     expect(html).toContain("href=\"./chords/chord__C__maj.html\"");
     expect(html).toContain("href=\"./chords/chord__C__min.html\"");
     expect(html).toContain("href=\"./chords/chord__Db__maj.html\"");
+    expect(html).toContain("data-notation-toggle=\"flat\"");
+    expect(html).toContain("data-notation-toggle=\"sharp\"");
+    expect(html).toContain("data-root-flat=\"Db\"");
+    expect(html).toContain("data-root-sharp=\"C#\"");
+    expect(html).toContain("\"chord:c#:maj\":\"./chords/chord__Db__maj.html\"");
+    expect(html).toContain("params.get(\"chord\")");
     expect(html).toContain("href=\"./privacy.html\"");
     expect(html).toContain("href=\"./license.html\"");
   });
@@ -463,10 +476,22 @@ describe("site generation", () => {
     expect(html).toContain("src=\"../diagrams/C-sharp/maj/v1.svg\"");
     expect(html).toContain("href=\"./chord__Db__maj.html\"");
     expect(html).toContain("href=\"./chord__C-sharp__min.html\"");
+    expect(html).toContain("data-notation-toggle=\"flat\"");
+    expect(html).toContain("data-root-flat=\"Db\"");
+    expect(html).toContain("data-root-sharp=\"C#\"");
     expect(html).toContain("href=\"https://example.com/c-sharp-major\"");
     expect(html).toContain("Back to index");
     expect(html).toContain("href=\"../privacy.html\"");
     expect(html).toContain("href=\"../license.html\"");
+  });
+
+  it("renders sharp alias redirect pages to canonical flat chord pages", () => {
+    const html = siteAliasRedirectHtml("chord:C#:maj", "chord:Db:maj");
+    expect(html).toContain("chord:C#:maj");
+    expect(html).toContain("chord:Db:maj");
+    expect(html).toContain("href=\"./chord__Db__maj.html\"");
+    expect(html).toContain("params.set(\"notation\", \"sharp\")");
+    expect(html).toContain("window.location.replace");
   });
 
   it("emits only resolvable internal links across generated index/chord pages", () => {
