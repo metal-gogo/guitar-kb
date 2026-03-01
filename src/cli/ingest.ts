@@ -1,6 +1,7 @@
 import { mkdir } from "node:fs/promises";
 import path from "node:path";
 import { ingestNormalizedChords } from "../ingest/pipeline.js";
+import { buildParserConfidenceReport } from "../ingest/parserConfidenceReport.js";
 import { writeJson } from "../utils/fs.js";
 import { parseIngestCliOptions } from "./options.js";
 
@@ -22,6 +23,10 @@ async function main(): Promise<void> {
 
   await mkdir(path.join("data", "generated"), { recursive: true });
   await writeJson(path.join("data", "generated", "chords.normalized.json"), chords);
+  if (options.includeParserConfidence) {
+    const report = buildParserConfidenceReport(chords);
+    await writeJson(path.join("data", "generated", "parser-confidence.report.json"), report);
+  }
 
   process.stdout.write(`Ingested ${chords.length} normalized chords\n`);
 }

@@ -10,7 +10,8 @@ import {
   ingestNormalizedChordsWithTargets,
   selectIngestTargets,
 } from "../../src/ingest/pipeline.js";
-import type { SourceRegistryEntry } from "../../src/types/model.js";
+import { buildParserConfidenceReport } from "../../src/ingest/parserConfidenceReport.js";
+import type { ChordRecord, SourceRegistryEntry } from "../../src/types/model.js";
 
 describe("ingestNormalizedChords", () => {
   afterEach(() => {
@@ -292,5 +293,109 @@ describe("ingestNormalizedChords", () => {
     const output = writeSpy.mock.calls.map(([line]) => String(line)).join("");
     expect(output).toContain("GAP_ALLOWLISTED chord=chord:C:min7 unsupported_sources=stub-source");
     expect(output).not.toContain("GAP_UNRESOLVED chord=chord:C:min7");
+  });
+
+  it("builds deterministic parser confidence summaries grouped by source and quality", () => {
+    const chords: ChordRecord[] = [
+      {
+        id: "chord:D:min7",
+        root: "D",
+        quality: "min7",
+        aliases: [],
+        formula: ["1", "b3", "5", "b7"],
+        pitch_classes: ["D", "F", "A", "C"],
+        voicings: [],
+        parser_confidence: [
+          { source: "source-b", level: "medium", checks: ["has_formula"] },
+          { source: "source-a", level: "high", checks: ["all_voicings_complete"] },
+        ],
+        source_refs: [{ source: "fixture", url: "https://example.test/d-min7" }],
+      },
+      {
+        id: "chord:C:maj",
+        root: "C",
+        quality: "maj",
+        aliases: [],
+        formula: ["1", "3", "5"],
+        pitch_classes: ["C", "E", "G"],
+        voicings: [],
+        parser_confidence: [
+          { source: "source-a", level: "low", checks: ["missing_voicings"] },
+        ],
+        source_refs: [{ source: "fixture", url: "https://example.test/c-major" }],
+      },
+      {
+        id: "chord:A:dim",
+        root: "A",
+        quality: "dim",
+        aliases: [],
+        formula: ["1", "b3", "b5"],
+        pitch_classes: ["A", "C", "Eb"],
+        voicings: [],
+        source_refs: [{ source: "fixture", url: "https://example.test/a-dim" }],
+      },
+    ];
+
+    const report = buildParserConfidenceReport(chords);
+    const reversedReport = buildParserConfidenceReport([...chords].reverse());
+
+    expect(reversedReport).toEqual(report);
+    expect(report).toEqual({
+      totalChords: 3,
+      chordsWithConfidence: 2,
+      chordsWithoutConfidence: ["chord:A:dim"],
+      annotations: 3,
+      levels: { high: 1, medium: 1, low: 1 },
+      sources: [
+        {
+          source: "source-a",
+          chords: 2,
+          annotations: 2,
+          levels: { high: 1, medium: 0, low: 1 },
+          qualities: [
+            {
+              quality: "maj",
+              chords: 1,
+              annotations: 1,
+              levels: { high: 0, medium: 0, low: 1 },
+            },
+            {
+              quality: "min7",
+              chords: 1,
+              annotations: 1,
+              levels: { high: 1, medium: 0, low: 0 },
+            },
+          ],
+        },
+        {
+          source: "source-b",
+          chords: 1,
+          annotations: 1,
+          levels: { high: 0, medium: 1, low: 0 },
+          qualities: [
+            {
+              quality: "min7",
+              chords: 1,
+              annotations: 1,
+              levels: { high: 0, medium: 1, low: 0 },
+            },
+          ],
+        },
+      ],
+      qualities: [
+        {
+          quality: "maj",
+          chords: 1,
+          annotations: 1,
+          levels: { high: 0, medium: 0, low: 1 },
+        },
+        {
+          quality: "min7",
+          chords: 1,
+          annotations: 2,
+          levels: { high: 1, medium: 1, low: 0 },
+        },
+      ],
+    });
   });
 });
