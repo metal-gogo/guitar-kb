@@ -51,8 +51,12 @@ describe("CLI help flags", () => {
     expect(exitSpy).toHaveBeenCalledWith(0);
   });
 
-  it("INGEST_HELP mentions --chord, --source, --refresh, --dry-run flags", () => {
+  it("INGEST_HELP mentions ingest mode and chord-targeting flags", () => {
+    expect(INGEST_HELP).toContain("--mode");
     expect(INGEST_HELP).toContain("--chord");
+    expect(INGEST_HELP).toContain("--chord-id");
+    expect(INGEST_HELP).toContain("--root");
+    expect(INGEST_HELP).toContain("--quality");
     expect(INGEST_HELP).toContain("--source");
     expect(INGEST_HELP).toContain("--refresh");
     expect(INGEST_HELP).toContain("--dry-run");
@@ -79,6 +83,7 @@ describe("CLI help flags", () => {
 
   it("parseIngestCliOptions: normal flags still parse correctly (no help flag)", () => {
     const opts = parseIngestCliOptions(["--refresh", "--chord", "c-major", "--source", "guitar-chord-org"]);
+    expect(opts.mode).toBe("chord");
     expect(opts.refresh).toBe(true);
     expect(opts.chord).toBe("c-major");
     expect(opts.source).toBe("guitar-chord-org");
