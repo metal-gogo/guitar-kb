@@ -200,5 +200,6 @@ All four commands must pass with no errors before opening a PR.
 ## See Also
 
 - [Parser Fixture Index and Minimization Guide](parser-fixtures.md)
+- [Root Spelling Policy (flat-baseline canonical roots)](root-spelling-policy.md)
 - [AGENTS.md — Legal & Content Safety Rules](../../AGENTS.md#2-legal--content-safety-rules-non-negotiable)
 - [CONTRIBUTING.md — PR Process](../../CONTRIBUTING.md#pr-process)

@@ -1,6 +1,6 @@
 # ADR-0001: Canonical Chord IDs & Enharmonic Policy
 
-**Status:** Accepted\
+**Status:** Accepted (root-spelling section superseded by ADR-0007)\
 **Date:** 2026-02-21\
 **Owner:** Guitar Chord Knowledge Base (GCKB)
 
@@ -63,6 +63,9 @@ Rules:
 ------------------------------------------------------------------------
 
 ### 2. Root Spelling Policy
+
+> Superseded by ADR-0007 (`planning/decisions/0007-flat-baseline-canonical-root-policy.md`).
+> Keep this section for historical context only.
 
 We allow both sharp and flat roots as canonical.
 
