@@ -6,7 +6,7 @@ import { pathExists, readText, writeJson } from "../../utils/fs.js";
 export const DEFAULT_DOCS_ROOT = "docs";
 export const DEFAULT_BASELINE_PATH = path.join("data", "generated", "docs-changelog-baseline.json");
 
-const GENERATED_DOC_TARGETS = ["chords", "diagrams", "index.md", "sitemap.json"] as const;
+const GENERATED_DOC_TARGETS = ["chords", "diagrams", "index.md", "coverage.md", "sitemap.json"] as const;
 
 export interface DocsSnapshot {
   version: 1;
