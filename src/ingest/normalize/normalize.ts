@@ -394,10 +394,72 @@ function voicingFingerprint(
   return `base=${voicing.base_fret}|frets=${frets}|fingers=${fingers}|tuning=${tuning.join(",")}`;
 }
 
+function compareNullableNumber(left: number | null | undefined, right: number | null | undefined): number {
+  const leftRank = left === null || left === undefined ? -1 : left;
+  const rightRank = right === null || right === undefined ? -1 : right;
+  if (leftRank < rightRank) {
+    return -1;
+  }
+  if (leftRank > rightRank) {
+    return 1;
+  }
+  return 0;
+}
+
+function compareNumberArray(
+  left: ReadonlyArray<number | null> | undefined,
+  right: ReadonlyArray<number | null> | undefined,
+): number {
+  const maxLength = Math.max(left?.length ?? 0, right?.length ?? 0);
+  for (let index = 0; index < maxLength; index += 1) {
+    const comparison = compareNullableNumber(left?.[index], right?.[index]);
+    if (comparison !== 0) {
+      return comparison;
+    }
+  }
+  return 0;
+}
+
+function compareVoicingForIdAssignment(
+  a: { frets: Array<number | null>; fingers?: Array<number | null>; base_fret: number },
+  b: { frets: Array<number | null>; fingers?: Array<number | null>; base_fret: number },
+): number {
+  if (a.base_fret < b.base_fret) {
+    return -1;
+  }
+  if (a.base_fret > b.base_fret) {
+    return 1;
+  }
+
+  const fretComparison = compareNumberArray(a.frets, b.frets);
+  if (fretComparison !== 0) {
+    return fretComparison;
+  }
+
+  const aFingers = a.fingers ?? [];
+  const bFingers = b.fingers ?? [];
+  const fingerComparison = compareNumberArray(aFingers, bFingers);
+  if (fingerComparison !== 0) {
+    return fingerComparison;
+  }
+
+  return 0;
+}
+
+function assignDeterministicVoicingIds(record: ChordRecord): void {
+  const sorted = record.voicings
+    .slice()
+    .sort((left, right) => compareVoicingForIdAssignment(left, right));
+
+  record.voicings = sorted.map((voicing, index) => ({
+    ...voicing,
+    id: `${record.id}:v${index + 1}`,
+  }));
+}
+
 function appendNormalizedVoicings(
   record: ChordRecord,
   rawVoicings: RawChordRecord["voicings"],
-  source: string,
   fallbackSourceRef: SourceRef,
 ): void {
   const byFingerprint = new Map<string, number>();
@@ -422,10 +484,9 @@ function appendNormalizedVoicings(
       continue;
     }
 
-    const nextId = `${record.id}:v${record.voicings.length + 1}:${source}`;
     record.voicings.push({
       ...voicing,
-      id: nextId,
+      id: "",
       position: derivePosition(voicing.frets),
       source_refs: normalizedSourceRefs,
     });
@@ -491,15 +552,14 @@ export function normalizeRecords(raw: RawChordRecord[], options: NormalizeRecord
       });
       const created = merged.get(id);
       if (created) {
-        appendNormalizedVoicings(created, input.voicings, input.source, sourceRef);
+        appendNormalizedVoicings(created, input.voicings, sourceRef);
       }
       continue;
     }
 
     existing.aliases = normalizeStringArray([...(existing.aliases ?? []), ...aliases]);
-    appendNormalizedVoicings(existing, input.voicings, input.source, sourceRef);
+    appendNormalizedVoicings(existing, input.voicings, sourceRef);
     existing.source_refs.push(sourceRef);
-    existing.voicings.sort((a, b) => a.id.localeCompare(b.id));
     if (includeParserConfidence) {
       existing.parser_confidence = mergeParserConfidence(
         existing.parser_confidence,
@@ -508,7 +568,12 @@ export function normalizeRecords(raw: RawChordRecord[], options: NormalizeRecord
     }
   }
 
-  const result = [...merged.values()].sort(compareChordOrder);
+  const result = [...merged.values()];
+  for (const chord of result) {
+    assignDeterministicVoicingIds(chord);
+  }
+
+  result.sort(compareChordOrder);
   detectAliasCollisions(result);
   return result;
 }
