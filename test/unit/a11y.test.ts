@@ -47,8 +47,8 @@ describe("checkSvgContent", () => {
 
   it("includes file path in violation", () => {
     const svg = goodSvg.replace(/ role="img"/, "");
-    const violations = checkSvgContent("docs/diagrams/chord__C__maj__v1.svg", svg);
-    expect(violations[0]!.file).toBe("docs/diagrams/chord__C__maj__v1.svg");
+    const violations = checkSvgContent("docs/diagrams/C/maj/v1.svg", svg);
+    expect(violations[0]!.file).toBe("docs/diagrams/C/maj/v1.svg");
   });
 
   it("can report multiple violations for a single SVG", () => {

@@ -124,16 +124,16 @@ describe("checkDocLinks", () => {
   });
 
   it("handles SVG diagram links", async () => {
-    await mkdir(path.join(tempDir, "diagrams"), { recursive: true });
+    await mkdir(path.join(tempDir, "diagrams", "C", "maj"), { recursive: true });
     await writeFile(
-      path.join(tempDir, "diagrams", "chord__C__maj__v1.svg"),
+      path.join(tempDir, "diagrams", "C", "maj", "v1.svg"),
       "<svg/>",
       "utf8",
     );
     await mkdir(path.join(tempDir, "chords"), { recursive: true });
     await writeFile(
       path.join(tempDir, "chords", "c-maj.md"),
-      "# C maj\n[diagram](../diagrams/chord__C__maj__v1.svg)\n",
+      "# C maj\n[diagram](../diagrams/C/maj/v1.svg)\n",
       "utf8",
     );
 

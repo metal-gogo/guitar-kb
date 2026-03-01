@@ -60,7 +60,7 @@ describe("buildDocsSitemap", () => {
     expect(voicings[0].id).toBe("chord:C:maj:v1");
     expect(voicings[1].id).toBe("chord:C:maj:v2");
     expect(voicings[0].diagram_path).toBe(
-      "docs/diagrams/chord__C__maj__v1.svg",
+      "docs/diagrams/C/maj/v1.svg",
     );
   });
 
@@ -72,7 +72,17 @@ describe("buildDocsSitemap", () => {
     });
     const { entries } = buildDocsSitemap([chord], FIXED_TS);
     expect(entries[0].voicings[0].diagram_path).toBe(
-      "docs/diagrams/chord__C%23__maj__v1.svg",
+      "docs/diagrams/C%23/maj/v1.svg",
+    );
+  });
+
+  it("normalizes legacy source-suffixed voicing ids to hierarchical paths", () => {
+    const chord = buildChord({
+      voicings: [{ id: "chord:C:maj:v1:guitar-chord-org", frets: [null, 3, 2, 0, 1, 0], base_fret: 1 }],
+    });
+    const { entries } = buildDocsSitemap([chord], FIXED_TS);
+    expect(entries[0].voicings[0].diagram_path).toBe(
+      "docs/diagrams/C/maj/v1.svg",
     );
   });
 
