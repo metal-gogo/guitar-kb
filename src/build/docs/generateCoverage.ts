@@ -26,33 +26,38 @@ export function coverageDashboardMarkdown(
   const unexpectedRows = report.unexpectedCanonicalIds.length === 0
     ? "_None_"
     : report.unexpectedCanonicalIds.map((id) => `- \`${id}\``).join("\n");
+  const lines = [
+    "# Coverage Dashboard",
+    "",
+    `- Matrix version: \`${report.matrixVersion}\``,
+    `- Coverage: \`${report.observedCombinations}/${report.expectedCombinations}\` (\`${report.coveragePercent.toFixed(2)}%\`)`,
+    "",
+    "## Missing Severity Counts",
+    "",
+    "| Severity | Count |",
+    "|---|---:|",
+    `| critical | ${report.missingSeverityCounts.critical} |`,
+    `| high | ${report.missingSeverityCounts.high} |`,
+    `| medium | ${report.missingSeverityCounts.medium} |`,
+    `| low | ${report.missingSeverityCounts.low} |`,
+    "",
+    "## Missing Canonical IDs",
+    "",
+    truncated
+      ? `_Showing first ${missingLimit} of ${report.missingCanonicalIds.length} missing IDs (deterministic order)._`
+      : "",
+    "",
+    missingRows,
+    "",
+    "## Unexpected Canonical IDs",
+    "",
+    unexpectedRows,
+    "",
+    "## Navigation",
+    "",
+    "- [← Chord Index](./index.md)",
+    "",
+  ];
 
-  return `# Coverage Dashboard
-
-- Matrix version: \`${report.matrixVersion}\`
-- Coverage: \`${report.observedCombinations}/${report.expectedCombinations}\` (\`${report.coveragePercent.toFixed(2)}%\`)
-
-## Missing Severity Counts
-
-| Severity | Count |
-|---|---:|
-| critical | ${report.missingSeverityCounts.critical} |
-| high | ${report.missingSeverityCounts.high} |
-| medium | ${report.missingSeverityCounts.medium} |
-| low | ${report.missingSeverityCounts.low} |
-
-## Missing Canonical IDs
-
-${truncated ? `_Showing first ${missingLimit} of ${report.missingCanonicalIds.length} missing IDs (deterministic order)._` : ""}
-
-${missingRows}
-
-## Unexpected Canonical IDs
-
-${unexpectedRows}
-
-## Navigation
-
-- [← Chord Index](./index.md)
-`;
+  return lines.join("\n");
 }
