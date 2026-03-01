@@ -103,7 +103,7 @@ jobs:
         run: |
           set +e
           mkdir -p .artifacts
-          npm run audit-cache | tee .artifacts/cache-audit.txt
+          npm run audit-cache 2>&1 | tee .artifacts/cache-audit.txt
           code=${PIPESTATUS[0]}
           echo "exit_code=$code" >> "$GITHUB_OUTPUT"
           exit $code
