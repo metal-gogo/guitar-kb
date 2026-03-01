@@ -15,6 +15,8 @@ interface QualityTarget {
   allGuitarSlug: string;
 }
 
+type QualityTargetDefinition = Omit<QualityTarget, "quality">;
+
 export interface IngestTarget {
   source: "guitar-chord-org" | "all-guitar-chords";
   chordId: string;
@@ -22,18 +24,23 @@ export interface IngestTarget {
   url: string;
 }
 
-const FULL_QUALITY_TARGETS: readonly QualityTarget[] = [
-  { quality: "maj", cacheSuffix: "major", guitarSlug: "maj", allGuitarSlug: "major" },
-  { quality: "min", cacheSuffix: "minor", guitarSlug: "min", allGuitarSlug: "minor" },
-  { quality: "7", cacheSuffix: "7", guitarSlug: "7", allGuitarSlug: "dominant-7th" },
-  { quality: "maj7", cacheSuffix: "maj7", guitarSlug: "maj7", allGuitarSlug: "major-7th" },
-  { quality: "min7", cacheSuffix: "min7", guitarSlug: "min7", allGuitarSlug: "minor-7th" },
-  { quality: "dim", cacheSuffix: "dim", guitarSlug: "dim", allGuitarSlug: "diminished" },
-  { quality: "dim7", cacheSuffix: "dim7", guitarSlug: "dim7", allGuitarSlug: "diminished-7th" },
-  { quality: "aug", cacheSuffix: "aug", guitarSlug: "aug", allGuitarSlug: "augmented" },
-  { quality: "sus2", cacheSuffix: "sus2", guitarSlug: "sus2", allGuitarSlug: "suspended-2nd" },
-  { quality: "sus4", cacheSuffix: "sus4", guitarSlug: "sus4", allGuitarSlug: "suspended-4th" },
-] as const;
+const QUALITY_TARGET_DEFINITIONS = {
+  maj: { cacheSuffix: "major", guitarSlug: "maj", allGuitarSlug: "major" },
+  min: { cacheSuffix: "minor", guitarSlug: "min", allGuitarSlug: "minor" },
+  "7": { cacheSuffix: "7", guitarSlug: "7", allGuitarSlug: "dominant-7th" },
+  maj7: { cacheSuffix: "maj7", guitarSlug: "maj7", allGuitarSlug: "major-7th" },
+  min7: { cacheSuffix: "min7", guitarSlug: "min7", allGuitarSlug: "minor-7th" },
+  dim: { cacheSuffix: "dim", guitarSlug: "dim", allGuitarSlug: "diminished" },
+  dim7: { cacheSuffix: "dim7", guitarSlug: "dim7", allGuitarSlug: "diminished-7th" },
+  aug: { cacheSuffix: "aug", guitarSlug: "aug", allGuitarSlug: "augmented" },
+  sus2: { cacheSuffix: "sus2", guitarSlug: "sus2", allGuitarSlug: "suspended-2nd" },
+  sus4: { cacheSuffix: "sus4", guitarSlug: "sus4", allGuitarSlug: "suspended-4th" },
+} as const satisfies Record<ChordQuality, QualityTargetDefinition>;
+
+const FULL_QUALITY_TARGETS: readonly QualityTarget[] = QUALITY_ORDER.map((quality) => ({
+  quality,
+  ...QUALITY_TARGET_DEFINITIONS[quality],
+}));
 
 const CORE_QUALITY_SET = new Set<ChordQuality>(["maj", "min", "7", "maj7"]);
 

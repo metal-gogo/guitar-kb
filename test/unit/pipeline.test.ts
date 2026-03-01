@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { mkdtemp, mkdir, rm, writeFile } from "node:fs/promises";
+import { createHash } from "node:crypto";
 import os from "node:os";
 import path from "node:path";
 import { FULL_MATRIX_TARGETS, MVP_TARGETS, ROOT_ORDER, type IngestTarget } from "../../src/config.js";
@@ -157,5 +158,10 @@ describe("ingestNormalizedChords", () => {
     });
 
     expect(coreFromFull).toEqual(MVP_TARGETS);
+
+    const serializedMvpTargets = JSON.stringify(MVP_TARGETS);
+    const mvpDigest = createHash("sha256").update(serializedMvpTargets).digest("hex");
+
+    expect(mvpDigest).toBe("8460d67950f762f006ae1a5b2ed794ed650c9d76f728329453b696f45ba9ba3c");
   });
 });
