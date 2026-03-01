@@ -2,7 +2,7 @@
 
 ## Triage Labels
 
-- `status/backlog`
+- `status/in-progress`
 - `priority/p0`
 - `area/data-model`
 
@@ -25,12 +25,12 @@ definition rather than implicit defaults.
 
 ## Acceptance Criteria
 
-- [ ] Coverage report includes explicit matrix metadata and stable ordering.
-- [ ] Contract tests fail on accidental matrix drift.
-- [ ] Matrix definition includes all defined qualities (`maj`, `min`, `7`,
+- [x] Coverage report includes explicit matrix metadata and stable ordering.
+- [x] Contract tests fail on accidental matrix drift.
+- [x] Matrix definition includes all defined qualities (`maj`, `min`, `7`,
   `maj7`, `min7`, `dim`, `dim7`, `aug`, `sus2`, `sus4`).
-- [ ] `npm run validate` exits `0` and prints matrix metadata on a healthy build.
-- [ ] `npm test -- test/unit/coverage.test.ts` exits `0` and covers the new contract behavior.
+- [x] `npm run validate` exits `0` and prints matrix metadata on a healthy build.
+- [x] `npm test -- test/unit/coverage.test.ts` exits `0` and covers the new contract behavior.
 - [ ] All Copilot inline review comments addressed
 - [ ] `require-copilot-review` CI check green before merge
 
@@ -44,3 +44,7 @@ npm run validate
 Expected outcome:
 - Both commands exit `0`.
 - `validate` output includes deterministic matrix metadata fields.
+
+## Execution Notes
+
+- 2026-03-01: Implemented on branch `feat/37-coverage-matrix-contract` with local validation passing.

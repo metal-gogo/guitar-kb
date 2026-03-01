@@ -1,7 +1,8 @@
-import { QUALITY_ORDER, ROOT_ORDER } from "../config.js";
 import type { ChordQuality, ChordRecord } from "../types/model.js";
-
-export type CoverageGapSeverity = "critical" | "high" | "medium" | "low";
+import {
+  COVERAGE_MATRIX_CONTRACT,
+  type CoverageGapSeverity,
+} from "./coverageContract.js";
 
 export interface MissingCoverageGap {
   canonicalId: string;
@@ -10,6 +11,9 @@ export interface MissingCoverageGap {
 }
 
 export interface RootQualityCoverageReport {
+  matrixVersion: string;
+  expectedRoots: string[];
+  expectedQualities: ChordQuality[];
   expectedCombinations: number;
   observedCombinations: number;
   coveragePercent: number;
@@ -22,20 +26,8 @@ export interface RootQualityCoverageReport {
 interface CoverageOptions {
   roots?: readonly string[];
   qualities?: readonly ChordQuality[];
+  matrixVersion?: string;
 }
-
-const QUALITY_SEVERITY: Record<ChordQuality, CoverageGapSeverity> = {
-  maj: "critical",
-  min: "critical",
-  "7": "critical",
-  maj7: "critical",
-  min7: "high",
-  dim: "medium",
-  dim7: "medium",
-  aug: "medium",
-  sus2: "low",
-  sus4: "low",
-};
 
 function toChordId(root: string, quality: string): string {
   return `chord:${root}:${quality}`;
@@ -45,8 +37,9 @@ export function buildRootQualityCoverageReport(
   records: ChordRecord[],
   options: CoverageOptions = {},
 ): RootQualityCoverageReport {
-  const roots = options.roots ?? ROOT_ORDER;
-  const qualities = options.qualities ?? QUALITY_ORDER;
+  const roots = options.roots ?? COVERAGE_MATRIX_CONTRACT.roots;
+  const qualities = options.qualities ?? COVERAGE_MATRIX_CONTRACT.qualities;
+  const matrixVersion = options.matrixVersion ?? COVERAGE_MATRIX_CONTRACT.version;
 
   const expected = new Set<string>();
   for (const root of roots) {
@@ -70,7 +63,7 @@ export function buildRootQualityCoverageReport(
       const id = toChordId(root, quality);
       if (!observed.has(id)) {
         missingCanonicalIds.push(id);
-        const severity = QUALITY_SEVERITY[quality];
+        const severity = COVERAGE_MATRIX_CONTRACT.severityByQuality[quality];
         missingTagged.push({
           canonicalId: id,
           severity,
@@ -92,6 +85,9 @@ export function buildRootQualityCoverageReport(
     : Number(((observedCombinations / expectedCombinations) * 100).toFixed(2));
 
   return {
+    matrixVersion,
+    expectedRoots: [...roots],
+    expectedQualities: [...qualities],
     expectedCombinations,
     observedCombinations,
     coveragePercent,

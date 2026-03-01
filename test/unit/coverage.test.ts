@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildRootQualityCoverageReport } from "../../src/validate/coverage.js";
+import { COVERAGE_MATRIX_CONTRACT } from "../../src/validate/coverageContract.js";
 import type { ChordQuality, ChordRecord } from "../../src/types/model.js";
 
 function chord(id: string): ChordRecord {
@@ -30,6 +31,9 @@ describe("buildRootQualityCoverageReport", () => {
     ];
     const report = buildRootQualityCoverageReport(records, { roots, qualities });
 
+    expect(report.matrixVersion).toBe(COVERAGE_MATRIX_CONTRACT.version);
+    expect(report.expectedRoots).toEqual([...roots]);
+    expect(report.expectedQualities).toEqual([...qualities]);
     expect(report.expectedCombinations).toBe(4);
     expect(report.observedCombinations).toBe(4);
     expect(report.coveragePercent).toBe(100);
@@ -51,6 +55,8 @@ describe("buildRootQualityCoverageReport", () => {
     ];
     const report = buildRootQualityCoverageReport(records, { roots, qualities });
 
+    expect(report.expectedRoots).toEqual([...roots]);
+    expect(report.expectedQualities).toEqual([...qualities]);
     expect(report.expectedCombinations).toBe(4);
     expect(report.observedCombinations).toBe(2);
     expect(report.missingCanonicalIds).toEqual(["chord:C:min", "chord:D:maj"]);
@@ -130,5 +136,44 @@ describe("buildRootQualityCoverageReport", () => {
       medium: 1,
       low: 1,
     });
+  });
+
+  it("exposes a stable default matrix contract with deterministic ordering", () => {
+    const report = buildRootQualityCoverageReport([]);
+
+    expect(report.matrixVersion).toBe("coverage-matrix/v1");
+    expect(report.expectedRoots).toEqual([...COVERAGE_MATRIX_CONTRACT.roots]);
+    expect(report.expectedRoots).toEqual([
+      "C",
+      "C#",
+      "Db",
+      "D",
+      "D#",
+      "Eb",
+      "E",
+      "F",
+      "F#",
+      "Gb",
+      "G",
+      "G#",
+      "Ab",
+      "A",
+      "A#",
+      "Bb",
+      "B",
+    ]);
+    expect(report.expectedQualities).toEqual([...COVERAGE_MATRIX_CONTRACT.qualities]);
+    expect(report.expectedQualities).toEqual([
+      "maj",
+      "min",
+      "7",
+      "maj7",
+      "min7",
+      "dim",
+      "dim7",
+      "aug",
+      "sus2",
+      "sus4",
+    ]);
   });
 });
