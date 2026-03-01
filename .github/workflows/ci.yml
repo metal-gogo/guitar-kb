@@ -288,3 +288,65 @@ jobs:
         run: |
           echo "One or more CI steps failed. See ci-summary.md artifact for details."
           exit 1
+
+  website:
+    name: website
+    needs: build
+    if: needs.build.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: install
+        run: npm ci
+
+      - name: build site
+        run: npm run build
+
+      - name: check links
+        run: npm run check-links
+
+      - name: bundle deterministic site artifact
+        run: |
+          mkdir -p .artifacts
+          tar \
+            --sort=name \
+            --mtime='UTC 1970-01-01' \
+            --owner=0 \
+            --group=0 \
+            --numeric-owner \
+            -cf .artifacts/site.tar site
+
+      - name: upload site bundle artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: site-bundle
+          path: .artifacts/site.tar
+          retention-days: 7
+
+      - name: upload pages artifact
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy_pages:
+    name: deploy-pages
+    needs: website
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: deploy to github pages
+        id: deployment
+        uses: actions/deploy-pages@v4
