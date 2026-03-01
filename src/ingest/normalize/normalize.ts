@@ -394,36 +394,62 @@ function voicingFingerprint(
   return `base=${voicing.base_fret}|frets=${frets}|fingers=${fingers}|tuning=${tuning.join(",")}`;
 }
 
-function compareVoicingForIdAssignment(
-  a: { frets: Array<number | null>; fingers?: Array<number | null>; base_fret: number; source_refs?: SourceRef[] },
-  b: { frets: Array<number | null>; fingers?: Array<number | null>; base_fret: number; source_refs?: SourceRef[] },
-  tuning: ReadonlyArray<string>,
-): number {
-  const fingerprintComparison = voicingFingerprint(a, tuning).localeCompare(voicingFingerprint(b, tuning));
-  if (fingerprintComparison !== 0) {
-    return fingerprintComparison;
-  }
-
-  const aFirstRef = a.source_refs?.[0];
-  const bFirstRef = b.source_refs?.[0];
-  if (!aFirstRef && !bFirstRef) {
-    return 0;
-  }
-  if (!aFirstRef) {
+function compareNullableNumber(left: number | null | undefined, right: number | null | undefined): number {
+  const leftRank = left === null || left === undefined ? -1 : left;
+  const rightRank = right === null || right === undefined ? -1 : right;
+  if (leftRank < rightRank) {
     return -1;
   }
-  if (!bFirstRef) {
+  if (leftRank > rightRank) {
+    return 1;
+  }
+  return 0;
+}
+
+function compareNumberArray(
+  left: ReadonlyArray<number | null> | undefined,
+  right: ReadonlyArray<number | null> | undefined,
+): number {
+  const maxLength = Math.max(left?.length ?? 0, right?.length ?? 0);
+  for (let index = 0; index < maxLength; index += 1) {
+    const comparison = compareNullableNumber(left?.[index], right?.[index]);
+    if (comparison !== 0) {
+      return comparison;
+    }
+  }
+  return 0;
+}
+
+function compareVoicingForIdAssignment(
+  a: { frets: Array<number | null>; fingers?: Array<number | null>; base_fret: number },
+  b: { frets: Array<number | null>; fingers?: Array<number | null>; base_fret: number },
+): number {
+  if (a.base_fret < b.base_fret) {
+    return -1;
+  }
+  if (a.base_fret > b.base_fret) {
     return 1;
   }
 
-  return compareSourceRef(aFirstRef, bFirstRef);
+  const fretComparison = compareNumberArray(a.frets, b.frets);
+  if (fretComparison !== 0) {
+    return fretComparison;
+  }
+
+  const aFingers = a.fingers ?? [];
+  const bFingers = b.fingers ?? [];
+  const fingerComparison = compareNumberArray(aFingers, bFingers);
+  if (fingerComparison !== 0) {
+    return fingerComparison;
+  }
+
+  return 0;
 }
 
 function assignDeterministicVoicingIds(record: ChordRecord): void {
-  const tuning = record.tuning ?? STANDARD_TUNING;
   const sorted = record.voicings
     .slice()
-    .sort((left, right) => compareVoicingForIdAssignment(left, right, tuning));
+    .sort((left, right) => compareVoicingForIdAssignment(left, right));
 
   record.voicings = sorted.map((voicing, index) => ({
     ...voicing,
