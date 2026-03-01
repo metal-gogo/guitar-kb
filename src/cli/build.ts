@@ -148,9 +148,7 @@ async function main(): Promise<void> {
       const svg = generateChordSvg(voicing, chord.tuning);
       const docsDiagramPath = docsVoicingDiagramPath(voicing.id);
       const siteDiagramPath = siteVoicingDiagramPath(voicing.id);
-      await mkdir(path.dirname(docsDiagramPath), { recursive: true });
       await writeText(docsDiagramPath, svg);
-      await mkdir(path.dirname(siteDiagramPath), { recursive: true });
       await writeText(siteDiagramPath, svg);
     }
   }

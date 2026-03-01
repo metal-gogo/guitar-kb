@@ -6,11 +6,6 @@ export function chordDocFileName(chordId: string): string {
   return `${encodeIdForPathSegment(chordId)}.md`;
 }
 
-export function voicingDiagramFileName(voicingId: string): string {
-  const { voicing } = parseVoicingId(voicingId);
-  return `${encodeIdForPathSegment(voicing)}.svg`;
-}
-
 interface ParsedVoicingId {
   root: string;
   quality: string;

@@ -439,6 +439,9 @@ describe("site generation", () => {
       root: "C#",
       quality: "maj",
       enharmonic_equivalents: ["chord:Db:maj"],
+      voicings: [
+        { id: "chord:C#:maj:v1", frets: [null, 3, 2, 0, 1, 0], base_fret: 1 },
+      ],
       source_refs: [{ source: "guitar-chord-org", url: "https://example.com/c-sharp-major" }],
     });
     const dFlat = buildChord({
@@ -457,7 +460,7 @@ describe("site generation", () => {
 
     const html = siteChordHtml(cSharp, [cSharp, dFlat, cMin]);
 
-    expect(html).toContain("src=\"../diagrams/C/maj/v1.svg\"");
+    expect(html).toContain("src=\"../diagrams/C%23/maj/v1.svg\"");
     expect(html).toContain("href=\"./chord__Db__maj.html\"");
     expect(html).toContain("href=\"./chord__C%23__min.html\"");
     expect(html).toContain("href=\"https://example.com/c-sharp-major\"");
