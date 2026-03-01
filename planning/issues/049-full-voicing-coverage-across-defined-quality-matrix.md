@@ -43,3 +43,8 @@ npm run ingest && npm run build && npm run validate
 Expected outcome:
 - Both commands exit `0`.
 - Ingest/build output shows deterministic voicing completeness with no truncation regressions.
+
+## Execution Notes
+
+- 2026-03-01: Implemented on branch `feat/49-full-voicing-coverage` with all local quality gates passing.
+- 2026-03-01: `gh pr create` could not reach `api.github.com`; PR draft captured in `planning/prs/049-full-voicing-coverage.md`.
