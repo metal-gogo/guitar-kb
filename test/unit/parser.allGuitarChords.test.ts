@@ -22,6 +22,14 @@ const URL_BY_SLUG: Record<string, string> = {
   "f-sharp-major": "https://www.all-guitar-chords.com/chords/index/f-sharp/major",
   "g-sharp-major": "https://www.all-guitar-chords.com/chords/index/g-sharp/major",
   "a-sharp-major": "https://www.all-guitar-chords.com/chords/index/a-sharp/major",
+  "c-min7": "https://www.all-guitar-chords.com/chords/index/c/minor-7th",
+  "c-dim": "https://www.all-guitar-chords.com/chords/index/c/diminished",
+  "c-dim7": "https://www.all-guitar-chords.com/chords/index/c/diminished-7th",
+  "c-aug": "https://www.all-guitar-chords.com/chords/index/c/augmented",
+  "c-sus2": "https://www.all-guitar-chords.com/chords/index/c/suspended-2nd",
+  "c-sus4": "https://www.all-guitar-chords.com/chords/index/c/suspended-4th",
+  "c-min7-many-voicings": "https://www.all-guitar-chords.com/chords/index/c/minor-7th-many-voicings",
+  "c-min7-partial-voicing-attrs": "https://www.all-guitar-chords.com/chords/index/c/minor-7th-partial-voicing-attrs",
 };
 
 const BASE_URL = URL_BY_SLUG["c-major"];
@@ -163,6 +171,77 @@ describe("parseAllGuitarChords", () => {
       expect(parsed.voicings.length).toBe(testCase.expectedVoicings);
       expect(parsed.voicings[0]?.source_refs?.[0]).toEqual({ source: "all-guitar-chords", url });
       expect(parsed.parser_confidence?.level).toBe("high");
+      expect(parsed.parser_confidence?.checks).toContain("all_voicings_complete");
+    });
+
+    it("extracts factual extended-quality chord data from fixtures", () => {
+      const cases = [
+        {
+          slug: "c-min7",
+          qualityRaw: "min7",
+          formula: ["1", "b3", "5", "b7"],
+          pitchClasses: ["C", "Eb", "G", "Bb"],
+        },
+        {
+          slug: "c-dim",
+          qualityRaw: "dim",
+          formula: ["1", "b3", "b5"],
+          pitchClasses: ["C", "Eb", "Gb"],
+        },
+        {
+          slug: "c-dim7",
+          qualityRaw: "dim7",
+          formula: ["1", "b3", "b5", "bb7"],
+          pitchClasses: ["C", "Eb", "Gb", "A"],
+        },
+        {
+          slug: "c-aug",
+          qualityRaw: "aug",
+          formula: ["1", "3", "#5"],
+          pitchClasses: ["C", "E", "G#"],
+        },
+        {
+          slug: "c-sus2",
+          qualityRaw: "sus2",
+          formula: ["1", "2", "5"],
+          pitchClasses: ["C", "D", "G"],
+        },
+        {
+          slug: "c-sus4",
+          qualityRaw: "sus4",
+          formula: ["1", "4", "5"],
+          pitchClasses: ["C", "F", "G"],
+        },
+      ] as const;
+
+      for (const testCase of cases) {
+        const url = URL_BY_SLUG[testCase.slug];
+        const html = readFixture(testCase.slug);
+        const parsed = parseAllGuitarChords(html, url);
+
+        expect(parsed.root).toBe("C");
+        expect(parsed.quality_raw).toBe(testCase.qualityRaw);
+        expect(parsed.formula).toEqual(testCase.formula);
+        expect(parsed.pitch_classes).toEqual(testCase.pitchClasses);
+        expect(parsed.voicings).toHaveLength(3);
+        expect(parsed.parser_confidence?.level).toBe("high");
+      }
+    });
+
+    it("keeps extended-quality high-variation fixture voicings untruncated", () => {
+      const url = URL_BY_SLUG["c-min7-many-voicings"];
+      const html = readFixture("c-min7-many-voicings");
+      const parsed = parseAllGuitarChords(html, url);
+
+      expect(parsed.quality_raw).toBe("min7");
+      expect(parsed.voicings).toHaveLength(5);
+      expect(parsed.voicings.map((voicing) => voicing.id)).toEqual([
+        "variation-1",
+        "variation-2",
+        "variation-3",
+        "variation-4",
+        "variation-5",
+      ]);
       expect(parsed.parser_confidence?.checks).toContain("all_voicings_complete");
     });
 
@@ -440,6 +519,20 @@ describe("parseAllGuitarChords", () => {
       expect(full.base_fret).toBe(3);
       expect(full.frets).toEqual([null, 3, 5, 5, 5, 3]);
       expect(full.fingers).toEqual([0, 1, 3, 3, 3, 1]);
+      expect(parsed.parser_confidence?.level).toBe("medium");
+      expect(parsed.parser_confidence?.checks).not.toContain("all_voicings_complete");
+    });
+
+    it("handles partial voicing attributes on extended-quality fixtures", () => {
+      const html = readFixture("c-min7-partial-voicing-attrs");
+      const parsed = parseAllGuitarChords(html, URL_BY_SLUG["c-min7-partial-voicing-attrs"]);
+
+      expect(parsed.quality_raw).toBe("min7");
+      expect(parsed.voicings).toHaveLength(2);
+      expect(parsed.voicings[0]?.id).toBe("sparse");
+      expect(parsed.voicings[0]?.frets).toEqual([null, null, null, null, null, null]);
+      expect(parsed.voicings[1]?.id).toBe("full");
+      expect(parsed.voicings[1]?.frets).toEqual([null, 3, 5, 3, 4, 3]);
       expect(parsed.parser_confidence?.level).toBe("medium");
       expect(parsed.parser_confidence?.checks).not.toContain("all_voicings_complete");
     });

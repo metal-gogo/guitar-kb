@@ -27,8 +27,16 @@ test/fixtures/sources/
 │   ├── c-major.html            # Happy-path single-chord page
 │   ├── c-major-many-voicings.html  # Regression: >3 voicings (no truncation)
 │   ├── c-minor.html
+│   ├── c-min7.html
+│   ├── c-dim.html
+│   ├── c-dim7.html
+│   ├── c-aug.html
+│   ├── c-sus2.html
+│   ├── c-sus4.html
 │   ├── c7.html
 │   ├── cmaj7.html
+│   ├── c-min7-many-voicings.html   # Regression: extended quality >3 voicings
+│   ├── c-min7-partial-voicing-attrs.html # Edge: extended quality partial attrs
 │   ├── a-major.html            # Additional roots – parser coverage
 │   ├── a-sharp-major.html      # Sharp-root encoding
 │   ├── b-major.html
@@ -47,8 +55,16 @@ test/fixtures/sources/
     ├── c-major.html            # Happy-path single-chord page
     ├── c-major-many-voicings.html  # Regression: >3 voicings (no truncation)
     ├── c-minor.html
+    ├── c-min7.html
+    ├── c-dim.html
+    ├── c-dim7.html
+    ├── c-aug.html
+    ├── c-sus2.html
+    ├── c-sus4.html
     ├── c7.html
     ├── cmaj7.html
+    ├── c-min7-many-voicings.html   # Regression: extended quality >3 voicings
+    ├── c-min7-partial-voicing-attrs.html # Edge: extended quality partial attrs
     ├── a-major.html
     ├── a-sharp-major.html
     ├── b-major.html
