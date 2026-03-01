@@ -15,6 +15,7 @@ vi.mock("../../src/config.js", async (importOriginal) => {
   ] as const;
   return {
     ...actual,
+    FULL_MATRIX_TARGETS: targets,
     CORE_MATRIX_TARGETS: targets,
     MVP_TARGETS: targets,
   };
@@ -122,5 +123,27 @@ describe("auditCache", () => {
     expect(result.okCount).toBe(1);
     expect(result.corruptCount).toBe(1);
     expect(result.missingCount).toBe(1);
+  });
+
+  it("builds a deterministic cache completeness manifest snapshot", async () => {
+    const { buildCacheCompletenessManifest } = await import("../../src/ingest/cacheAudit.js");
+    const result = await auditCache(path.join(tempDir, "data", "sources"));
+    const manifest = buildCacheCompletenessManifest(result, "2026-03-01T00:00:00.000Z");
+
+    expect(manifest).toEqual({
+      manifest_version: "cache-completeness/v1",
+      generated_at: "2026-03-01T00:00:00.000Z",
+      total_expected: 3,
+      ok_count: 0,
+      missing_count: 3,
+      corrupt_count: 0,
+      is_complete: false,
+      missing: [
+        { source: "all-guitar-chords", slug: "c-major" },
+        { source: "guitar-chord-org", slug: "c-major" },
+        { source: "guitar-chord-org", slug: "c-minor" },
+      ],
+      corrupt: [],
+    });
   });
 });
