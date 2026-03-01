@@ -77,5 +77,17 @@ describe("CLI options parsing", () => {
       .toThrow("Invalid value for --root");
     expect(() => parseIngestCliOptions(["--mode", "chord", "--root", "Db", "--quality", "major"]))
       .toThrow("Invalid value for --quality");
+    expect(() => parseIngestCliOptions([
+      "--mode",
+      "chord",
+      "--chord-id",
+      "chord:C:maj7",
+      "--root",
+      "Db",
+      "--quality",
+      "maj7",
+    ])).toThrow("Conflicting chord selectors provided");
+    expect(() => parseIngestCliOptions(["--mode", "chord", "--chord-id", "chord:H:maj7"]))
+      .toThrow("Invalid value for --chord-id: H");
   });
 });

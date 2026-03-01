@@ -153,16 +153,16 @@ function parseIngestMode(mode: string | undefined): IngestMode | undefined {
   throw new Error(`Invalid value for --mode: ${mode}. Expected one of: ${KNOWN_MODES.join(", ")}`);
 }
 
-function parseCanonicalRootInput(rootInput: string): string {
+function parseCanonicalRootInput(rootInput: string, flag = "--root"): string {
   const normalized = rootInput.trim().replaceAll("♯", "#").replaceAll("♭", "b");
   const parsed = normalized.match(/^([A-Ga-g])([#b])?$/);
   if (!parsed) {
-    throw new Error(`Invalid value for --root: ${rootInput}`);
+    throw new Error(`Invalid value for ${flag}: ${rootInput}`);
   }
   const root = `${parsed[1]?.toUpperCase() ?? ""}${parsed[2] ?? ""}`;
   const canonicalRoot = toFlatCanonicalRoot(root);
   if (!canonicalRoot) {
-    throw new Error(`Unsupported root for --root: ${rootInput}`);
+    throw new Error(`Unsupported root for ${flag}: ${rootInput}`);
   }
   return canonicalRoot;
 }
@@ -180,7 +180,7 @@ function normalizeCanonicalChordId(selector: string, flag: string): string {
   if (!parsed) {
     throw new Error(`Invalid value for ${flag}: ${selector}. Expected chord:<ROOT>:<QUALITY>`);
   }
-  const canonicalRoot = parseCanonicalRootInput(parsed[1] ?? "");
+  const canonicalRoot = parseCanonicalRootInput(parsed[1] ?? "", flag);
   const quality = parseChordQualityInput(parsed[2] ?? "");
   return `chord:${canonicalRoot}:${quality}`;
 }
@@ -211,14 +211,13 @@ export function parseIngestCliOptions(argv: string[]): IngestCliOptions {
     ? normalizeCanonicalChordId(legacyChordInput, "--chord")
     : legacyChordInput;
 
-  const explicitChordSelector = chordIdSelector ?? rootQualitySelector;
-  const candidates = [explicitChordSelector, legacyChordSelector].filter((value): value is string => Boolean(value));
+  const candidates = [chordIdSelector, rootQualitySelector, legacyChordSelector].filter((value): value is string => Boolean(value));
   const uniqueSelectors = [...new Set(candidates.map((value) => value.toLowerCase()))];
   if (uniqueSelectors.length > 1) {
     throw new Error("Conflicting chord selectors provided; use only one of --chord, --chord-id, or --root/--quality");
   }
 
-  const chordSelector = explicitChordSelector ?? legacyChordSelector;
+  const chordSelector = chordIdSelector ?? rootQualitySelector ?? legacyChordSelector;
   const mode = modeFlag ?? (chordSelector ? "chord" : "full");
 
   if (mode === "full" && chordSelector) {
