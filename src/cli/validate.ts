@@ -20,6 +20,7 @@ async function main(): Promise<void> {
     .map((line) => line.trim())
     .filter((line) => line.length > 0)
     .map((line) => JSON.parse(line) as ChordRecord);
+  const validationFailures: string[] = [];
 
   // 2. Provenance coverage check (before AJV so missing provenance fields yield
   //    actionable chord/voicing paths rather than generic JSON Schema errors)
@@ -97,7 +98,7 @@ async function main(): Promise<void> {
     for (const id of coverageGate.blockedMissingCanonicalIds) {
       process.stderr.write(`BLOCKED_MISSING ${id}\n`);
     }
-    throw new Error("Coverage gate failed");
+    validationFailures.push("coverage gate failed");
   }
 
   // 4. Enharmonic equivalence report
@@ -125,7 +126,11 @@ async function main(): Promise<void> {
     for (const v of a11y.violations) {
       process.stderr.write(`  [${v.rule}] ${v.file}: ${v.message}\n`);
     }
-    throw new Error(`Accessibility lint failed: ${a11y.violations.length} violation(s)`);
+    validationFailures.push(`Accessibility lint failed: ${a11y.violations.length} violation(s)`);
+  }
+
+  if (validationFailures.length > 0) {
+    throw new Error(validationFailures.join("; "));
   }
 }
 
