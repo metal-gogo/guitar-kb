@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { SOURCE_REGISTRY } from "../../src/ingest/sourceRegistry.js";
-import { QUALITY_ORDER } from "../../src/config.js";
+import { CORE_QUALITY_ORDER } from "../../src/config.js";
 
 describe("SOURCE_REGISTRY", () => {
   it("defines required fields for each source entry", () => {
@@ -23,8 +23,10 @@ describe("SOURCE_REGISTRY", () => {
   });
 
   it("declares deterministic source capability metadata for configured quality order", () => {
-    for (const entry of SOURCE_REGISTRY) {
-      expect(entry.capabilities.qualities).toEqual([...QUALITY_ORDER]);
-    }
+    const guitarChordOrg = SOURCE_REGISTRY.find((entry) => entry.id === "guitar-chord-org");
+    const allGuitarChords = SOURCE_REGISTRY.find((entry) => entry.id === "all-guitar-chords");
+
+    expect(guitarChordOrg?.capabilities.qualities).toEqual([...CORE_QUALITY_ORDER]);
+    expect(allGuitarChords?.capabilities.qualities).toEqual([...CORE_QUALITY_ORDER]);
   });
 });

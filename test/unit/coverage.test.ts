@@ -145,20 +145,15 @@ describe("buildRootQualityCoverageReport", () => {
     expect(report.expectedRoots).toEqual([...COVERAGE_MATRIX_CONTRACT.roots]);
     expect(report.expectedRoots).toEqual([
       "C",
-      "C#",
       "Db",
       "D",
-      "D#",
       "Eb",
       "E",
       "F",
-      "F#",
       "Gb",
       "G",
-      "G#",
       "Ab",
       "A",
-      "A#",
       "Bb",
       "B",
     ]);
