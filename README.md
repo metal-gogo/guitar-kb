@@ -21,7 +21,7 @@ End-to-end pipeline:
 
 ### Inputs
 
-- Source target config in `src/config.ts` (`MVP_TARGETS`)
+- Source target config in `src/config.ts` (`FULL_MATRIX_TARGETS`, `CORE_MATRIX_TARGETS`)
 - Cached source HTML in `data/sources/<source>/<slug>.html`
 - Canonical ID and normalization policy in `planning/decisions/0001-canonical-id-and-enharmonics.md`
 - Flat-baseline canonical root policy in `planning/decisions/0007-flat-baseline-canonical-root-policy.md`

@@ -285,8 +285,8 @@ describe("chordIndexMarkdown", () => {
     expect(cGroup).toBeGreaterThan(-1);
     expect(csGroup).toBeGreaterThan(-1);
     expect(dbGroup).toBeGreaterThan(-1);
-    expect(cGroup).toBeLessThan(csGroup);
-    expect(csGroup).toBeLessThan(dbGroup);
+    expect(cGroup).toBeLessThan(dbGroup);
+    expect(dbGroup).toBeLessThan(csGroup);
 
     const cMaj = md.indexOf("[maj](./chords/chord__C__maj.md)");
     const cMin = md.indexOf("[min](./chords/chord__C__min.md)");

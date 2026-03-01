@@ -5,16 +5,18 @@ import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { auditCache } from "../../src/ingest/cacheAudit.js";
 
-// Stub MVP_TARGETS so we control exactly which files are expected
+// Stub expected target constants so we control exactly which files are expected
 vi.mock("../../src/config.js", async (importOriginal) => {
   const actual = await importOriginal<typeof import("../../src/config.js")>();
+  const targets = [
+    { source: "guitar-chord-org", slug: "c-major",   chordId: "chord:C:maj", url: "" },
+    { source: "guitar-chord-org", slug: "c-minor",   chordId: "chord:C:min", url: "" },
+    { source: "all-guitar-chords", slug: "c-major",  chordId: "chord:C:maj", url: "" },
+  ] as const;
   return {
     ...actual,
-    MVP_TARGETS: [
-      { source: "guitar-chord-org", slug: "c-major",   chordId: "chord:C:maj", url: "" },
-      { source: "guitar-chord-org", slug: "c-minor",   chordId: "chord:C:min", url: "" },
-      { source: "all-guitar-chords", slug: "c-major",  chordId: "chord:C:maj", url: "" },
-    ],
+    CORE_MATRIX_TARGETS: targets,
+    MVP_TARGETS: targets,
   };
 });
 
