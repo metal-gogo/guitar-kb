@@ -5,6 +5,12 @@ import { coverageDashboardMarkdown } from "../build/docs/generateCoverage.js";
 import { chordDocFileName, voicingDiagramFileName } from "../build/docs/paths.js";
 import { buildDocsSitemap } from "../build/docs/generateSitemap.js";
 import { writeChordJsonl } from "../build/output/writeJsonl.js";
+import {
+  siteChordFileName,
+  siteChordHtml,
+  siteIndexHtml,
+  siteStylesheet,
+} from "../build/site/generateSite.js";
 import { generateChordSvg } from "../build/svg/generateSvg.js";
 import { ingestNormalizedChords } from "../ingest/pipeline.js";
 import { SOURCE_REGISTRY } from "../ingest/sourceRegistry.js";
@@ -103,12 +109,18 @@ async function main(): Promise<void> {
 
   await rm(path.join("docs", "chords"), { recursive: true, force: true });
   await rm(path.join("docs", "diagrams"), { recursive: true, force: true });
+  await rm("site", { recursive: true, force: true });
   await writeChordJsonl(path.join("data", "chords.jsonl"), chords);
   await mkdir(path.join("docs", "chords"), { recursive: true });
   await mkdir(path.join("docs", "diagrams"), { recursive: true });
+  await mkdir(path.join("site", "assets"), { recursive: true });
+  await mkdir(path.join("site", "chords"), { recursive: true });
+  await mkdir(path.join("site", "diagrams"), { recursive: true });
   await writeText(path.join("docs", "index.md"), chordIndexMarkdown(chords));
   const coverageReport = buildRootQualityCoverageReport(chords);
   await writeText(path.join("docs", "coverage.md"), coverageDashboardMarkdown(coverageReport));
+  await writeText(path.join("site", "index.html"), siteIndexHtml(chords));
+  await writeText(path.join("site", "assets", "site.css"), siteStylesheet());
 
   const sitemapGeneratedAt =
     process.env.DOCS_SITEMAP_GENERATED_AT ??
@@ -122,10 +134,19 @@ async function main(): Promise<void> {
       path.join("docs", "chords", chordDocFileName(chord.id)),
       chordMarkdown(chord, chords),
     );
+    await writeText(
+      path.join("site", "chords", siteChordFileName(chord.id)),
+      siteChordHtml(chord, chords),
+    );
     for (const voicing of chord.voicings) {
       const svg = generateChordSvg(voicing, chord.tuning);
+      const diagramName = voicingDiagramFileName(voicing.id);
       await writeText(
-        path.join("docs", "diagrams", voicingDiagramFileName(voicing.id)),
+        path.join("docs", "diagrams", diagramName),
+        svg,
+      );
+      await writeText(
+        path.join("site", "diagrams", diagramName),
         svg,
       );
     }
