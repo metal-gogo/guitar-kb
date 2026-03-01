@@ -17,8 +17,8 @@ into the GCKB ingest pipeline.
   - Every voicing record must carry `source_refs` with a `source` identifier and the
     page URL.
   - Normalization deduplicates equivalent voicing shapes across sources; merged
-    provenance references for duplicate detections use
-    `source_refs.note = "duplicate-voicing"` on appended references.
+    provenance references for duplicate detections are annotated with
+    `source_refs.note = "duplicate-voicing"`.
 
 ---
 

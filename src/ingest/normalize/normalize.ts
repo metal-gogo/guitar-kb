@@ -325,6 +325,12 @@ function mergeParserConfidence(
 }
 
 function compareSourceRef(a: SourceRef, b: SourceRef): number {
+  const hasNoteA = a.note !== undefined;
+  const hasNoteB = b.note !== undefined;
+  if (hasNoteA !== hasNoteB) {
+    return hasNoteA ? 1 : -1;
+  }
+
   if (a.source < b.source) {
     return -1;
   }

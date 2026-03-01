@@ -62,13 +62,13 @@ describe("ingestNormalizedChords", () => {
     expect(aMajor?.voicings.map((voicing) => voicing.base_fret)).toEqual([1, 5, 2]);
     expect(aMajor?.voicings[0]?.source_refs).toEqual([
       {
+        source: "guitar-chord-org",
+        url: "https://www.guitar-chord.org/a-maj.html",
+      },
+      {
         source: "all-guitar-chords",
         url: "https://www.all-guitar-chords.com/chords/index/a/major",
         note: DUPLICATE_VOICING_SOURCE_REF_NOTE,
-      },
-      {
-        source: "guitar-chord-org",
-        url: "https://www.guitar-chord.org/a-maj.html",
       },
     ]);
   });

@@ -66,13 +66,13 @@ exports[`schema snapshot contracts > representative chord records match stored s
       "position": "open",
       "source_refs": [
         {
+          "source": "guitar-chord-org",
+          "url": "https://www.guitar-chord.org/c-maj.html",
+        },
+        {
           "note": "duplicate-voicing",
           "source": "all-guitar-chords",
           "url": "https://www.all-guitar-chords.com/chords/index/c/major",
-        },
-        {
-          "source": "guitar-chord-org",
-          "url": "https://www.guitar-chord.org/c-maj.html",
         },
       ],
     },
@@ -98,13 +98,13 @@ exports[`schema snapshot contracts > representative chord records match stored s
       "position": "unknown",
       "source_refs": [
         {
+          "source": "guitar-chord-org",
+          "url": "https://www.guitar-chord.org/c-maj.html",
+        },
+        {
           "note": "duplicate-voicing",
           "source": "all-guitar-chords",
           "url": "https://www.all-guitar-chords.com/chords/index/c/major",
-        },
-        {
-          "source": "guitar-chord-org",
-          "url": "https://www.guitar-chord.org/c-maj.html",
         },
       ],
     },
@@ -130,13 +130,13 @@ exports[`schema snapshot contracts > representative chord records match stored s
       "position": "unknown",
       "source_refs": [
         {
+          "source": "guitar-chord-org",
+          "url": "https://www.guitar-chord.org/c-maj.html",
+        },
+        {
           "note": "duplicate-voicing",
           "source": "all-guitar-chords",
           "url": "https://www.all-guitar-chords.com/chords/index/c/major",
-        },
-        {
-          "source": "guitar-chord-org",
-          "url": "https://www.guitar-chord.org/c-maj.html",
         },
       ],
     },
@@ -209,13 +209,13 @@ exports[`schema snapshot contracts > representative chord records match stored s
       "position": "unknown",
       "source_refs": [
         {
+          "source": "guitar-chord-org",
+          "url": "https://www.guitar-chord.org/c-min.html",
+        },
+        {
           "note": "duplicate-voicing",
           "source": "all-guitar-chords",
           "url": "https://www.all-guitar-chords.com/chords/index/c/minor",
-        },
-        {
-          "source": "guitar-chord-org",
-          "url": "https://www.guitar-chord.org/c-min.html",
         },
       ],
     },
@@ -241,13 +241,13 @@ exports[`schema snapshot contracts > representative chord records match stored s
       "position": "barre",
       "source_refs": [
         {
+          "source": "guitar-chord-org",
+          "url": "https://www.guitar-chord.org/c-min.html",
+        },
+        {
           "note": "duplicate-voicing",
           "source": "all-guitar-chords",
           "url": "https://www.all-guitar-chords.com/chords/index/c/minor",
-        },
-        {
-          "source": "guitar-chord-org",
-          "url": "https://www.guitar-chord.org/c-min.html",
         },
       ],
     },
@@ -273,13 +273,13 @@ exports[`schema snapshot contracts > representative chord records match stored s
       "position": "unknown",
       "source_refs": [
         {
+          "source": "guitar-chord-org",
+          "url": "https://www.guitar-chord.org/c-min.html",
+        },
+        {
           "note": "duplicate-voicing",
           "source": "all-guitar-chords",
           "url": "https://www.all-guitar-chords.com/chords/index/c/minor",
-        },
-        {
-          "source": "guitar-chord-org",
-          "url": "https://www.guitar-chord.org/c-min.html",
         },
       ],
     },
@@ -353,13 +353,13 @@ exports[`schema snapshot contracts > representative chord records match stored s
       "position": "open",
       "source_refs": [
         {
+          "source": "guitar-chord-org",
+          "url": "https://www.guitar-chord.org/c-7.html",
+        },
+        {
           "note": "duplicate-voicing",
           "source": "all-guitar-chords",
           "url": "https://www.all-guitar-chords.com/chords/index/c/dominant-7th",
-        },
-        {
-          "source": "guitar-chord-org",
-          "url": "https://www.guitar-chord.org/c-7.html",
         },
       ],
     },
@@ -385,13 +385,13 @@ exports[`schema snapshot contracts > representative chord records match stored s
       "position": "barre",
       "source_refs": [
         {
+          "source": "guitar-chord-org",
+          "url": "https://www.guitar-chord.org/c-7.html",
+        },
+        {
           "note": "duplicate-voicing",
           "source": "all-guitar-chords",
           "url": "https://www.all-guitar-chords.com/chords/index/c/dominant-7th",
-        },
-        {
-          "source": "guitar-chord-org",
-          "url": "https://www.guitar-chord.org/c-7.html",
         },
       ],
     },
@@ -417,13 +417,13 @@ exports[`schema snapshot contracts > representative chord records match stored s
       "position": "unknown",
       "source_refs": [
         {
+          "source": "guitar-chord-org",
+          "url": "https://www.guitar-chord.org/c-7.html",
+        },
+        {
           "note": "duplicate-voicing",
           "source": "all-guitar-chords",
           "url": "https://www.all-guitar-chords.com/chords/index/c/dominant-7th",
-        },
-        {
-          "source": "guitar-chord-org",
-          "url": "https://www.guitar-chord.org/c-7.html",
         },
       ],
     },
@@ -497,13 +497,13 @@ exports[`schema snapshot contracts > representative chord records match stored s
       "position": "open",
       "source_refs": [
         {
+          "source": "guitar-chord-org",
+          "url": "https://www.guitar-chord.org/c-maj7.html",
+        },
+        {
           "note": "duplicate-voicing",
           "source": "all-guitar-chords",
           "url": "https://www.all-guitar-chords.com/chords/index/c/major-7th",
-        },
-        {
-          "source": "guitar-chord-org",
-          "url": "https://www.guitar-chord.org/c-maj7.html",
         },
       ],
     },
@@ -529,13 +529,13 @@ exports[`schema snapshot contracts > representative chord records match stored s
       "position": "unknown",
       "source_refs": [
         {
+          "source": "guitar-chord-org",
+          "url": "https://www.guitar-chord.org/c-maj7.html",
+        },
+        {
           "note": "duplicate-voicing",
           "source": "all-guitar-chords",
           "url": "https://www.all-guitar-chords.com/chords/index/c/major-7th",
-        },
-        {
-          "source": "guitar-chord-org",
-          "url": "https://www.guitar-chord.org/c-maj7.html",
         },
       ],
     },
@@ -561,13 +561,13 @@ exports[`schema snapshot contracts > representative chord records match stored s
       "position": "unknown",
       "source_refs": [
         {
+          "source": "guitar-chord-org",
+          "url": "https://www.guitar-chord.org/c-maj7.html",
+        },
+        {
           "note": "duplicate-voicing",
           "source": "all-guitar-chords",
           "url": "https://www.all-guitar-chords.com/chords/index/c/major-7th",
-        },
-        {
-          "source": "guitar-chord-org",
-          "url": "https://www.guitar-chord.org/c-maj7.html",
         },
       ],
     },
