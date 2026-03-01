@@ -10,6 +10,8 @@
     "ci:flaky-summary": "tsx src/ci/flakySummary.ts",
     "lint": "tsc --noEmit",
     "test": "vitest run",
+    "audit:deps": "npm audit",
+    "audit:ci": "npm audit --audit-level=high",
     "preflight": "npm run lint && npm test && npm run build && npm run validate",
     "pr-ready": "tsx src/cli/prReady.ts",
     "audit-cache": "tsx src/cli/auditCache.ts",
