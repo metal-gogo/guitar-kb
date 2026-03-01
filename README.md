@@ -91,6 +91,12 @@ To include parser confidence annotations for debugging:
 npm run ingest -- --include-parser-confidence
 ```
 
+To filter ingest to a specific extended-quality chord target:
+
+```bash
+npm run ingest -- --chord c-dim7
+```
+
 Capability diagnostics:
 
 - In dry-run mode, ingest prints deterministic `SKIP_UNSUPPORTED` lines when a
@@ -128,6 +134,12 @@ Build behavior:
 - sorts records deterministically
 - validates records
 - regenerates JSONL/docs/SVG artifacts
+
+To dry-run build output selection for an extended-quality canonical chord ID:
+
+```bash
+npm run build -- --dry-run --chord chord:C:dim7
+```
 
 ### Validate output schema
 
