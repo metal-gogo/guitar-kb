@@ -107,7 +107,9 @@ async function loadOrGenerateNormalized(options: BuildRuntimeOptions): Promise<C
   if (shouldEnforceCacheCompletenessPolicy(options)) {
     const cacheAudit = await auditCache();
     const cacheManifest = buildCacheCompletenessManifest(cacheAudit);
-    await writeJson(CACHE_MANIFEST_PATH, cacheManifest);
+    if (!options.dryRun) {
+      await writeJson(CACHE_MANIFEST_PATH, cacheManifest);
+    }
 
     if (!cacheManifest.is_complete) {
       throw new Error(cacheFailureMessage(cacheManifest.missing, cacheManifest.corrupt));
