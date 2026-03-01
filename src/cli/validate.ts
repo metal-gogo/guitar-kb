@@ -29,6 +29,9 @@ async function main(): Promise<void> {
 
   // 3. Root-quality coverage summary (deterministic + CI friendly)
   const coverage = buildRootQualityCoverageReport(records);
+  process.stdout.write(`matrix_version=${coverage.matrixVersion}\n`);
+  process.stdout.write(`expected_roots=${coverage.expectedRoots.join(",")}\n`);
+  process.stdout.write(`expected_qualities=${coverage.expectedQualities.join(",")}\n`);
   process.stdout.write(
     `Root-quality coverage: ${coverage.observedCombinations}/${coverage.expectedCombinations} (${coverage.coveragePercent.toFixed(2)}%)\n`,
   );
