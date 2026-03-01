@@ -68,8 +68,25 @@ const EXPECTED_FIXTURE_SLUGS: Record<ParitySource, readonly string[]> = {
 };
 
 const ALLOWED_CACHE_EXTRAS: Record<ParitySource, readonly string[]> = {
-  "guitar-chord-org": ["c7", "cmaj7", "c-major-many-voicings"],
-  "all-guitar-chords": ["c7", "cmaj7", "c-major-many-voicings"],
+  "guitar-chord-org": [
+    // Alias fixture slug for canonical cache target `c-7`; both forms are
+    // intentionally kept to preserve stable parser fixtures.
+    "c7",
+    // Alias fixture slug for canonical cache target `c-maj7`.
+    "cmaj7",
+    // Dedicated high-variation regression fixture used to guard against
+    // voicing truncation; intentionally retained as cache-only extra.
+    "c-major-many-voicings",
+  ],
+  "all-guitar-chords": [
+    // Alias fixture slug for canonical cache target `c-7`.
+    "c7",
+    // Alias fixture slug for canonical cache target `c-maj7`.
+    "cmaj7",
+    // Dedicated high-variation regression fixture used to guard against
+    // voicing truncation; intentionally retained as cache-only extra.
+    "c-major-many-voicings",
+  ],
 };
 
 const CACHE_BACKED_FIXTURE_SLUGS: Record<ParitySource, readonly string[]> = {
