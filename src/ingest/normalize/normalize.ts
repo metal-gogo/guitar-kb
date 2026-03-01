@@ -1,6 +1,7 @@
 import type {
   ChordQuality,
   ChordRecord,
+  FlatCanonicalRoot,
   ParserConfidence,
   RawChordRecord,
   SourceRef,
@@ -136,6 +137,29 @@ const ENHARMONIC_ROOT: Record<string, string> = {
   Bb: "A#"
 };
 
+const SHARP_TO_FLAT_ROOT: Readonly<Record<string, FlatCanonicalRoot>> = {
+  "C#": "Db",
+  "D#": "Eb",
+  "F#": "Gb",
+  "G#": "Ab",
+  "A#": "Bb",
+};
+
+const FLAT_TO_SHARP_ROOT: Readonly<Record<FlatCanonicalRoot, string | undefined>> = {
+  C: undefined,
+  Db: "C#",
+  D: undefined,
+  Eb: "D#",
+  E: undefined,
+  F: undefined,
+  Gb: "F#",
+  G: undefined,
+  Ab: "G#",
+  A: undefined,
+  Bb: "A#",
+  B: undefined,
+};
+
 const DEFAULT_FORMULAS: Record<ChordQuality, string[]> = {
   maj: ["1", "3", "5"],
   min: ["1", "b3", "5"],
@@ -227,6 +251,11 @@ function defaultAlias(root: string, quality: ChordQuality): string {
     case "sus4":
       return `${root}sus4`;
   }
+}
+
+function toFlatCanonicalRoot(root: string): FlatCanonicalRoot {
+  const mapped = SHARP_TO_FLAT_ROOT[root] ?? root;
+  return mapped as FlatCanonicalRoot;
 }
 
 function derivePitchClasses(root: string, formula: string[]): string[] {
@@ -449,6 +478,9 @@ export function normalizeRecords(raw: RawChordRecord[], options: NormalizeRecord
       source: input.source,
       url: input.url
     };
+    const canonicalRoot = toFlatCanonicalRoot(input.root);
+    const sharpAlias = FLAT_TO_SHARP_ROOT[canonicalRoot];
+    const rootAliases = sharpAlias ? [canonicalRoot, sharpAlias] : [canonicalRoot];
     const parserConfidence = includeParserConfidence
       ? mergeParserConfidence(undefined, input.parser_confidence)
       : undefined;
@@ -460,6 +492,12 @@ export function normalizeRecords(raw: RawChordRecord[], options: NormalizeRecord
       merged.set(id, {
         id,
         root: input.root,
+        canonical_root: canonicalRoot,
+        root_aliases: rootAliases,
+        root_display: {
+          flat: canonicalRoot,
+          ...(sharpAlias ? { sharp: sharpAlias } : {}),
+        },
         quality,
         aliases,
         enharmonic_equivalents: enharmonic,
