@@ -9,15 +9,17 @@ import {
 
 vi.mock("../../src/config.js", async (importOriginal) => {
   const actual = await importOriginal<typeof import("../../src/config.js")>();
+  const targets = [
+    { source: "all-guitar-chords", slug: "c-major", chordId: "chord:C:maj", url: "" },
+    { source: "all-guitar-chords", slug: "d-major", chordId: "chord:D:maj", url: "" },
+    { source: "guitar-chord-org", slug: "e-minor", chordId: "chord:E:min", url: "" },
+    // duplicate on purpose to verify de-duping in expected target list
+    { source: "all-guitar-chords", slug: "c-major", chordId: "chord:C:maj", url: "" },
+  ] as const;
   return {
     ...actual,
-    MVP_TARGETS: [
-      { source: "all-guitar-chords", slug: "c-major", chordId: "chord:C:maj", url: "" },
-      { source: "all-guitar-chords", slug: "d-major", chordId: "chord:D:maj", url: "" },
-      { source: "guitar-chord-org", slug: "e-minor", chordId: "chord:E:min", url: "" },
-      // duplicate on purpose to verify de-duping in expected target list
-      { source: "all-guitar-chords", slug: "c-major", chordId: "chord:C:maj", url: "" },
-    ],
+    CORE_MATRIX_TARGETS: targets,
+    MVP_TARGETS: targets,
   };
 });
 

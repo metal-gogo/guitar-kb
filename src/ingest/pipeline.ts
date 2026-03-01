@@ -1,4 +1,4 @@
-import { FULL_MATRIX_TARGETS, MVP_TARGETS, QUALITY_ORDER } from "../config.js";
+import { FULL_MATRIX_TARGETS, QUALITY_ORDER } from "../config.js";
 import { getCachedHtml } from "./fetch/cache.js";
 import { normalizeRecords } from "./normalize/normalize.js";
 import { SOURCE_REGISTRY } from "./sourceRegistry.js";
@@ -295,8 +295,8 @@ export function selectIngestTargets(
   return filterTargets(targets, registry, options);
 }
 
-export function defaultIngestTargets(options: IngestPipelineOptions = {}): ReadonlyArray<IngestTarget> {
-  return options.dryRun ? FULL_MATRIX_TARGETS : MVP_TARGETS;
+export function defaultIngestTargets(_options: IngestPipelineOptions = {}): ReadonlyArray<IngestTarget> {
+  return FULL_MATRIX_TARGETS;
 }
 
 export async function ingestNormalizedChordsWithTargets(
@@ -334,8 +334,21 @@ export async function ingestNormalizedChordsWithTargets(
       throw new Error(`No source registry entry found for ${target.source}`);
     }
 
-    const html = await getCachedHtml(sourceEntry.cacheDir, target.slug, target.url, { refresh, delayMs });
-    rawRecords.push(sourceEntry.parse(html, target.url));
+    try {
+      const html = await getCachedHtml(sourceEntry.cacheDir, target.slug, target.url, { refresh, delayMs });
+      rawRecords.push(sourceEntry.parse(html, target.url));
+    } catch (error: unknown) {
+      const message = String(error);
+      if (message.includes("HTTP ")) {
+        const httpCode = message.match(/HTTP\s+(\d{3})/)?.[1] ?? "unknown";
+        process.stdout.write(
+          `SKIP_MISSING source=${target.source} chord=${target.chordId ?? "unknown"} `
+          + `slug=${target.slug} reason=http_${httpCode}\n`,
+        );
+        continue;
+      }
+      throw error;
+    }
   }
 
   return normalizeRecords(rawRecords, {
