@@ -394,10 +394,46 @@ function voicingFingerprint(
   return `base=${voicing.base_fret}|frets=${frets}|fingers=${fingers}|tuning=${tuning.join(",")}`;
 }
 
+function compareVoicingForIdAssignment(
+  a: { frets: Array<number | null>; fingers?: Array<number | null>; base_fret: number; source_refs?: SourceRef[] },
+  b: { frets: Array<number | null>; fingers?: Array<number | null>; base_fret: number; source_refs?: SourceRef[] },
+  tuning: ReadonlyArray<string>,
+): number {
+  const fingerprintComparison = voicingFingerprint(a, tuning).localeCompare(voicingFingerprint(b, tuning));
+  if (fingerprintComparison !== 0) {
+    return fingerprintComparison;
+  }
+
+  const aFirstRef = a.source_refs?.[0];
+  const bFirstRef = b.source_refs?.[0];
+  if (!aFirstRef && !bFirstRef) {
+    return 0;
+  }
+  if (!aFirstRef) {
+    return -1;
+  }
+  if (!bFirstRef) {
+    return 1;
+  }
+
+  return compareSourceRef(aFirstRef, bFirstRef);
+}
+
+function assignDeterministicVoicingIds(record: ChordRecord): void {
+  const tuning = record.tuning ?? STANDARD_TUNING;
+  const sorted = record.voicings
+    .slice()
+    .sort((left, right) => compareVoicingForIdAssignment(left, right, tuning));
+
+  record.voicings = sorted.map((voicing, index) => ({
+    ...voicing,
+    id: `${record.id}:v${index + 1}`,
+  }));
+}
+
 function appendNormalizedVoicings(
   record: ChordRecord,
   rawVoicings: RawChordRecord["voicings"],
-  source: string,
   fallbackSourceRef: SourceRef,
 ): void {
   const byFingerprint = new Map<string, number>();
@@ -422,10 +458,9 @@ function appendNormalizedVoicings(
       continue;
     }
 
-    const nextId = `${record.id}:v${record.voicings.length + 1}:${source}`;
     record.voicings.push({
       ...voicing,
-      id: nextId,
+      id: "",
       position: derivePosition(voicing.frets),
       source_refs: normalizedSourceRefs,
     });
@@ -491,15 +526,14 @@ export function normalizeRecords(raw: RawChordRecord[], options: NormalizeRecord
       });
       const created = merged.get(id);
       if (created) {
-        appendNormalizedVoicings(created, input.voicings, input.source, sourceRef);
+        appendNormalizedVoicings(created, input.voicings, sourceRef);
       }
       continue;
     }
 
     existing.aliases = normalizeStringArray([...(existing.aliases ?? []), ...aliases]);
-    appendNormalizedVoicings(existing, input.voicings, input.source, sourceRef);
+    appendNormalizedVoicings(existing, input.voicings, sourceRef);
     existing.source_refs.push(sourceRef);
-    existing.voicings.sort((a, b) => a.id.localeCompare(b.id));
     if (includeParserConfidence) {
       existing.parser_confidence = mergeParserConfidence(
         existing.parser_confidence,
@@ -508,7 +542,12 @@ export function normalizeRecords(raw: RawChordRecord[], options: NormalizeRecord
     }
   }
 
-  const result = [...merged.values()].sort(compareChordOrder);
+  const result = [...merged.values()];
+  for (const chord of result) {
+    assignDeterministicVoicingIds(chord);
+  }
+
+  result.sort(compareChordOrder);
   detectAliasCollisions(result);
   return result;
 }

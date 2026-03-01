@@ -67,10 +67,10 @@ describe("ingestNormalizedChords", () => {
     expect(aMajor).toBeDefined();
     expect(aMajor?.voicings.map((voicing) => voicing.frets)).toEqual([
       [null, 0, 2, 2, 2, 0],
-      [5, 7, 7, 6, 5, 5],
       [null, null, 2, 2, 2, 5],
+      [5, 7, 7, 6, 5, 5],
     ]);
-    expect(aMajor?.voicings.map((voicing) => voicing.base_fret)).toEqual([1, 5, 2]);
+    expect(aMajor?.voicings.map((voicing) => voicing.base_fret)).toEqual([1, 2, 5]);
   });
 
   it("supports dry-run ingestion from a registry-only third source", async () => {

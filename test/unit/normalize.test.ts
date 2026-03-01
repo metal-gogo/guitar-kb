@@ -227,8 +227,8 @@ describe("normalizeRecords", () => {
     expect(normalized[0]?.aliases).toEqual(["C", "Cmaj", "CM"]);
     expect(normalized[0]?.source_refs.map((ref) => ref.source)).toEqual(["source-a", "source-b"]);
     expect(normalized[0]?.voicings.map((voicing) => voicing.id)).toEqual([
-      "chord:C:maj:v1:source-a",
-      "chord:C:maj:v2:source-b",
+      "chord:C:maj:v1",
+      "chord:C:maj:v2",
     ]);
   });
 
@@ -277,7 +277,7 @@ describe("normalizeRecords", () => {
     const normalized = normalizeRecords(raw);
     expect(normalized).toHaveLength(1);
     expect(normalized[0]?.voicings).toHaveLength(1);
-    expect(normalized[0]?.voicings[0]?.id).toBe("chord:C:maj:v1:source-a");
+    expect(normalized[0]?.voicings[0]?.id).toBe("chord:C:maj:v1");
     expect(normalized[0]?.voicings[0]?.source_refs).toEqual([
       {
         source: "source-a",
