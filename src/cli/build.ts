@@ -12,7 +12,7 @@ import { compareChordOrder } from "../utils/sort.js";
 import { pathExists, writeJson, writeText } from "../utils/fs.js";
 import { validateChordRecords } from "../validate/schema.js";
 import { parseBuildCliOptions } from "./options.js";
-import { MVP_TARGETS } from "../config.js";
+import { FULL_MATRIX_TARGETS } from "../config.js";
 
 const NORMALIZED_PATH = path.join("data", "generated", "chords.normalized.json");
 const DEFAULT_SITEMAP_GENERATED_AT = "1970-01-01T00:00:00.000Z";
@@ -48,7 +48,7 @@ export function filterBuildChords(chords: ChordRecord[], options: BuildRuntimeOp
       filtered = filtered.filter((chord) => chord.id.toLowerCase() === term);
     } else {
       const matchingCanonicalIds = new Set(
-        MVP_TARGETS
+        FULL_MATRIX_TARGETS
           .filter((target) => target.slug.toLowerCase().includes(term))
           .map((target) => target.chordId.toLowerCase()),
       );

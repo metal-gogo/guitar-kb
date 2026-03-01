@@ -25,8 +25,8 @@ data/generated/chords.normalized.json.
 Options:
   --chord <name>    Process only chords whose ID or slug matches <name>.
                     Accepts a canonical ID (e.g. chord:C:maj) or a partial
-                    chord name (e.g. c-major, cmaj7).
-                    Example: npm run ingest -- --chord c-major
+                    chord name (e.g. c-major, c-dim7).
+                    Example: npm run ingest -- --chord c-dim7
 
   --source <id>     Process only the specified source.
                     Known sources: ${KNOWN_SOURCE_IDS}.
@@ -61,7 +61,7 @@ Environment:
 
 Examples:
   npm run ingest
-  npm run ingest -- --chord c-major
+  npm run ingest -- --chord c-dim7
   npm run ingest -- --source all-guitar-chords --dry-run
   npm run ingest -- --refresh
   npm run ingest -- --include-parser-confidence
@@ -77,8 +77,8 @@ does not exist, ingestion runs automatically first.
 Options:
   --chord <name>    Build only chords whose ID or slug matches <name>.
                     Accepts a canonical ID (e.g. chord:C:maj) or a partial
-                    chord name (e.g. c-major, cmaj7).
-                    Example: npm run build -- --chord c-major
+                    chord name (e.g. c-major, c-dim7).
+                    Example: npm run build -- --chord c-dim7
 
   --source <id>     Build only chords that have at least one voicing from the
                     specified source.
@@ -93,7 +93,7 @@ Options:
 
 Examples:
   npm run build
-  npm run build -- --chord c-major
+  npm run build -- --chord c-dim7
   npm run build -- --source all-guitar-chords --dry-run
   npm run build -- --dry-run
 `.trimStart();
