@@ -1,4 +1,4 @@
-import { MVP_TARGETS } from "../config.js";
+import { CORE_MATRIX_TARGETS } from "../config.js";
 
 export interface CacheTargetKey {
   source: string;
@@ -66,7 +66,7 @@ export function expectedCacheKeys(): CacheTargetKey[] {
   const seen = new Set<string>();
   const keys: CacheTargetKey[] = [];
 
-  for (const target of MVP_TARGETS) {
+  for (const target of CORE_MATRIX_TARGETS) {
     const slugs = [target.slug];
     const aliasSlug = buildAliasSlug(target.chordId);
     if (aliasSlug) {

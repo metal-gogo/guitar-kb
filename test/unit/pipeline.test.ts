@@ -184,7 +184,7 @@ describe("ingestNormalizedChords", () => {
       .toThrow("No ingest targets matched filters");
   });
 
-  it("uses expanded defined-quality target generation for dry-run mode", () => {
+  it("uses FULL_MATRIX_TARGETS for all execution modes", () => {
     expect(defaultIngestTargets({ dryRun: true })).toEqual(FULL_MATRIX_TARGETS);
     expect(defaultIngestTargets({ dryRun: false })).toEqual(FULL_MATRIX_TARGETS);
     expect(defaultIngestTargets()).toEqual(FULL_MATRIX_TARGETS);

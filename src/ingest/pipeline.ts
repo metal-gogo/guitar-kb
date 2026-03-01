@@ -295,8 +295,7 @@ export function selectIngestTargets(
   return filterTargets(targets, registry, options);
 }
 
-export function defaultIngestTargets(options: IngestPipelineOptions = {}): ReadonlyArray<IngestTarget> {
-  void options;
+export function defaultIngestTargets(_options: IngestPipelineOptions = {}): ReadonlyArray<IngestTarget> {
   return FULL_MATRIX_TARGETS;
 }
 
