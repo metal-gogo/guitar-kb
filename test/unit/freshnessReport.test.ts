@@ -18,6 +18,7 @@ vi.mock("../../src/config.js", async (importOriginal) => {
   ] as const;
   return {
     ...actual,
+    FULL_MATRIX_TARGETS: targets,
     CORE_MATRIX_TARGETS: targets,
     MVP_TARGETS: targets,
   };

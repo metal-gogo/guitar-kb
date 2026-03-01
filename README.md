@@ -182,6 +182,11 @@ Build behavior:
 
 - loads `data/generated/chords.normalized.json` if present
 - otherwise generates normalized records via ingest pipeline
+- in full build mode (no `--chord`/`--source` filters), enforces cache completeness
+  policy before build/deploy:
+  - writes `data/generated/cache-completeness.manifest.json`
+  - skips ingest when cache is complete and normalized artifacts already exist
+  - fails fast with missing/corrupt cache target details when completeness fails
 - sorts records deterministically
 - validates records
 - regenerates JSONL/docs/SVG/static-site artifacts
@@ -304,8 +309,18 @@ fast on the first error. `build` includes the ingest pipeline if
 To include a full source refresh before the gate:
 
 ```bash
-npm run ingest && npm run preflight
+npm run ingest:full-refresh && npm run preflight
 ```
+
+Routine deploy-friendly flow:
+
+```bash
+npm run audit-cache
+npm run preflight
+```
+
+`npm run audit-cache` writes a deterministic cache completeness report to
+`data/generated/cache-completeness.manifest.json`.
 
 ## Typical local workflows
 
@@ -318,7 +333,7 @@ npm run preflight
 For a full source refresh first:
 
 ```bash
-npm run ingest && npm run preflight
+npm run ingest:full-refresh && npm run preflight
 ```
 
 ### Fast artifact refresh during development

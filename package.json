@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "ingest": "tsx src/cli/ingest.ts",
+    "ingest:full-refresh": "tsx src/cli/ingest.ts --mode full --refresh",
     "build": "tsx src/cli/build.ts",
     "validate": "tsx src/cli/validate.ts",
     "ci:flaky-summary": "tsx src/ci/flakySummary.ts",

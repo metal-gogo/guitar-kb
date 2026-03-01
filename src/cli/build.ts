@@ -17,6 +17,7 @@ import {
 import { generateChordSvg } from "../build/svg/generateSvg.js";
 import { ingestNormalizedChords } from "../ingest/pipeline.js";
 import { SOURCE_REGISTRY } from "../ingest/sourceRegistry.js";
+import { auditCache, buildCacheCompletenessManifest } from "../ingest/cacheAudit.js";
 import type { ChordRecord } from "../types/model.js";
 import { sharpAliasForFlatCanonicalRoot, toFlatCanonicalRoot } from "../types/guards.js";
 import { compareChordOrder } from "../utils/sort.js";
@@ -28,6 +29,7 @@ import { FULL_MATRIX_TARGETS } from "../config.js";
 
 const NORMALIZED_PATH = path.join("data", "generated", "chords.normalized.json");
 const DEFAULT_SITEMAP_GENERATED_AT = "1970-01-01T00:00:00.000Z";
+const CACHE_MANIFEST_PATH = path.join("data", "generated", "cache-completeness.manifest.json");
 
 interface BuildRuntimeOptions {
   chord?: string;
@@ -38,6 +40,27 @@ interface BuildRuntimeOptions {
 async function loadNormalized(): Promise<ChordRecord[]> {
   const content = await readFile(NORMALIZED_PATH, "utf8");
   return JSON.parse(content) as ChordRecord[];
+}
+
+export function shouldEnforceCacheCompletenessPolicy(options: BuildRuntimeOptions): boolean {
+  return !options.chord && !options.source;
+}
+
+export function cacheFailureMessage(
+  missing: ReadonlyArray<{ source: string; slug: string }>,
+  corrupt: ReadonlyArray<{ source: string; slug: string }>,
+): string {
+  const sample = [
+    ...missing.slice(0, 3).map((entry) => `${entry.source}/${entry.slug}.html (missing)`),
+    ...corrupt.slice(0, 3).map((entry) => `${entry.source}/${entry.slug}.html (corrupt)`),
+  ];
+
+  return [
+    "Cache completeness policy failed for full build/deploy mode.",
+    `Missing=${missing.length} Corrupt=${corrupt.length}`,
+    sample.length > 0 ? `Sample gaps: ${sample.join(", ")}` : "",
+    "Run `npm run ingest:full-refresh` and then retry `npm run preflight`.",
+  ].filter((line) => line.length > 0).join(" ");
 }
 
 export function filterBuildChords(chords: ChordRecord[], options: BuildRuntimeOptions): ChordRecord[] {
@@ -81,7 +104,22 @@ export function filterBuildChords(chords: ChordRecord[], options: BuildRuntimeOp
 }
 
 async function loadOrGenerateNormalized(options: BuildRuntimeOptions): Promise<ChordRecord[]> {
+  if (shouldEnforceCacheCompletenessPolicy(options)) {
+    const cacheAudit = await auditCache();
+    const cacheManifest = buildCacheCompletenessManifest(cacheAudit);
+    if (!options.dryRun) {
+      await writeJson(CACHE_MANIFEST_PATH, cacheManifest);
+    }
+
+    if (!cacheManifest.is_complete) {
+      throw new Error(cacheFailureMessage(cacheManifest.missing, cacheManifest.corrupt));
+    }
+  }
+
   if (await pathExists(NORMALIZED_PATH)) {
+    if (shouldEnforceCacheCompletenessPolicy(options)) {
+      process.stdout.write("Ingest policy: cache + normalized artifacts complete; skipping ingest.\n");
+    }
     const normalized = await loadNormalized();
     return filterBuildChords(normalized, options);
   }

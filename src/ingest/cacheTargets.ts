@@ -1,8 +1,14 @@
-import { CORE_MATRIX_TARGETS } from "../config.js";
+import { FULL_MATRIX_TARGETS } from "../config.js";
+import { SOURCE_REGISTRY } from "./sourceRegistry.js";
 
 export interface CacheTargetKey {
   source: string;
   slug: string;
+}
+
+interface SourceCapabilities {
+  roots: ReadonlySet<string>;
+  qualities: ReadonlySet<string>;
 }
 
 const SHARP_ALIAS_BY_FLAT_ROOT: Readonly<Record<string, string>> = {
@@ -63,10 +69,25 @@ function buildAliasSlug(chordId?: string): string | null {
 
 /** Build sorted list of unique (source, slug) pairs expected in cache. */
 export function expectedCacheKeys(): CacheTargetKey[] {
+  const capabilitiesBySource = new Map<string, SourceCapabilities>(
+    SOURCE_REGISTRY.map((entry) => [entry.id, {
+      roots: new Set(entry.capabilities.roots),
+      qualities: new Set(entry.capabilities.qualities),
+    }]),
+  );
   const seen = new Set<string>();
   const keys: CacheTargetKey[] = [];
 
-  for (const target of CORE_MATRIX_TARGETS) {
+  for (const target of FULL_MATRIX_TARGETS) {
+    const sourceCapabilities = capabilitiesBySource.get(target.source);
+    const parsed = parseChordId(target.chordId);
+    if (!sourceCapabilities || !parsed) {
+      continue;
+    }
+    if (!sourceCapabilities.roots.has(parsed.root) || !sourceCapabilities.qualities.has(parsed.quality)) {
+      continue;
+    }
+
     const slugs = [target.slug];
     const aliasSlug = buildAliasSlug(target.chordId);
     if (aliasSlug) {

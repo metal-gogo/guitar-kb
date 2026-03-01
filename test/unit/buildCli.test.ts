@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { filterBuildChords } from "../../src/cli/build.js";
+import { cacheFailureMessage, filterBuildChords, shouldEnforceCacheCompletenessPolicy } from "../../src/cli/build.js";
 import type { ChordRecord } from "../../src/types/model.js";
 
 function chord(overrides: Partial<ChordRecord>): ChordRecord {
@@ -44,5 +44,27 @@ describe("filterBuildChords", () => {
 
     expect(() => filterBuildChords(chords, { source: "guitarr-chord-org", chord: undefined, dryRun: false }))
       .toThrow("Unknown source: guitarr-chord-org");
+  });
+
+  it("enforces cache completeness policy only for full build mode", () => {
+    expect(shouldEnforceCacheCompletenessPolicy({ dryRun: false })).toBe(true);
+    expect(shouldEnforceCacheCompletenessPolicy({ dryRun: false, chord: "chord:C:maj" })).toBe(false);
+    expect(shouldEnforceCacheCompletenessPolicy({ dryRun: false, source: "guitar-chord-org" })).toBe(false);
+  });
+
+  it("formats deterministic cache policy failure messages with remediation guidance", () => {
+    const message = cacheFailureMessage(
+      [
+        { source: "all-guitar-chords", slug: "c-major" },
+        { source: "guitar-chord-org", slug: "d-major" },
+      ],
+      [{ source: "all-guitar-chords", slug: "e-major" }],
+    );
+
+    expect(message).toContain("Cache completeness policy failed");
+    expect(message).toContain("Missing=2 Corrupt=1");
+    expect(message).toContain("all-guitar-chords/c-major.html (missing)");
+    expect(message).toContain("all-guitar-chords/e-major.html (corrupt)");
+    expect(message).toContain("npm run ingest:full-refresh");
   });
 });

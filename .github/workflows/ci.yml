@@ -74,12 +74,25 @@ jobs:
           exit $code
         continue-on-error: true
 
-      - name: ingest
+      - name: ingest policy
         id: ingest
         if: steps.install.outcome == 'success'
         run: |
           set +e
-          npm run ingest
+          npm run audit-cache
+          cache_code=$?
+          if [ "$cache_code" -ne 0 ]; then
+            echo "::error::Cache completeness policy failed; ingest/build is blocked until cache gaps are fixed."
+            echo "exit_code=$cache_code" >> "$GITHUB_OUTPUT"
+            exit $cache_code
+          fi
+          if [ -f data/generated/chords.normalized.json ]; then
+            echo "Ingest policy: cache completeness passed and normalized artifacts exist; skipping ingest."
+            echo "exit_code=0" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "Ingest policy: cache completeness passed but normalized artifacts are missing; running full ingest."
+          npm run ingest -- --mode full
           code=$?
           echo "exit_code=$code" >> "$GITHUB_OUTPUT"
           exit $code
@@ -208,7 +221,7 @@ jobs:
             echo "| lint     | \`npm run lint\` | $(icon "$STATUS_LINT") $STATUS_LINT | $EXIT_LINT |"
             echo "| test     | \`npm test\` | $(icon "$STATUS_TEST") $STATUS_TEST | $EXIT_TEST |"
             echo "| flaky-summary | \`npm run ci:flaky-summary\` | $(icon "$STATUS_FLAKY_SUMMARY") $STATUS_FLAKY_SUMMARY | $EXIT_FLAKY_SUMMARY |"
-            echo "| ingest   | \`npm run ingest\` | $(icon "$STATUS_INGEST") $STATUS_INGEST | $EXIT_INGEST |"
+            echo "| ingest-policy   | \`npm run audit-cache && (skip ingest OR npm run ingest -- --mode full)\` | $(icon "$STATUS_INGEST") $STATUS_INGEST | $EXIT_INGEST |"
             echo "| build    | \`npm run build\` | $(icon "$STATUS_BUILD") $STATUS_BUILD | $EXIT_BUILD |"
             echo "| docs-changelog | \`npm run docs-changelog\` | $(icon "$STATUS_DOCS_CHANGELOG") $STATUS_DOCS_CHANGELOG | $EXIT_DOCS_CHANGELOG |"
             echo "| cache-audit | \`npm run audit-cache\` | $(icon "$STATUS_CACHE_AUDIT") $STATUS_CACHE_AUDIT | $EXIT_CACHE_AUDIT |"
@@ -229,7 +242,7 @@ jobs:
               [ "$STATUS_LINT"     = "failure" ] && echo "- **lint failed**: run \`npm run lint\` locally and fix TypeScript errors."
               [ "$STATUS_TEST"     = "failure" ] && echo "- **test failed**: run \`npm test\` locally; check for regressions in parsers, normalization, or SVG output."
               [ "$STATUS_FLAKY_SUMMARY" = "failure" ] && echo "- **flaky-summary failed**: run \`npm run ci:flaky-summary -- --input .artifacts/vitest-results.json\` and verify vitest JSON is present."
-              [ "$STATUS_INGEST"   = "failure" ] && echo "- **ingest failed**: run \`npm run ingest\` locally; verify cached HTML under \`data/sources/\` is present (\`npm run audit-cache\`)."
+              [ "$STATUS_INGEST"   = "failure" ] && echo "- **ingest policy failed**: run \`npm run audit-cache\` locally; fix missing/corrupt cache entries or run \`npm run ingest:full-refresh\`."
               [ "$STATUS_BUILD"    = "failure" ] && echo "- **build failed**: run \`npm run build\` locally; check docs/SVG generator errors."
               [ "$STATUS_DOCS_CHANGELOG" = "failure" ] && echo "- **docs-changelog failed**: run \`npm run docs-changelog\` locally and verify docs outputs exist after \`npm run build\`."
               [ "$STATUS_CACHE_AUDIT" = "failure" ] && echo "- **cache-audit failed**: run \`npm run audit-cache\` locally and restore missing/corrupt entries under \`data/sources/\`."

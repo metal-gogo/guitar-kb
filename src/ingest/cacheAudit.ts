@@ -24,7 +24,20 @@ export interface CacheAuditResult {
   corruptCount: number;
 }
 
+export interface CacheCompletenessManifest {
+  manifest_version: "cache-completeness/v1";
+  generated_at: string;
+  total_expected: number;
+  ok_count: number;
+  missing_count: number;
+  corrupt_count: number;
+  is_complete: boolean;
+  missing: ReadonlyArray<{ source: string; slug: string }>;
+  corrupt: ReadonlyArray<{ source: string; slug: string; checksum?: string }>;
+}
+
 const MINIMUM_VALID_HTML_BYTES = 64;
+const DEFAULT_MANIFEST_GENERATED_AT = "1970-01-01T00:00:00.000Z";
 
 function computeChecksum(content: Buffer): string {
   return createHash("sha256").update(content).digest("hex");
@@ -75,5 +88,26 @@ export async function auditCache(cacheBase = "data/sources"): Promise<CacheAudit
     okCount,
     missingCount,
     corruptCount,
+  };
+}
+
+export function buildCacheCompletenessManifest(
+  result: CacheAuditResult,
+  generatedAt = process.env.CACHE_MANIFEST_GENERATED_AT ?? DEFAULT_MANIFEST_GENERATED_AT,
+): CacheCompletenessManifest {
+  return {
+    manifest_version: "cache-completeness/v1",
+    generated_at: generatedAt,
+    total_expected: result.totalExpected,
+    ok_count: result.okCount,
+    missing_count: result.missingCount,
+    corrupt_count: result.corruptCount,
+    is_complete: result.missingCount === 0 && result.corruptCount === 0,
+    missing: result.entries
+      .filter((entry) => entry.status === "missing")
+      .map((entry) => ({ source: entry.source, slug: entry.slug })),
+    corrupt: result.entries
+      .filter((entry) => entry.status === "corrupt")
+      .map((entry) => ({ source: entry.source, slug: entry.slug, checksum: entry.checksum })),
   };
 }
