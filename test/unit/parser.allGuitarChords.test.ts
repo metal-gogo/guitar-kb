@@ -482,9 +482,8 @@ describe("parseAllGuitarChords", () => {
   describe("resilience – degraded HTML", () => {
     it("throws a structured error when section[data-root] is absent", () => {
       const html = readFixture("no-section-root");
-      expect(() => parseAllGuitarChords(html, BASE_URL)).toThrowError(
-        /all-guitar-chords parser failed/i,
-      );
+      expect(() => parseAllGuitarChords(html, BASE_URL)).toThrowError(/source=all-guitar-chords/);
+      expect(() => parseAllGuitarChords(html, BASE_URL)).toThrowError(/quality_token=maj/);
     });
 
     it("returns empty arrays when optional sections are absent", () => {
@@ -543,6 +542,22 @@ describe("parseAllGuitarChords", () => {
       const a = parseAllGuitarChords(html, url);
       const b = parseAllGuitarChords(html, url);
       expect(JSON.stringify(a)).toBe(JSON.stringify(b));
+    });
+
+    it("falls back to quality token from URL when data-quality is missing", () => {
+      const html = `
+        <section data-root="C" data-symbol="Cm7">
+          <div data-formula><code>1</code><code>b3</code><code>5</code><code>b7</code></div>
+          <div data-notes><code>C</code><code>Eb</code><code>G</code><code>Bb</code></div>
+          <div data-aliases><code>Cm7</code></div>
+          <div data-voicing data-id="shape-1" data-base-fret="1" data-frets="x-3-1-3-1-3" data-fingers="0-3-1-4-1-4"></div>
+        </section>
+      `;
+      const parsed = parseAllGuitarChords(html, "https://www.all-guitar-chords.com/chords/index/c/minor-7th");
+
+      expect(parsed.quality_raw).toBe("min7");
+      expect(parsed.parser_confidence?.checks).toContain("has_quality");
+      expect(parsed.parser_confidence?.level).toBe("high");
     });
   });
 });
