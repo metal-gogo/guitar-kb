@@ -25,6 +25,7 @@ fetched from the network at test time.
 test/fixtures/sources/
 ├── all-guitar-chords/          # Fixtures for the All Guitar Chords parser
 │   ├── c-major.html            # Happy-path single-chord page
+│   ├── c-major-many-voicings.html  # Regression: >3 voicings (no truncation)
 │   ├── c-minor.html
 │   ├── c7.html
 │   ├── cmaj7.html
@@ -44,6 +45,7 @@ test/fixtures/sources/
 │   └── partial-voicing-attrs.html  # Error/edge: incomplete voicing attributes
 └── guitar-chord-org/           # Fixtures for the Guitar Chord Org parser
     ├── c-major.html            # Happy-path single-chord page
+    ├── c-major-many-voicings.html  # Regression: >3 voicings (no truncation)
     ├── c-minor.html
     ├── c7.html
     ├── cmaj7.html
@@ -81,7 +83,7 @@ features the parser depends on. The goal is twofold:
 |------|-----------|
 | Include only the elements the parser reads | Navigation, headers, footers, ads, scripts, and stylesheets must be stripped. |
 | Preserve data attributes and class names exactly | The parser targets specific attributes (`data-chord-root`, `data-frets`, etc.) and CSS classes (`formula`, `pitch-classes`, `voicing`). |
-| Keep the minimum number of voicings needed | Two voicings suffice for most tests; include a third only if the test logic needs it. |
+| Keep fixture size minimal while preserving regression intent | Two or three voicings are enough for most tests, but include a dedicated `>3` fixture (for example `c-major-many-voicings.html`) to guard against parser-side truncation. |
 | Do not include real user data or PII | Fixtures are synthetic re-encodings of publicly observable structure. |
 | Encode the failure mode explicitly in error fixtures | The comment or stub element in an error fixture must make the missing/broken feature obvious (e.g., `<!-- voicings intentionally omitted -->`). |
 

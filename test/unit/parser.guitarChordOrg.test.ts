@@ -9,6 +9,7 @@ const URL_BY_SLUG = {
   "a-major": "https://www.guitar-chord.org/a-maj.html",
   "b-major": "https://www.guitar-chord.org/b-maj.html",
   "c-major": "https://www.guitar-chord.org/c-maj.html",
+  "c-major-many-voicings": "https://www.guitar-chord.org/c-maj-many-voicings.html",
   "g-major": "https://www.guitar-chord.org/g-maj.html",
   "c-sharp-major": "https://www.guitar-chord.org/c-sharp-maj.html",
   "d-major": "https://www.guitar-chord.org/d-maj.html",
@@ -236,6 +237,23 @@ describe("parseGuitarChordOrg", () => {
         "barre-8",
         "shape-3",
       ]);
+    });
+
+    it("extracts all available voicings when fixture has more than three entries", () => {
+      const url = URL_BY_SLUG["c-major-many-voicings"];
+      const html = readFixture("c-major-many-voicings");
+      const parsed = parseGuitarChordOrg(html, url);
+
+      expect(parsed.voicings).toHaveLength(5);
+      expect(parsed.voicings.map((voicing) => voicing.id)).toEqual([
+        "shape-2",
+        "shape-10",
+        "shape-1",
+        "shape-7",
+        "shape-3",
+      ]);
+      expect(parsed.voicings.map((voicing) => voicing.base_fret)).toEqual([1, 3, 10, 8, 12]);
+      expect(parsed.voicings.every((voicing) => (voicing.source_refs?.length ?? 0) === 1)).toBe(true);
     });
 
     it("extracts D major voicing frets and base-fret values in source order", () => {
