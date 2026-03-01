@@ -45,6 +45,18 @@ All generated outputs (`data/generated/`, `data/chords.jsonl`, `docs/chords/`, `
 
 Full policy: [`planning/decisions/0004-artifact-versioning-policy.md`](planning/decisions/0004-artifact-versioning-policy.md)
 
+## License
+
+This repository is distributed under the ISC License. See
+[`LICENSE`](LICENSE) for full terms.
+
+Usage expectations:
+
+- Generated repository content is original project output.
+- Source-site prose and source diagrams are not copied into this repository.
+- Ingested chord labels, formulas, note spellings, and voicing frets are used
+  as factual data with provenance metadata.
+
 ## Repository map
 
 - `src/cli/*` – command entrypoints (`ingest`, `build`, `validate`)

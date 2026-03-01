@@ -35,6 +35,14 @@ function privacyHrefFromChordPage(): string {
   return "../privacy.html";
 }
 
+function licenseHrefFromIndex(): string {
+  return "./license.html";
+}
+
+function licenseHrefFromChordPage(): string {
+  return "../license.html";
+}
+
 function rootAnchorId(root: string): string {
   const token = root
     .toLowerCase()
@@ -234,9 +242,9 @@ export function siteIndexHtml(chords: ReadonlyArray<ChordRecord>): string {
     "<header class=\"hero\">",
     "  <h1>Guitar Chord Knowledge Base</h1>",
     `  <p>Browse ${sorted.length} canonical chords by root and quality.</p>`,
-    `  <p class="meta"><a href="${escapeHtml(privacyHrefFromIndex())}">Privacy notice</a></p>`,
+    `  <p class="meta"><a href="${escapeHtml(privacyHrefFromIndex())}">Privacy notice</a> · <a href="${escapeHtml(licenseHrefFromIndex())}">License</a></p>`,
     `  <nav class="chip-row" aria-label="Root navigation">${rootChips}</nav>`,
-    "</header>",
+  "</header>",
     "<section class=\"grid section\">",
     rootSections,
     "</section>",
@@ -290,10 +298,10 @@ export function siteChordHtml(chord: ChordRecord, allChords: ReadonlyArray<Chord
 
   const body = [
     "<header class=\"hero\">",
-    `  <p><a class="back-link" href="../index.html">← Back to index</a> · <a class="back-link" href="${escapeHtml(privacyHrefFromChordPage())}">Privacy notice</a></p>`,
+    `  <p><a class="back-link" href="../index.html">← Back to index</a> · <a class="back-link" href="${escapeHtml(privacyHrefFromChordPage())}">Privacy notice</a> · <a class="back-link" href="${escapeHtml(licenseHrefFromChordPage())}">License</a></p>`,
     `  <h1>${escapeHtml(`${chord.root} ${chord.quality}`)}</h1>`,
     `  <p class="meta">${escapeHtml(chord.id)}</p>`,
-    "</header>",
+  "</header>",
     "<section class=\"grid section\">",
     "  <article class=\"card\">",
     "    <h2>Chord Details</h2>",
@@ -359,4 +367,31 @@ export function sitePrivacyHtml(): string {
   ].join("\n");
 
   return htmlFrame("Privacy Notice | GCKB", "./assets/site.css", body);
+}
+
+export function siteLicenseHtml(): string {
+  const body = [
+    "<header class=\"hero\">",
+    "  <p><a class=\"back-link\" href=\"./index.html\">← Back to index</a></p>",
+    "  <h1>License</h1>",
+    "  <p class=\"meta\">Project license and usage boundaries.</p>",
+    "</header>",
+    "<section class=\"grid section\">",
+    "  <article class=\"card\">",
+    "    <h2>Project License</h2>",
+    "    <p>This repository is distributed under the ISC License.</p>",
+    "    <p>See the root <code>LICENSE</code> file in the repository for full terms.</p>",
+    "  </article>",
+    "  <article class=\"card\">",
+    "    <h2>Usage Boundaries</h2>",
+    "    <ul class=\"plain-list\">",
+    "      <li>Generated chord pages and diagrams in this project are original outputs.</li>",
+    "      <li>Source-site prose and source images are not copied into this repository.</li>",
+    "      <li>Ingested chord labels, formulas, note spellings, and voicing frets are treated as factual data with provenance.</li>",
+    "    </ul>",
+    "  </article>",
+    "</section>",
+  ].join("\n");
+
+  return htmlFrame("License | GCKB", "./assets/site.css", body);
 }
