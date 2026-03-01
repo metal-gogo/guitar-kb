@@ -29,4 +29,9 @@ describe("SOURCE_REGISTRY", () => {
     expect(guitarChordOrg?.capabilities.qualities).toEqual([...CORE_QUALITY_ORDER]);
     expect(allGuitarChords?.capabilities.qualities).toEqual([...CORE_QUALITY_ORDER]);
   });
+
+  it("keeps source precedence order all-guitar-chords then guitar-chord-org", () => {
+    expect(SOURCE_REGISTRY[0]?.id).toBe("all-guitar-chords");
+    expect(SOURCE_REGISTRY[1]?.id).toBe("guitar-chord-org");
+  });
 });

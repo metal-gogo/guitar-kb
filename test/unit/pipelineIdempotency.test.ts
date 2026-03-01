@@ -48,18 +48,19 @@ const SOURCE_REGISTRY_STUB: ReadonlyArray<SourceRegistryEntry> = [
 ];
 
 const TARGETS = [
+  // Intentionally shuffled: pipeline should sort by chord ID + source precedence.
+  { source: "guitar-chord-org", slug: "cmaj7", url: "https://www.guitar-chord.org/c-maj7.html" },
   {
     source: "guitar-chord-org",
     slug: "c-major-many-voicings",
     url: "https://www.guitar-chord.org/c-maj-many-voicings.html",
   },
-  { source: "guitar-chord-org", slug: "cmaj7", url: "https://www.guitar-chord.org/c-maj7.html" },
+  { source: "all-guitar-chords", slug: "cmaj7", url: "https://www.all-guitar-chords.com/chords/index/c/major-7th" },
   {
     source: "all-guitar-chords",
     slug: "c-major-many-voicings",
     url: "https://www.all-guitar-chords.com/chords/index/c/major-many-voicings",
   },
-  { source: "all-guitar-chords", slug: "cmaj7", url: "https://www.all-guitar-chords.com/chords/index/c/major-7th" },
 ];
 
 function stableStringify(records: ChordRecord[]): string {

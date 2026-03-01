@@ -8,6 +8,9 @@ export const ROOT_ORDER = [
 
 export const QUALITY_ORDER = ["maj", "min", "7", "maj7", "min7", "dim", "dim7", "aug", "sus2", "sus4"] as const;
 export const CORE_QUALITY_ORDER = ["maj", "min", "7", "maj7"] as const;
+export const SOURCE_PRIORITY = ["all-guitar-chords", "guitar-chord-org"] as const;
+
+type SourceId = typeof SOURCE_PRIORITY[number];
 
 interface QualityTarget {
   quality: ChordQuality;
@@ -53,26 +56,35 @@ function toRootSlug(root: string): string {
   return slug;
 }
 
+function buildTargetForSource(
+  source: SourceId,
+  root: string,
+  rootSlug: string,
+  qualityTarget: QualityTarget,
+): IngestTarget {
+  if (source === "all-guitar-chords") {
+    return {
+      source,
+      chordId: `chord:${root}:${qualityTarget.quality}`,
+      slug: `${rootSlug}-${qualityTarget.cacheSuffix}`,
+      url: `https://www.all-guitar-chords.com/chords/index/${rootSlug}/${qualityTarget.allGuitarSlug}`,
+    };
+  }
+
+  return {
+    source,
+    chordId: `chord:${root}:${qualityTarget.quality}`,
+    slug: `${rootSlug}-${qualityTarget.cacheSuffix}`,
+    url: `https://www.guitar-chord.org/${rootSlug}-${qualityTarget.guitarSlug}.html`,
+  };
+}
+
 function buildTargets(qualityTargets: ReadonlyArray<QualityTarget>): ReadonlyArray<IngestTarget> {
   return ROOT_ORDER.flatMap((root) => {
     const rootSlug = toRootSlug(root);
-    return qualityTargets.flatMap((qualityTarget) => {
-      const cacheSlug = `${rootSlug}-${qualityTarget.cacheSuffix}`;
-      return [
-        {
-          source: "guitar-chord-org" as const,
-          chordId: `chord:${root}:${qualityTarget.quality}`,
-          slug: cacheSlug,
-          url: `https://www.guitar-chord.org/${rootSlug}-${qualityTarget.guitarSlug}.html`,
-        },
-        {
-          source: "all-guitar-chords" as const,
-          chordId: `chord:${root}:${qualityTarget.quality}`,
-          slug: cacheSlug,
-          url: `https://www.all-guitar-chords.com/chords/index/${rootSlug}/${qualityTarget.allGuitarSlug}`,
-        },
-      ];
-    });
+    return qualityTargets.flatMap((qualityTarget) => (
+      SOURCE_PRIORITY.map((source) => buildTargetForSource(source, root, rootSlug, qualityTarget))
+    ));
   });
 }
 
