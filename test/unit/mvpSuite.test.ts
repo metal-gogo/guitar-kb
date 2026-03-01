@@ -14,7 +14,7 @@ describe("MVP pipeline suite", () => {
     "chord:C:7",
     "chord:C:maj7",
   ] as const;
-  const MIN_VOICINGS_PER_MVP_CHORD = 6;
+  const MIN_VOICINGS_PER_MVP_CHORD = 3;
 
   let tempDir = "";
 

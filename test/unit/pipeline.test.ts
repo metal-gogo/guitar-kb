@@ -10,6 +10,7 @@ import {
   ingestNormalizedChordsWithTargets,
   selectIngestTargets,
 } from "../../src/ingest/pipeline.js";
+import { DUPLICATE_VOICING_SOURCE_REF_NOTE } from "../../src/ingest/normalize/normalize.js";
 import { buildParserConfidenceReport } from "../../src/ingest/parserConfidenceReport.js";
 import type { ChordRecord, SourceRegistryEntry } from "../../src/types/model.js";
 
@@ -57,11 +58,19 @@ describe("ingestNormalizedChords", () => {
       [null, 0, 2, 2, 2, 0],
       [5, 7, 7, 6, 5, 5],
       [null, null, 2, 2, 2, 5],
-      [null, 0, 2, 2, 2, 0],
-      [null, null, 2, 2, 2, 5],
-      [5, 7, 7, 6, 5, 5],
     ]);
-    expect(aMajor?.voicings.map((voicing) => voicing.base_fret)).toEqual([1, 5, 2, 1, 2, 5]);
+    expect(aMajor?.voicings.map((voicing) => voicing.base_fret)).toEqual([1, 5, 2]);
+    expect(aMajor?.voicings[0]?.source_refs).toEqual([
+      {
+        source: "all-guitar-chords",
+        url: "https://www.all-guitar-chords.com/chords/index/a/major",
+        note: DUPLICATE_VOICING_SOURCE_REF_NOTE,
+      },
+      {
+        source: "guitar-chord-org",
+        url: "https://www.guitar-chord.org/a-maj.html",
+      },
+    ]);
   });
 
   it("supports dry-run ingestion from a registry-only third source", async () => {
