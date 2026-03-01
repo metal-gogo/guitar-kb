@@ -20,7 +20,7 @@ import type { ChordRecord, SourceRegistryEntry } from "../../src/types/model.js"
 // Helpers
 // ---------------------------------------------------------------------------
 
-const FIXTURE_SLUGS = ["c-major", "cmaj7"] as const;
+const FIXTURE_SLUGS = ["c-major-many-voicings", "cmaj7"] as const;
 
 const SOURCE_REGISTRY_STUB: ReadonlyArray<SourceRegistryEntry> = [
   {
@@ -40,14 +40,41 @@ const SOURCE_REGISTRY_STUB: ReadonlyArray<SourceRegistryEntry> = [
 ];
 
 const TARGETS = [
-  { source: "guitar-chord-org", slug: "c-major", url: "https://www.guitar-chord.org/c-maj.html" },
+  {
+    source: "guitar-chord-org",
+    slug: "c-major-many-voicings",
+    url: "https://www.guitar-chord.org/c-maj-many-voicings.html",
+  },
   { source: "guitar-chord-org", slug: "cmaj7", url: "https://www.guitar-chord.org/c-maj7.html" },
-  { source: "all-guitar-chords", slug: "c-major", url: "https://www.all-guitar-chords.com/chords/index/c/major" },
+  {
+    source: "all-guitar-chords",
+    slug: "c-major-many-voicings",
+    url: "https://www.all-guitar-chords.com/chords/index/c/major-many-voicings",
+  },
   { source: "all-guitar-chords", slug: "cmaj7", url: "https://www.all-guitar-chords.com/chords/index/c/major-7th" },
 ];
 
 function stableStringify(records: ChordRecord[]): string {
   return JSON.stringify(records.map((r) => r.id).sort());
+}
+
+function voicingIdMap(records: ChordRecord[]): Record<string, string[]> {
+  return Object.fromEntries(
+    records
+      .slice()
+      .sort((a, b) => a.id.localeCompare(b.id))
+      .map((record) => [record.id, record.voicings.map((voicing) => voicing.id)]),
+  );
+}
+
+function fixtureSlugForUrl(url: string): string {
+  if (url.includes("c-maj7.html") || url.includes("major-7th")) {
+    return "cmaj7";
+  }
+  if (url.includes("c-maj-many-voicings.html") || url.includes("major-many-voicings")) {
+    return "c-major-many-voicings";
+  }
+  throw new Error(`Unexpected fetch URL in test: ${url}`);
 }
 
 // ---------------------------------------------------------------------------
@@ -109,6 +136,11 @@ describe("pipeline idempotency across refresh modes", () => {
 
     expect(divergent, `Divergent record IDs: ${divergent.join(", ")}`).toHaveLength(0);
     expect(JSON.stringify(runA)).toBe(JSON.stringify(runB));
+    expect(voicingIdMap(runA)).toEqual(voicingIdMap(runB));
+
+    const cMajor = runA.find((record) => record.id === "chord:C:maj");
+    expect(cMajor, "Expected normalized C major record").toBeDefined();
+    expect(cMajor?.voicings).toHaveLength(10);
   });
 
   it("refresh=true with same HTML produces identical records as refresh=false", async () => {
@@ -121,19 +153,16 @@ describe("pipeline idempotency across refresh modes", () => {
     // Mock global.fetch to return the same HTML content that's already in cache
     // This simulates a network refresh that returns identical content
     vi.stubGlobal("fetch", async (url: string) => {
-      // Identify the slug from the URL being fetched
       let source = "";
-      let slugFile = "";
 
       if (url.includes("guitar-chord.org")) {
         source = "guitar-chord-org";
-        slugFile = url.endsWith("c-maj7.html") ? "cmaj7.html" : "c-major.html";
       } else if (url.includes("all-guitar-chords")) {
         source = "all-guitar-chords";
-        slugFile = url.includes("major-7th") ? "cmaj7.html" : "c-major.html";
       } else {
         throw new Error(`Unexpected fetch URL in test: ${url}`);
       }
+      const slugFile = `${fixtureSlugForUrl(url)}.html`;
 
       const html = await readFile(
         path.join(originalCwd, "data", "sources", source, slugFile),
@@ -160,6 +189,7 @@ describe("pipeline idempotency across refresh modes", () => {
 
     expect(divergent, `Divergent record IDs after refresh: ${divergent.join(", ")}`).toHaveLength(0);
     expect(JSON.stringify(refreshedRecords)).toBe(JSON.stringify(cachedRecords));
+    expect(voicingIdMap(refreshedRecords)).toEqual(voicingIdMap(cachedRecords));
   });
 
   it("canonical IDs are stable across refresh modes", async () => {
@@ -170,16 +200,14 @@ describe("pipeline idempotency across refresh modes", () => {
 
     vi.stubGlobal("fetch", async (url: string) => {
       let source = "";
-      let slugFile = "";
       if (url.includes("guitar-chord.org")) {
         source = "guitar-chord-org";
-        slugFile = url.endsWith("c-maj7.html") ? "cmaj7.html" : "c-major.html";
       } else if (url.includes("all-guitar-chords")) {
         source = "all-guitar-chords";
-        slugFile = url.includes("major-7th") ? "cmaj7.html" : "c-major.html";
       } else {
         throw new Error(`Unexpected fetch URL: ${url}`);
       }
+      const slugFile = `${fixtureSlugForUrl(url)}.html`;
       const html = await readFile(path.join(originalCwd, "data", "sources", source, slugFile), "utf8");
       return new Response(html, { status: 200 });
     });
