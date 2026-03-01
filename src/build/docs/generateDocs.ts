@@ -83,7 +83,7 @@ export function chordMarkdown(chord: ChordRecord, allChords: ChordRecord[]): str
   const enharmonicLinks = formatNavLinks(enharmonicLinkIds(chord, allChords), byId);
   const relatedQualityLinks = formatNavLinks(relatedQualityLinkIds(chord, allChords), byId);
 
-  return `# ${chord.root} ${chord.quality}\n\n- Canonical ID: ${chord.id}\n- Aliases: ${aliases}\n- Enharmonic equivalents: ${enharmonics}\n- Formula: ${chord.formula.join("-")}\n- Pitch classes: ${chord.pitch_classes.join(", ")}\n\n## Summary\n${chord.notes?.summary ?? "Chord reference generated from factual source data."}\n\n## Voicings\n${voicingLines}\n\n## Provenance\n${sourceLines}\n\n## Navigation\n- [← Chord Index](../index.md)\n- [Privacy Notice](../privacy.md)\n- Enharmonic equivalents: ${enharmonicLinks}\n- Related qualities: ${relatedQualityLinks}\n`;
+  return `# ${chord.root} ${chord.quality}\n\n- Canonical ID: ${chord.id}\n- Aliases: ${aliases}\n- Enharmonic equivalents: ${enharmonics}\n- Formula: ${chord.formula.join("-")}\n- Pitch classes: ${chord.pitch_classes.join(", ")}\n\n## Summary\n${chord.notes?.summary ?? "Chord reference generated from factual source data."}\n\n## Voicings\n${voicingLines}\n\n## Provenance\n${sourceLines}\n\n## Navigation\n- [← Chord Index](../index.md)\n- [Privacy Notice](../privacy.md)\n- [License](../license.md)\n- Enharmonic equivalents: ${enharmonicLinks}\n- Related qualities: ${relatedQualityLinks}\n`;
 }
 
 export function chordIndexMarkdown(chords: ChordRecord[]): string {
@@ -112,6 +112,7 @@ export function chordIndexMarkdown(chords: ChordRecord[]): string {
     "",
     "- [Coverage Dashboard](./coverage.md)",
     "- [Privacy Notice](./privacy.md)",
+    "- [License](./license.md)",
     "",
     sections.join("\n\n"),
     "",
@@ -141,6 +142,22 @@ export function privacyNoticeMarkdown(): string {
     "## Contact",
     "",
     "For repository-level questions, use the project issue tracker.",
+    "",
+  ].join("\n");
+}
+
+export function licenseMarkdown(): string {
+  return [
+    "# License",
+    "",
+    "This repository is distributed under the ISC License.",
+    "",
+    "See the root [`LICENSE`](../LICENSE) file for the full license text.",
+    "",
+    "## Usage Notes",
+    "",
+    "- Source-site text and diagrams are not copied into this project.",
+    "- Chord facts (labels, spellings, formulas, and voicing frets) are ingested as factual data with provenance.",
     "",
   ].join("\n");
 }
