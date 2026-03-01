@@ -142,4 +142,32 @@ describe("checkDocLinks", () => {
     expect(result.brokenLinks).toHaveLength(0);
     expect(result.checkedLinks).toBe(1);
   });
+
+  it("resolves hosting-safe sharp chord and diagram links", async () => {
+    await mkdir(path.join(tempDir, "diagrams", "C-sharp", "maj"), { recursive: true });
+    await writeFile(
+      path.join(tempDir, "diagrams", "C-sharp", "maj", "v1.svg"),
+      "<svg/>",
+      "utf8",
+    );
+    await mkdir(path.join(tempDir, "chords"), { recursive: true });
+    await writeFile(
+      path.join(tempDir, "index.md"),
+      "# Index\n- [C# maj](./chords/chord__C-sharp__maj.md)\n",
+      "utf8",
+    );
+    await writeFile(
+      path.join(tempDir, "chords", "chord__C-sharp__maj.md"),
+      "# C# maj\n[← Index](../index.md)\n[diagram](../diagrams/C-sharp/maj/v1.svg)\n",
+      "utf8",
+    );
+
+    const result = await checkDocLinks([
+      path.join(tempDir, "index.md"),
+      path.join(tempDir, "chords", "chord__C-sharp__maj.md"),
+    ]);
+
+    expect(result.brokenLinks).toHaveLength(0);
+    expect(result.checkedLinks).toBe(3);
+  });
 });

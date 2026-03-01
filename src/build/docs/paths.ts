@@ -1,5 +1,13 @@
+const ID_SEPARATOR = ":";
+const PATH_SEPARATOR = "__";
+const SHARP_TOKEN = "-sharp";
+
+function encodePathToken(token: string): string {
+  return token.replace(/#/g, SHARP_TOKEN);
+}
+
 export function encodeIdForPathSegment(id: string): string {
-  return id.replace(/:/g, "__").replace(/#/g, "%23");
+  return id.split(ID_SEPARATOR).map(encodePathToken).join(PATH_SEPARATOR);
 }
 
 export function chordDocFileName(chordId: string): string {

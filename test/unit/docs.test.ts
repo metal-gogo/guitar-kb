@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import path from "node:path";
 import { chordIndexMarkdown, chordMarkdown, licenseMarkdown, privacyNoticeMarkdown } from "../../src/build/docs/generateDocs.js";
-import { voicingDiagramRelativePath } from "../../src/build/docs/paths.js";
+import { encodeIdForPathSegment, voicingDiagramRelativePath } from "../../src/build/docs/paths.js";
 import { coverageDashboardMarkdown } from "../../src/build/docs/generateCoverage.js";
 import { siteChordFileName, siteChordHtml, siteIndexHtml, siteLicenseHtml, sitePrivacyHtml } from "../../src/build/site/generateSite.js";
 import { buildRootQualityCoverageReport } from "../../src/validate/coverage.js";
@@ -219,7 +219,7 @@ describe("chordMarkdown", () => {
       const dFlatMd = chordMarkdown(dFlat, allChords);
 
       expect(cSharpMd).toContain("[Db maj](./chord__Db__maj.md)");
-      expect(dFlatMd).toContain("[C# maj](./chord__C%23__maj.md)");
+      expect(dFlatMd).toContain("[C# maj](./chord__C-sharp__maj.md)");
     });
 
     it("renders related quality links for same-root different-quality chords", () => {
@@ -348,7 +348,7 @@ describe("chordIndexMarkdown", () => {
       "./coverage.md",
       "./privacy.md",
       "./license.md",
-      ...chords.map((chord) => `./chords/${chord.id.replace(/:/g, "__").replace(/#/g, "%23")}.md`),
+      ...chords.map((chord) => `./chords/${encodeIdForPathSegment(chord.id)}.md`),
     ]);
 
     for (const link of extractMarkdownLinks(indexMd)) {
@@ -460,9 +460,9 @@ describe("site generation", () => {
 
     const html = siteChordHtml(cSharp, [cSharp, dFlat, cMin]);
 
-    expect(html).toContain("src=\"../diagrams/C%23/maj/v1.svg\"");
+    expect(html).toContain("src=\"../diagrams/C-sharp/maj/v1.svg\"");
     expect(html).toContain("href=\"./chord__Db__maj.html\"");
-    expect(html).toContain("href=\"./chord__C%23__min.html\"");
+    expect(html).toContain("href=\"./chord__C-sharp__min.html\"");
     expect(html).toContain("href=\"https://example.com/c-sharp-major\"");
     expect(html).toContain("Back to index");
     expect(html).toContain("href=\"../privacy.html\"");
