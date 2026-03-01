@@ -32,7 +32,7 @@ const URL_BY_SLUG = {
   "c-min7-partial-voicing-attrs": "https://www.guitar-chord.org/c-min7-partial-voicing-attrs.html",
 } as const;
 
-type MvpSlug = keyof typeof URL_BY_SLUG;
+type FixtureSlug = keyof typeof URL_BY_SLUG;
 
 const BASE_URL = URL_BY_SLUG["c-major"];
 
@@ -40,7 +40,7 @@ describe("parseGuitarChordOrg", () => {
   describe("happy path – MVP chord fixtures", () => {
     it("extracts factual MVP chord data from cached fixtures", () => {
       const cases: Array<{
-        slug: MvpSlug;
+        slug: FixtureSlug;
         root: string;
         qualityRaw: string;
         formula: string[];
