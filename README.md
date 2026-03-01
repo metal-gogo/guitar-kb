@@ -96,6 +96,32 @@ npm run ingest
 
 Writes `data/generated/chords.normalized.json`.
 
+Explicit mode commands:
+
+- Full matrix ingest:
+
+```bash
+npm run ingest -- --mode full
+```
+
+- Chord-targeted ingest by canonical ID:
+
+```bash
+npm run ingest -- --mode chord --chord-id chord:Db:maj7
+```
+
+- Chord-targeted ingest by root + quality (sharp input normalizes to flat canonical ID):
+
+```bash
+npm run ingest -- --mode chord --root C# --quality maj7
+```
+
+- Optional source-restricted chord ingest:
+
+```bash
+npm run ingest -- --mode chord --chord-id chord:Db:maj7 --source guitar-chord-org
+```
+
 Default merge precedence is deterministic and source-agnostic:
 - `all-guitar-chords` is processed first for each chord target.
 - `guitar-chord-org` is processed second; both sources are ingested when available, with deterministic merge behavior for overlaps.
@@ -117,6 +143,10 @@ To filter ingest to a specific extended-quality chord target:
 ```bash
 npm run ingest -- --chord c-dim7
 ```
+
+Compatibility:
+
+- Legacy `--chord` remains supported and infers chord-targeted mode when `--mode` is omitted.
 
 Capability diagnostics:
 
