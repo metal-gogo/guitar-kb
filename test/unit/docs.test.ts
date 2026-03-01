@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { chordIndexMarkdown, chordMarkdown } from "../../src/build/docs/generateDocs.js";
+import path from "node:path";
+import { chordIndexMarkdown, chordMarkdown, privacyNoticeMarkdown } from "../../src/build/docs/generateDocs.js";
 import { coverageDashboardMarkdown } from "../../src/build/docs/generateCoverage.js";
-import { siteChordFileName, siteChordHtml, siteIndexHtml } from "../../src/build/site/generateSite.js";
+import { siteChordFileName, siteChordHtml, siteIndexHtml, sitePrivacyHtml } from "../../src/build/site/generateSite.js";
 import { buildRootQualityCoverageReport } from "../../src/validate/coverage.js";
 import type { ChordRecord } from "../../src/types/model.js";
 
@@ -123,6 +124,7 @@ describe("chordMarkdown", () => {
       const md = renderChord();
       expect(md).toContain("## Navigation");
       expect(md).toContain("[← Chord Index](../index.md)");
+      expect(md).toContain("[Privacy Notice](../privacy.md)");
     });
   });
 
@@ -250,6 +252,11 @@ describe("chordIndexMarkdown", () => {
     expect(md).toContain("[Coverage Dashboard](./coverage.md)");
   });
 
+  it("links to privacy notice", () => {
+    const md = chordIndexMarkdown([buildChord()]);
+    expect(md).toContain("[Privacy Notice](./privacy.md)");
+  });
+
   it("includes the Chord Index heading", () => {
     const md = chordIndexMarkdown([buildChord()]);
     expect(md).toContain("# Chord Index");
@@ -332,6 +339,7 @@ describe("chordIndexMarkdown", () => {
     const generatedPages = new Set([
       "./index.md",
       "./coverage.md",
+      "./privacy.md",
       ...chords.map((chord) => `./chords/${chord.id.replace(/:/g, "__").replace(/#/g, "%23")}.md`),
     ]);
 
@@ -377,6 +385,15 @@ describe("coverageDashboardMarkdown", () => {
   });
 });
 
+describe("privacyNoticeMarkdown", () => {
+  it("states static-site behavior without overclaiming", () => {
+    const md = privacyNoticeMarkdown();
+    expect(md).toContain("# Privacy Notice");
+    expect(md).toContain("does not intentionally collect personal data");
+    expect(md).toContain("hosting provider may keep standard request logs");
+  });
+});
+
 describe("site generation", () => {
   it("renders a deterministic site index with root and quality navigation", () => {
     const chords = [
@@ -395,6 +412,7 @@ describe("site generation", () => {
     expect(html).toContain("href=\"./chords/chord__C__maj.html\"");
     expect(html).toContain("href=\"./chords/chord__C__min.html\"");
     expect(html).toContain("href=\"./chords/chord__Db__maj.html\"");
+    expect(html).toContain("href=\"./privacy.html\"");
   });
 
   it("renders chord pages with voicing diagrams, provenance, and cross-links", () => {
@@ -426,6 +444,7 @@ describe("site generation", () => {
     expect(html).toContain("href=\"./chord__C%23__min.html\"");
     expect(html).toContain("href=\"https://example.com/c-sharp-major\"");
     expect(html).toContain("Back to index");
+    expect(html).toContain("href=\"../privacy.html\"");
   });
 
   it("emits only resolvable internal links across generated index/chord pages", () => {
@@ -438,11 +457,13 @@ describe("site generation", () => {
     const index = siteIndexHtml(chords);
     const pages = new Map<string, string>([
       ["./index.html", index],
+      ["./privacy.html", sitePrivacyHtml()],
       ...chords.map((chord) => [`./chords/${siteChordFileName(chord.id)}`, siteChordHtml(chord, chords)] as const),
     ]);
 
     const internalTargets = new Set<string>([
       "./index.html",
+      "./privacy.html",
       "./assets/site.css",
       ...chords.map((chord) => `./chords/${siteChordFileName(chord.id)}`),
       ...chords.flatMap((chord) => chord.voicings.map((voicing) => `./diagrams/${voicing.id.replace(/:/g, "__").replace(/#/g, "%23")}.svg`)),
@@ -453,9 +474,9 @@ describe("site generation", () => {
         if (target.startsWith("https://") || target.startsWith("http://") || target.startsWith("#")) {
           continue;
         }
-        const normalized = pathName === "./index.html"
-          ? target
-          : (target.startsWith("../") ? `./${target.slice(3)}` : `./chords/${target.slice(2)}`);
+        const normalized = `./${path.posix.normalize(
+          path.posix.join(path.posix.dirname(pathName.slice(2)), target),
+        )}`;
         expect(internalTargets.has(normalized), `${pathName} -> ${target}`).toBe(true);
       }
     }

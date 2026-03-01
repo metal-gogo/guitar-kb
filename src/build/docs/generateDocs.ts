@@ -83,7 +83,7 @@ export function chordMarkdown(chord: ChordRecord, allChords: ChordRecord[]): str
   const enharmonicLinks = formatNavLinks(enharmonicLinkIds(chord, allChords), byId);
   const relatedQualityLinks = formatNavLinks(relatedQualityLinkIds(chord, allChords), byId);
 
-  return `# ${chord.root} ${chord.quality}\n\n- Canonical ID: ${chord.id}\n- Aliases: ${aliases}\n- Enharmonic equivalents: ${enharmonics}\n- Formula: ${chord.formula.join("-")}\n- Pitch classes: ${chord.pitch_classes.join(", ")}\n\n## Summary\n${chord.notes?.summary ?? "Chord reference generated from factual source data."}\n\n## Voicings\n${voicingLines}\n\n## Provenance\n${sourceLines}\n\n## Navigation\n- [← Chord Index](../index.md)\n- Enharmonic equivalents: ${enharmonicLinks}\n- Related qualities: ${relatedQualityLinks}\n`;
+  return `# ${chord.root} ${chord.quality}\n\n- Canonical ID: ${chord.id}\n- Aliases: ${aliases}\n- Enharmonic equivalents: ${enharmonics}\n- Formula: ${chord.formula.join("-")}\n- Pitch classes: ${chord.pitch_classes.join(", ")}\n\n## Summary\n${chord.notes?.summary ?? "Chord reference generated from factual source data."}\n\n## Voicings\n${voicingLines}\n\n## Provenance\n${sourceLines}\n\n## Navigation\n- [← Chord Index](../index.md)\n- [Privacy Notice](../privacy.md)\n- Enharmonic equivalents: ${enharmonicLinks}\n- Related qualities: ${relatedQualityLinks}\n`;
 }
 
 export function chordIndexMarkdown(chords: ChordRecord[]): string {
@@ -111,8 +111,36 @@ export function chordIndexMarkdown(chords: ChordRecord[]): string {
     "# Chord Index",
     "",
     "- [Coverage Dashboard](./coverage.md)",
+    "- [Privacy Notice](./privacy.md)",
     "",
     sections.join("\n\n"),
+    "",
+  ].join("\n");
+}
+
+export function privacyNoticeMarkdown(): string {
+  return [
+    "# Privacy Notice",
+    "",
+    "This project publishes a static reference site for guitar chord data.",
+    "",
+    "## What This Site Does",
+    "",
+    "- Serves generated HTML, Markdown, and SVG chord diagrams.",
+    "- Does not provide user accounts, forms, or in-site messaging.",
+    "",
+    "## Data Collection in Generated Output",
+    "",
+    "- The generated site does not intentionally collect personal data.",
+    "- The generated site does not set first-party analytics cookies by default.",
+    "",
+    "## Hosting and Infrastructure Logs",
+    "",
+    "When this site is hosted (for example on GitHub Pages), the hosting provider may keep standard request logs under its own policies.",
+    "",
+    "## Contact",
+    "",
+    "For repository-level questions, use the project issue tracker.",
     "",
   ].join("\n");
 }
