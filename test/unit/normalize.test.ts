@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { AliasCollisionError, detectAliasCollisions, derivePosition, normalizeQuality, normalizeRecords } from "../../src/ingest/normalize/normalize.js";
+import {
+  AliasCollisionError,
+  DUPLICATE_VOICING_SOURCE_REF_NOTE,
+  detectAliasCollisions,
+  derivePosition,
+  normalizeQuality,
+  normalizeRecords,
+} from "../../src/ingest/normalize/normalize.js";
 import type { ChordQuality, ChordRecord, RawChordRecord } from "../../src/types/model.js";
 
 describe("normalizeQuality", () => {
@@ -222,6 +229,65 @@ describe("normalizeRecords", () => {
     expect(normalized[0]?.voicings.map((voicing) => voicing.id)).toEqual([
       "chord:C:maj:v1:source-a",
       "chord:C:maj:v2:source-b",
+    ]);
+  });
+
+  it("deduplicates equivalent voicings across sources and merges voicing provenance", () => {
+    const raw: RawChordRecord[] = [
+      {
+        source: "source-a",
+        url: "https://example.com/c-major-a",
+        symbol: "C",
+        root: "C",
+        quality_raw: "major",
+        aliases: ["C"],
+        formula: ["1", "3", "5"],
+        pitch_classes: ["C", "E", "G"],
+        voicings: [
+          {
+            id: "a-1",
+            frets: [null, 3, 2, 0, 1, 0],
+            fingers: [null, 3, 2, 0, 1, 0],
+            base_fret: 1,
+            source_refs: [{ source: "source-a", url: "https://example.com/c-major-a" }],
+          },
+        ],
+      },
+      {
+        source: "source-b",
+        url: "https://example.com/c-major-b",
+        symbol: "C",
+        root: "C",
+        quality_raw: "major",
+        aliases: ["CM"],
+        formula: ["1", "3", "5"],
+        pitch_classes: ["C", "E", "G"],
+        voicings: [
+          {
+            id: "b-1",
+            frets: [null, 3, 2, 0, 1, 0],
+            fingers: [null, 3, 2, 0, 1, 0],
+            base_fret: 1,
+            source_refs: [{ source: "source-b", url: "https://example.com/c-major-b" }],
+          },
+        ],
+      },
+    ];
+
+    const normalized = normalizeRecords(raw);
+    expect(normalized).toHaveLength(1);
+    expect(normalized[0]?.voicings).toHaveLength(1);
+    expect(normalized[0]?.voicings[0]?.id).toBe("chord:C:maj:v1:source-a");
+    expect(normalized[0]?.voicings[0]?.source_refs).toEqual([
+      {
+        source: "source-a",
+        url: "https://example.com/c-major-a",
+      },
+      {
+        source: "source-b",
+        url: "https://example.com/c-major-b",
+        note: DUPLICATE_VOICING_SOURCE_REF_NOTE,
+      },
     ]);
   });
 

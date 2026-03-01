@@ -148,7 +148,7 @@ describe("pipeline idempotency across refresh modes", () => {
 
     const cMajor = runA.find((record) => record.id === "chord:C:maj");
     expect(cMajor, "Expected normalized C major record").toBeDefined();
-    expect(cMajor?.voicings).toHaveLength(10);
+    expect(cMajor?.voicings).toHaveLength(5);
   });
 
   it("refresh=true with same HTML produces identical records as refresh=false", async () => {
