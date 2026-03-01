@@ -13,6 +13,7 @@ import os from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { chordIndexMarkdown, chordMarkdown } from "../../src/build/docs/generateDocs.js";
+import { voicingDiagramRelativePath } from "../../src/build/docs/paths.js";
 import { writeChordJsonl } from "../../src/build/output/writeJsonl.js";
 import { generateChordSvg } from "../../src/build/svg/generateSvg.js";
 import { ingestNormalizedChords } from "../../src/ingest/pipeline.js";
@@ -34,9 +35,8 @@ async function buildArtifacts(chords: ChordRecord[], outDir: string): Promise<vo
     const slug = chord.id.replace(/:/g, "__").replace(/#/g, "%23");
     await writeText(path.join(docsDir, `${slug}.md`), chordMarkdown(chord, chords));
     for (const voicing of chord.voicings) {
-      const voicingSlug = voicing.id.replace(/:/g, "__").replace(/#/g, "%23");
       await writeText(
-        path.join(diagramsDir, `${voicingSlug}.svg`),
+        path.join(diagramsDir, voicingDiagramRelativePath(voicing.id)),
         generateChordSvg(voicing, chord.tuning),
       );
     }

@@ -1,4 +1,4 @@
-import { voicingDiagramFileName, encodeIdForPathSegment } from "../docs/paths.js";
+import { voicingDiagramRelativePath, encodeIdForPathSegment } from "../docs/paths.js";
 import type { ChordRecord } from "../../types/model.js";
 import { compareChordOrder } from "../../utils/sort.js";
 
@@ -24,7 +24,7 @@ function chordHrefFromChordPage(chordId: string): string {
 }
 
 function diagramHref(voicingId: string): string {
-  return `../diagrams/${voicingDiagramFileName(voicingId)}`;
+  return `../diagrams/${voicingDiagramRelativePath(voicingId)}`;
 }
 
 function privacyHrefFromIndex(): string {

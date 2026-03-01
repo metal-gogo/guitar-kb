@@ -2,7 +2,7 @@ import { mkdir, readFile, rm } from "node:fs/promises";
 import path from "node:path";
 import { chordIndexMarkdown, chordMarkdown, licenseMarkdown, privacyNoticeMarkdown } from "../build/docs/generateDocs.js";
 import { coverageDashboardMarkdown } from "../build/docs/generateCoverage.js";
-import { chordDocFileName, voicingDiagramFileName } from "../build/docs/paths.js";
+import { chordDocFileName, docsVoicingDiagramPath, siteVoicingDiagramPath } from "../build/docs/paths.js";
 import { buildDocsSitemap } from "../build/docs/generateSitemap.js";
 import { writeChordJsonl } from "../build/output/writeJsonl.js";
 import {
@@ -146,15 +146,12 @@ async function main(): Promise<void> {
     );
     for (const voicing of chord.voicings) {
       const svg = generateChordSvg(voicing, chord.tuning);
-      const diagramName = voicingDiagramFileName(voicing.id);
-      await writeText(
-        path.join("docs", "diagrams", diagramName),
-        svg,
-      );
-      await writeText(
-        path.join("site", "diagrams", diagramName),
-        svg,
-      );
+      const docsDiagramPath = docsVoicingDiagramPath(voicing.id);
+      const siteDiagramPath = siteVoicingDiagramPath(voicing.id);
+      await mkdir(path.dirname(docsDiagramPath), { recursive: true });
+      await writeText(docsDiagramPath, svg);
+      await mkdir(path.dirname(siteDiagramPath), { recursive: true });
+      await writeText(siteDiagramPath, svg);
     }
   }
 

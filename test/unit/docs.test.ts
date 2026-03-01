@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import path from "node:path";
 import { chordIndexMarkdown, chordMarkdown, licenseMarkdown, privacyNoticeMarkdown } from "../../src/build/docs/generateDocs.js";
+import { voicingDiagramRelativePath } from "../../src/build/docs/paths.js";
 import { coverageDashboardMarkdown } from "../../src/build/docs/generateCoverage.js";
 import { siteChordFileName, siteChordHtml, siteIndexHtml, siteLicenseHtml, sitePrivacyHtml } from "../../src/build/site/generateSite.js";
 import { buildRootQualityCoverageReport } from "../../src/validate/coverage.js";
@@ -137,8 +138,8 @@ describe("chordMarkdown", () => {
           { id: "chord:C:maj:v1", frets: [null, 3, 2, 0, 1, 0], base_fret: 1 },
         ],
       });
-      expect(md).toContain("diagram: ../diagrams/chord__C__maj__v1.svg");
-      expect(md).toContain("diagram: ../diagrams/chord__C__maj__v2.svg");
+      expect(md).toContain("diagram: ../diagrams/C/maj/v1.svg");
+      expect(md).toContain("diagram: ../diagrams/C/maj/v2.svg");
     });
 
     it("renders voicings in stable id order", () => {
@@ -456,7 +457,7 @@ describe("site generation", () => {
 
     const html = siteChordHtml(cSharp, [cSharp, dFlat, cMin]);
 
-    expect(html).toContain("src=\"../diagrams/chord__C__maj__v1.svg\"");
+    expect(html).toContain("src=\"../diagrams/C/maj/v1.svg\"");
     expect(html).toContain("href=\"./chord__Db__maj.html\"");
     expect(html).toContain("href=\"./chord__C%23__min.html\"");
     expect(html).toContain("href=\"https://example.com/c-sharp-major\"");
@@ -486,7 +487,7 @@ describe("site generation", () => {
       "./license.html",
       "./assets/site.css",
       ...chords.map((chord) => `./chords/${siteChordFileName(chord.id)}`),
-      ...chords.flatMap((chord) => chord.voicings.map((voicing) => `./diagrams/${voicing.id.replace(/:/g, "__").replace(/#/g, "%23")}.svg`)),
+      ...chords.flatMap((chord) => chord.voicings.map((voicing) => `./diagrams/${voicingDiagramRelativePath(voicing.id)}`)),
     ]);
 
     for (const [pathName, html] of pages.entries()) {

@@ -7,7 +7,36 @@ export function chordDocFileName(chordId: string): string {
 }
 
 export function voicingDiagramFileName(voicingId: string): string {
-  return `${encodeIdForPathSegment(voicingId)}.svg`;
+  const { voicing } = parseVoicingId(voicingId);
+  return `${encodeIdForPathSegment(voicing)}.svg`;
+}
+
+interface ParsedVoicingId {
+  root: string;
+  quality: string;
+  voicing: string;
+}
+
+function parseVoicingId(voicingId: string): ParsedVoicingId {
+  const parts = voicingId.split(":");
+  if (parts[0] === "chord" && parts.length >= 4) {
+    return {
+      root: parts[1] ?? "_legacy",
+      quality: parts[2] ?? "_legacy",
+      voicing: parts[3] ?? encodeIdForPathSegment(voicingId),
+    };
+  }
+
+  return {
+    root: "_legacy",
+    quality: "_legacy",
+    voicing: voicingId,
+  };
+}
+
+export function voicingDiagramRelativePath(voicingId: string): string {
+  const { root, quality, voicing } = parseVoicingId(voicingId);
+  return `${encodeIdForPathSegment(root)}/${encodeIdForPathSegment(quality)}/${encodeIdForPathSegment(voicing)}.svg`;
 }
 
 export function relativeChordPagePath(chordId: string): string {
@@ -19,7 +48,7 @@ export function relativeChordIndexPath(chordId: string): string {
 }
 
 export function relativeVoicingDiagramPath(voicingId: string): string {
-  return `../diagrams/${voicingDiagramFileName(voicingId)}`;
+  return `../diagrams/${voicingDiagramRelativePath(voicingId)}`;
 }
 
 export function docsChordPath(chordId: string): string {
@@ -27,5 +56,9 @@ export function docsChordPath(chordId: string): string {
 }
 
 export function docsVoicingDiagramPath(voicingId: string): string {
-  return `docs/diagrams/${voicingDiagramFileName(voicingId)}`;
+  return `docs/diagrams/${voicingDiagramRelativePath(voicingId)}`;
+}
+
+export function siteVoicingDiagramPath(voicingId: string): string {
+  return `site/diagrams/${voicingDiagramRelativePath(voicingId)}`;
 }
