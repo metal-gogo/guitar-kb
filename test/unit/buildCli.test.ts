@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { cacheFailureMessage, filterBuildChords, shouldEnforceCacheCompletenessPolicy } from "../../src/cli/build.js";
+import {
+  cacheFailureMessage,
+  filterBuildChords,
+  shouldEnforceCacheCompletenessPolicy,
+  shouldWriteCacheManifest,
+} from "../../src/cli/build.js";
 import type { ChordRecord } from "../../src/types/model.js";
 
 function chord(overrides: Partial<ChordRecord>): ChordRecord {
@@ -50,6 +55,13 @@ describe("filterBuildChords", () => {
     expect(shouldEnforceCacheCompletenessPolicy({ dryRun: false })).toBe(true);
     expect(shouldEnforceCacheCompletenessPolicy({ dryRun: false, chord: "chord:C:maj" })).toBe(false);
     expect(shouldEnforceCacheCompletenessPolicy({ dryRun: false, source: "guitar-chord-org" })).toBe(false);
+  });
+
+  it("writes cache manifest only for non-dry full builds", () => {
+    expect(shouldWriteCacheManifest({ dryRun: false })).toBe(true);
+    expect(shouldWriteCacheManifest({ dryRun: true })).toBe(false);
+    expect(shouldWriteCacheManifest({ dryRun: false, chord: "chord:C:maj" })).toBe(false);
+    expect(shouldWriteCacheManifest({ dryRun: false, source: "guitar-chord-org" })).toBe(false);
   });
 
   it("formats deterministic cache policy failure messages with remediation guidance", () => {
