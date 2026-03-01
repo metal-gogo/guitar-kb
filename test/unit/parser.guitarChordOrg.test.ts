@@ -22,6 +22,14 @@ const URL_BY_SLUG = {
   "c-minor": "https://www.guitar-chord.org/c-min.html",
   c7: "https://www.guitar-chord.org/c-7.html",
   cmaj7: "https://www.guitar-chord.org/c-maj7.html",
+  "c-min7": "https://www.guitar-chord.org/c-min7.html",
+  "c-dim": "https://www.guitar-chord.org/c-dim.html",
+  "c-dim7": "https://www.guitar-chord.org/c-dim7.html",
+  "c-aug": "https://www.guitar-chord.org/c-aug.html",
+  "c-sus2": "https://www.guitar-chord.org/c-sus2.html",
+  "c-sus4": "https://www.guitar-chord.org/c-sus4.html",
+  "c-min7-many-voicings": "https://www.guitar-chord.org/c-min7-many-voicings.html",
+  "c-min7-partial-voicing-attrs": "https://www.guitar-chord.org/c-min7-partial-voicing-attrs.html",
 } as const;
 
 type MvpSlug = keyof typeof URL_BY_SLUG;
@@ -183,6 +191,77 @@ describe("parseGuitarChordOrg", () => {
           expect(firstVoicing?.fingers).toEqual([0, 3, 2, 0, 1, 0]);
         }
       }
+    });
+
+    it("extracts factual extended-quality chord data from fixtures", () => {
+      const cases = [
+        {
+          slug: "c-min7",
+          qualityRaw: "min7",
+          formula: ["1", "b3", "5", "b7"],
+          pitchClasses: ["C", "Eb", "G", "Bb"],
+        },
+        {
+          slug: "c-dim",
+          qualityRaw: "dim",
+          formula: ["1", "b3", "b5"],
+          pitchClasses: ["C", "Eb", "Gb"],
+        },
+        {
+          slug: "c-dim7",
+          qualityRaw: "dim7",
+          formula: ["1", "b3", "b5", "bb7"],
+          pitchClasses: ["C", "Eb", "Gb", "A"],
+        },
+        {
+          slug: "c-aug",
+          qualityRaw: "aug",
+          formula: ["1", "3", "#5"],
+          pitchClasses: ["C", "E", "G#"],
+        },
+        {
+          slug: "c-sus2",
+          qualityRaw: "sus2",
+          formula: ["1", "2", "5"],
+          pitchClasses: ["C", "D", "G"],
+        },
+        {
+          slug: "c-sus4",
+          qualityRaw: "sus4",
+          formula: ["1", "4", "5"],
+          pitchClasses: ["C", "F", "G"],
+        },
+      ] as const;
+
+      for (const testCase of cases) {
+        const url = URL_BY_SLUG[testCase.slug];
+        const html = readFixture(testCase.slug);
+        const parsed = parseGuitarChordOrg(html, url);
+
+        expect(parsed.root).toBe("C");
+        expect(parsed.quality_raw).toBe(testCase.qualityRaw);
+        expect(parsed.formula).toEqual(testCase.formula);
+        expect(parsed.pitch_classes).toEqual(testCase.pitchClasses);
+        expect(parsed.voicings).toHaveLength(3);
+        expect(parsed.parser_confidence?.level).toBe("high");
+      }
+    });
+
+    it("keeps extended-quality high-variation fixture voicings untruncated", () => {
+      const url = URL_BY_SLUG["c-min7-many-voicings"];
+      const html = readFixture("c-min7-many-voicings");
+      const parsed = parseGuitarChordOrg(html, url);
+
+      expect(parsed.quality_raw).toBe("min7");
+      expect(parsed.voicings).toHaveLength(5);
+      expect(parsed.voicings.map((voicing) => voicing.id)).toEqual([
+        "shape-1",
+        "shape-3",
+        "shape-5",
+        "shape-8",
+        "shape-10",
+      ]);
+      expect(parsed.parser_confidence?.checks).toContain("all_voicings_complete");
     });
 
     it("extracts A major voicing frets and base-fret values in source order", () => {
@@ -458,6 +537,20 @@ describe("parseGuitarChordOrg", () => {
       expect(full.base_fret).toBe(2);
       expect(full.frets).toEqual([null, 1, 2, 3, null, null]);
       expect(full.fingers).toEqual([0, 1, 2, 3, 0, 0]);
+      expect(parsed.parser_confidence?.level).toBe("medium");
+      expect(parsed.parser_confidence?.checks).not.toContain("all_voicings_complete");
+    });
+
+    it("handles partial voicing attributes on extended-quality fixtures", () => {
+      const html = readFixture("c-min7-partial-voicing-attrs");
+      const parsed = parseGuitarChordOrg(html, URL_BY_SLUG["c-min7-partial-voicing-attrs"]);
+
+      expect(parsed.quality_raw).toBe("min7");
+      expect(parsed.voicings).toHaveLength(2);
+      expect(parsed.voicings[0]?.id).toBe("sparse");
+      expect(parsed.voicings[0]?.frets).toEqual([null, null, null, null, null, null]);
+      expect(parsed.voicings[1]?.id).toBe("full");
+      expect(parsed.voicings[1]?.frets).toEqual([null, 3, 5, 3, 4, 3]);
       expect(parsed.parser_confidence?.level).toBe("medium");
       expect(parsed.parser_confidence?.checks).not.toContain("all_voicings_complete");
     });
