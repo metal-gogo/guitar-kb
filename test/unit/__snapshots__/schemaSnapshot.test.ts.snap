@@ -69,7 +69,7 @@ exports[`schema snapshot contracts > representative chord records match stored s
         1,
         0,
       ],
-      "id": "chord:C:maj:v1:all-guitar-chords",
+      "id": "chord:C:maj:v1",
       "position": "open",
       "source_refs": [
         {
@@ -101,7 +101,7 @@ exports[`schema snapshot contracts > representative chord records match stored s
         3,
         3,
       ],
-      "id": "chord:C:maj:v2:all-guitar-chords",
+      "id": "chord:C:maj:v2",
       "position": "unknown",
       "source_refs": [
         {
@@ -133,7 +133,7 @@ exports[`schema snapshot contracts > representative chord records match stored s
         3,
         3,
       ],
-      "id": "chord:C:maj:v3:all-guitar-chords",
+      "id": "chord:C:maj:v3",
       "position": "unknown",
       "source_refs": [
         {
@@ -204,38 +204,6 @@ exports[`schema snapshot contracts > representative chord records match stored s
     {
       "base_fret": 3,
       "fingers": [
-        0,
-        1,
-        3,
-        4,
-        2,
-        1,
-      ],
-      "frets": [
-        null,
-        3,
-        5,
-        5,
-        4,
-        3,
-      ],
-      "id": "chord:C:min:v1:all-guitar-chords",
-      "position": "unknown",
-      "source_refs": [
-        {
-          "source": "all-guitar-chords",
-          "url": "https://www.all-guitar-chords.com/chords/index/c/minor",
-        },
-        {
-          "note": "duplicate-voicing",
-          "source": "guitar-chord-org",
-          "url": "https://www.guitar-chord.org/c-min.html",
-        },
-      ],
-    },
-    {
-      "base_fret": 3,
-      "fingers": [
         1,
         3,
         4,
@@ -251,7 +219,7 @@ exports[`schema snapshot contracts > representative chord records match stored s
         3,
         3,
       ],
-      "id": "chord:C:min:v2:all-guitar-chords",
+      "id": "chord:C:min:v1",
       "position": "barre",
       "source_refs": [
         {
@@ -269,6 +237,38 @@ exports[`schema snapshot contracts > representative chord records match stored s
       "base_fret": 3,
       "fingers": [
         0,
+        1,
+        3,
+        4,
+        2,
+        1,
+      ],
+      "frets": [
+        null,
+        3,
+        5,
+        5,
+        4,
+        3,
+      ],
+      "id": "chord:C:min:v2",
+      "position": "unknown",
+      "source_refs": [
+        {
+          "source": "all-guitar-chords",
+          "url": "https://www.all-guitar-chords.com/chords/index/c/minor",
+        },
+        {
+          "note": "duplicate-voicing",
+          "source": "guitar-chord-org",
+          "url": "https://www.guitar-chord.org/c-min.html",
+        },
+      ],
+    },
+    {
+      "base_fret": 3,
+      "fingers": [
+        0,
         0,
         3,
         4,
@@ -283,7 +283,7 @@ exports[`schema snapshot contracts > representative chord records match stored s
         4,
         3,
       ],
-      "id": "chord:C:min:v3:all-guitar-chords",
+      "id": "chord:C:min:v3",
       "position": "unknown",
       "source_refs": [
         {
@@ -370,7 +370,7 @@ exports[`schema snapshot contracts > representative chord records match stored s
         1,
         0,
       ],
-      "id": "chord:C:7:v1:all-guitar-chords",
+      "id": "chord:C:7:v1",
       "position": "open",
       "source_refs": [
         {
@@ -402,7 +402,7 @@ exports[`schema snapshot contracts > representative chord records match stored s
         3,
         3,
       ],
-      "id": "chord:C:7:v2:all-guitar-chords",
+      "id": "chord:C:7:v2",
       "position": "barre",
       "source_refs": [
         {
@@ -434,7 +434,7 @@ exports[`schema snapshot contracts > representative chord records match stored s
         3,
         3,
       ],
-      "id": "chord:C:7:v3:all-guitar-chords",
+      "id": "chord:C:7:v3",
       "position": "unknown",
       "source_refs": [
         {
@@ -521,7 +521,7 @@ exports[`schema snapshot contracts > representative chord records match stored s
         0,
         0,
       ],
-      "id": "chord:C:maj7:v1:all-guitar-chords",
+      "id": "chord:C:maj7:v1",
       "position": "open",
       "source_refs": [
         {
@@ -553,7 +553,7 @@ exports[`schema snapshot contracts > representative chord records match stored s
         3,
         3,
       ],
-      "id": "chord:C:maj7:v2:all-guitar-chords",
+      "id": "chord:C:maj7:v2",
       "position": "unknown",
       "source_refs": [
         {
@@ -585,7 +585,7 @@ exports[`schema snapshot contracts > representative chord records match stored s
         5,
         3,
       ],
-      "id": "chord:C:maj7:v3:all-guitar-chords",
+      "id": "chord:C:maj7:v3",
       "position": "unknown",
       "source_refs": [
         {
