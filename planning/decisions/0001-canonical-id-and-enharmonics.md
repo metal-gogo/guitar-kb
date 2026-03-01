@@ -1,6 +1,6 @@
 # ADR-0001: Canonical Chord IDs & Enharmonic Policy
 
-**Status:** Accepted\
+**Status:** Accepted (root-spelling section superseded by ADR-0007)\
 **Date:** 2026-02-21\
 **Owner:** Guitar Chord Knowledge Base (GCKB)
 
@@ -48,21 +48,25 @@ Examples:
     chord:C:min
     chord:C:7
     chord:C:maj7
-    chord:F#:dim
+    chord:Gb:dim
     chord:Db:maj7
 
 Rules:
 
 -   Prefix `chord:` is required
--   `<ROOT>` preserves musical spelling (C, C#, Db, etc.)
+-   `<ROOT>` uses the canonical root set/order from ADR-0007
 -   `<QUALITY>` is normalized (see Section 3)
 -   Lowercase for quality
 -   No spaces
 -   No special symbols in the canonical ID
+-   Source/preferred display spellings remain in aliases and provenance
 
 ------------------------------------------------------------------------
 
 ### 2. Root Spelling Policy
+
+> Superseded by ADR-0007 (`planning/decisions/0007-flat-baseline-canonical-root-policy.md`).
+> Keep this section for historical context only.
 
 We allow both sharp and flat roots as canonical.
 
@@ -163,9 +167,9 @@ Rules:
 
 Chord records must be sorted:
 
-1.  By root in musical order:
+1.  By canonical root order from ADR-0007:
 
-    C, C#, Db, D, D#, Eb, E, F, F#, Gb, G, G#, Ab, A, A#, Bb, B
+    C, Db, D, Eb, E, F, Gb, G, Ab, A, Bb, B
 
 2.  Then by quality in fixed internal order:
 

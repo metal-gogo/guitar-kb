@@ -23,7 +23,9 @@ End-to-end pipeline:
 
 - Source target config in `src/config.ts` (`MVP_TARGETS`)
 - Cached source HTML in `data/sources/<source>/<slug>.html`
-- Normalization and canonical ID policy in `planning/decisions/0001-canonical-id-and-enharmonics.md`
+- Canonical ID and normalization policy in `planning/decisions/0001-canonical-id-and-enharmonics.md`
+- Flat-baseline canonical root policy in `planning/decisions/0007-flat-baseline-canonical-root-policy.md`
+- Contributor reference for root mapping in `docs/contributing/root-spelling-policy.md`
 - Schema constraints in `chords.schema.json`
 
 ### Generated artifacts
