@@ -318,6 +318,16 @@ CI artifacts include:
 - `flaky-test-summary`
 - `docs-changelog-snapshot`
 - `coverage-report` (`data/coverage-report.json` from `npm run validate`)
+- `site-bundle` (deterministic `site.tar` archive with static website output)
+
+Website publishing workflow:
+
+- PRs: CI runs dedicated `website` job (`build` + `check-links`) and uploads
+  `site-bundle` for preview/debug.
+- `main` pushes: CI uploads `site/` to GitHub Pages and deploys to:
+  `https://metal-gogo.github.io/guitar-kb/`
+- Publish always runs after the full build/test gate because `website` depends
+  on successful `build` job completion.
 
 ## Troubleshooting
 
