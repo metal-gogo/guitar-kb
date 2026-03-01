@@ -9,6 +9,9 @@ import type {
 import { assertCanonicalChordId } from "../../types/guards.js";
 import { compareChordOrder } from "../../utils/sort.js";
 
+export const DUPLICATE_VOICING_SOURCE_REF_NOTE = "duplicate-voicing";
+const STANDARD_TUNING = ["E", "A", "D", "G", "B", "E"] as const;
+
 /** Thrown when two distinct chords share the same alias. */
 export class AliasCollisionError extends Error {
   readonly collisions: ReadonlyArray<{ alias: string; chordIds: string[] }>;
@@ -321,6 +324,111 @@ function mergeParserConfidence(
   return next;
 }
 
+function compareSourceRef(a: SourceRef, b: SourceRef): number {
+  const hasNoteA = a.note !== undefined;
+  const hasNoteB = b.note !== undefined;
+  if (hasNoteA !== hasNoteB) {
+    return hasNoteA ? 1 : -1;
+  }
+
+  if (a.source < b.source) {
+    return -1;
+  }
+  if (a.source > b.source) {
+    return 1;
+  }
+  if (a.url < b.url) {
+    return -1;
+  }
+  if (a.url > b.url) {
+    return 1;
+  }
+  const noteA = a.note ?? "";
+  const noteB = b.note ?? "";
+  if (noteA < noteB) {
+    return -1;
+  }
+  if (noteA > noteB) {
+    return 1;
+  }
+  return 0;
+}
+
+function normalizeSourceRefs(sourceRefs: SourceRef[] | undefined, fallback: SourceRef): SourceRef[] {
+  const refs = sourceRefs && sourceRefs.length > 0 ? sourceRefs : [fallback];
+  const unique = new Map<string, SourceRef>();
+  for (const ref of refs) {
+    const normalized: SourceRef = { source: ref.source, url: ref.url, ...(ref.note ? { note: ref.note } : {}) };
+    unique.set(`${normalized.source}::${normalized.url}::${normalized.note ?? ""}`, normalized);
+  }
+  return [...unique.values()].sort(compareSourceRef);
+}
+
+function mergeSourceRefs(existing: SourceRef[] | undefined, incoming: SourceRef[]): SourceRef[] {
+  const unique = new Map<string, SourceRef>();
+  for (const ref of [...(existing ?? []), ...incoming]) {
+    unique.set(`${ref.source}::${ref.url}::${ref.note ?? ""}`, ref);
+  }
+  return [...unique.values()].sort(compareSourceRef);
+}
+
+function asVoicingToken(value: number | null | undefined): string {
+  if (value === null || value === undefined) {
+    return "x";
+  }
+  return String(value);
+}
+
+function voicingFingerprint(
+  voicing: { frets: Array<number | null>; fingers?: Array<number | null>; base_fret: number },
+  tuning: ReadonlyArray<string>,
+): string {
+  const frets = voicing.frets.map((fret) => asVoicingToken(fret)).join(",");
+  const fingers = voicing.fingers
+    ? voicing.fingers.map((finger) => asVoicingToken(finger)).join(",")
+    : "none";
+  return `base=${voicing.base_fret}|frets=${frets}|fingers=${fingers}|tuning=${tuning.join(",")}`;
+}
+
+function appendNormalizedVoicings(
+  record: ChordRecord,
+  rawVoicings: RawChordRecord["voicings"],
+  source: string,
+  fallbackSourceRef: SourceRef,
+): void {
+  const byFingerprint = new Map<string, number>();
+  for (let index = 0; index < record.voicings.length; index += 1) {
+    const existing = record.voicings[index]!;
+    byFingerprint.set(voicingFingerprint(existing, record.tuning ?? STANDARD_TUNING), index);
+  }
+
+  for (const voicing of rawVoicings) {
+    const fingerprint = voicingFingerprint(voicing, record.tuning ?? STANDARD_TUNING);
+    const normalizedSourceRefs = normalizeSourceRefs(voicing.source_refs, fallbackSourceRef);
+    const existingIndex = byFingerprint.get(fingerprint);
+
+    if (existingIndex !== undefined) {
+      const existingVoicing = record.voicings[existingIndex]!;
+      const duplicateRefs = normalizedSourceRefs.map((ref) => (
+        ref.note
+          ? ref
+          : { ...ref, note: DUPLICATE_VOICING_SOURCE_REF_NOTE }
+      ));
+      existingVoicing.source_refs = mergeSourceRefs(existingVoicing.source_refs, duplicateRefs);
+      continue;
+    }
+
+    const nextId = `${record.id}:v${record.voicings.length + 1}:${source}`;
+    record.voicings.push({
+      ...voicing,
+      id: nextId,
+      position: derivePosition(voicing.frets),
+      source_refs: normalizedSourceRefs,
+    });
+    byFingerprint.set(fingerprint, record.voicings.length - 1);
+  }
+}
+
 export function normalizeRecords(raw: RawChordRecord[], options: NormalizeRecordsOptions = {}): ChordRecord[] {
   const merged = new Map<string, ChordRecord>();
   const includeParserConfidence = options.includeParserConfidence ?? false;
@@ -357,27 +465,23 @@ export function normalizeRecords(raw: RawChordRecord[], options: NormalizeRecord
         enharmonic_equivalents: enharmonic,
         formula,
         pitch_classes: pitchClasses,
-        tuning: ["E", "A", "D", "G", "B", "E"],
-        voicings: input.voicings.map((voicing, index) => ({
-          ...voicing,
-          id: `${id}:v${index + 1}:${input.source}`,
-          position: derivePosition(voicing.frets)
-        })),
+        tuning: [...STANDARD_TUNING],
+        voicings: [],
         notes: {
           summary: `${input.root} ${quality} chord with formula ${formula.join("-")}.`
         },
         ...(parserConfidence ? { parser_confidence: parserConfidence } : {}),
         source_refs: [sourceRef]
       });
+      const created = merged.get(id);
+      if (created) {
+        appendNormalizedVoicings(created, input.voicings, input.source, sourceRef);
+      }
       continue;
     }
 
     existing.aliases = normalizeStringArray([...(existing.aliases ?? []), ...aliases]);
-    existing.voicings.push(...input.voicings.map((voicing, index) => ({
-      ...voicing,
-      id: `${id}:v${existing.voicings.length + index + 1}:${input.source}`,
-      position: derivePosition(voicing.frets)
-    })));
+    appendNormalizedVoicings(existing, input.voicings, input.source, sourceRef);
     existing.source_refs.push(sourceRef);
     existing.voicings.sort((a, b) => a.id.localeCompare(b.id));
     if (includeParserConfidence) {
