@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { PROJECT_USER_AGENT } from "../../src/config.js";
 import type { RetryLogEvent } from "../../src/ingest/fetch/cache.js";
 import { getCachedHtml } from "../../src/ingest/fetch/cache.js";
+import { buildFixtureCacheParityReport } from "../../src/ingest/fixtureCacheParity.js";
 
 describe("getCachedHtml", () => {
   const originalCwd = process.cwd();
@@ -306,5 +307,80 @@ describe("retry telemetry", () => {
     const keys = Object.keys(events[0]!);
     // All expected fields present, in declaration order
     expect(keys).toEqual(["type", "source", "url", "attempt", "maxAttempts", "delayMs", "error"]);
+  });
+});
+
+describe("fixture/cache parity", () => {
+  let tempDir = "";
+
+  afterEach(async () => {
+    if (tempDir) {
+      await rm(tempDir, { recursive: true, force: true });
+      tempDir = "";
+    }
+  });
+
+  it("reports clean parity for expected targets, cache files, and fixtures", async () => {
+    const report = await buildFixtureCacheParityReport();
+
+    expect(report.ok).toBe(true);
+    expect(report.sources).toHaveLength(2);
+    expect(report.sources.every((source) =>
+      source.missingCacheSlugs.length === 0 &&
+      source.extraCacheSlugs.length === 0 &&
+      source.missingFixtureSlugs.length === 0 &&
+      source.extraFixtureSlugs.length === 0 &&
+      source.missingCacheForFixtureSlugs.length === 0
+    )).toBe(true);
+  });
+
+  it("emits deterministic missing/extra diagnostics for drifted directories", async () => {
+    tempDir = await mkdtemp(path.join(os.tmpdir(), "gckb-fixture-cache-parity-"));
+
+    const cacheBase = path.join(tempDir, "data", "sources");
+    const fixtureBase = path.join(tempDir, "test", "fixtures", "sources");
+    await mkdir(path.join(cacheBase, "guitar-chord-org"), { recursive: true });
+    await mkdir(path.join(cacheBase, "all-guitar-chords"), { recursive: true });
+    await mkdir(path.join(fixtureBase, "guitar-chord-org"), { recursive: true });
+    await mkdir(path.join(fixtureBase, "all-guitar-chords"), { recursive: true });
+
+    await writeFile(path.join(cacheBase, "guitar-chord-org", "c-major.html"), "<html>ok</html>", "utf8");
+    await writeFile(path.join(cacheBase, "guitar-chord-org", "z-extra.html"), "<html>ok</html>", "utf8");
+    await writeFile(path.join(cacheBase, "all-guitar-chords", "c-major.html"), "<html>ok</html>", "utf8");
+
+    await writeFile(path.join(fixtureBase, "guitar-chord-org", "c-major.html"), "<html>fixture</html>", "utf8");
+    await writeFile(path.join(fixtureBase, "guitar-chord-org", "z-fixture-extra.html"), "<html>fixture</html>", "utf8");
+    await writeFile(path.join(fixtureBase, "all-guitar-chords", "c-major.html"), "<html>fixture</html>", "utf8");
+
+    const report = await buildFixtureCacheParityReport({ cacheBase, fixtureBase });
+
+    expect(report.ok).toBe(false);
+    const compact = report.sources.map((source) => ({
+      source: source.source,
+      missingCacheSlugs: source.missingCacheSlugs.slice(0, 5),
+      extraCacheSlugs: source.extraCacheSlugs,
+      missingFixtureSlugs: source.missingFixtureSlugs.slice(0, 5),
+      extraFixtureSlugs: source.extraFixtureSlugs,
+      missingCacheForFixtureSlugs: source.missingCacheForFixtureSlugs.slice(0, 5),
+    }));
+
+    expect(compact).toEqual([
+      {
+        source: "guitar-chord-org",
+        missingCacheSlugs: ["a-7", "a-flat-7", "a-flat-maj7", "a-flat-major", "a-flat-minor"],
+        extraCacheSlugs: ["z-extra"],
+        missingFixtureSlugs: ["a-major", "a-sharp-major", "b-major", "c7", "c-aug"],
+        extraFixtureSlugs: ["z-fixture-extra"],
+        missingCacheForFixtureSlugs: ["a-major", "a-sharp-major", "b-major", "c-7", "c-maj7"],
+      },
+      {
+        source: "all-guitar-chords",
+        missingCacheSlugs: ["a-7", "a-flat-7", "a-flat-maj7", "a-flat-major", "a-flat-minor"],
+        extraCacheSlugs: [],
+        missingFixtureSlugs: ["a-major", "a-sharp-major", "b-major", "c7", "c-aug"],
+        extraFixtureSlugs: [],
+        missingCacheForFixtureSlugs: ["a-major", "a-sharp-major", "b-major", "c-7", "c-maj7"],
+      },
+    ]);
   });
 });
