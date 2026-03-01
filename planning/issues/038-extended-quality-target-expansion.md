@@ -2,7 +2,7 @@
 
 ## Triage Labels
 
-- `status/backlog`
+- `status/in-progress`
 - `priority/p0`
 - `area/ingest`
 
@@ -26,10 +26,10 @@ the full defined quality set (`maj`, `min`, `7`, `maj7`, `min7`, `dim`,
 
 ## Acceptance Criteria
 
-- [ ] Ingest target generation includes all defined qualities with correct URLs/slugs.
-- [ ] Existing core targets remain byte-stable (no regressions in current URLs).
-- [ ] `npm run ingest -- --dry-run` lists extended-quality targets deterministically.
-- [ ] `npm test -- test/unit/pipeline.test.ts test/unit/sourceRegistry.test.ts` exits `0`.
+- [x] Ingest target generation includes all defined qualities with correct URLs/slugs.
+- [x] Existing core targets remain byte-stable (no regressions in current URLs).
+- [x] `npm run ingest -- --dry-run` lists extended-quality targets deterministically.
+- [x] `npm test -- test/unit/pipeline.test.ts test/unit/sourceRegistry.test.ts` exits `0`.
 - [ ] All Copilot inline review comments addressed
 - [ ] `require-copilot-review` CI check green before merge
 
@@ -43,3 +43,8 @@ npm test -- test/unit/pipeline.test.ts test/unit/sourceRegistry.test.ts
 Expected outcome:
 - Both commands exit `0`.
 - Dry-run output includes extended-quality chord IDs in deterministic order.
+
+## Execution Notes
+
+- 2026-03-01: Implemented on branch `feat/38-extended-quality-target-expansion`.
+- 2026-03-01: Dry-run now enumerates full defined-quality matrix targets; non-dry-run default remains core matrix to preserve offline stability until capability-gating issues land.
