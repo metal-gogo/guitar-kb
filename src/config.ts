@@ -10,7 +10,7 @@ export const QUALITY_ORDER = ["maj", "min", "7", "maj7", "min7", "dim", "dim7", 
 export const CORE_QUALITY_ORDER = ["maj", "min", "7", "maj7"] as const;
 export const SOURCE_PRIORITY = ["all-guitar-chords", "guitar-chord-org"] as const;
 
-type SourceId = typeof SOURCE_PRIORITY[number];
+export type SourceId = typeof SOURCE_PRIORITY[number];
 
 interface QualityTarget {
   quality: ChordQuality;
@@ -22,7 +22,7 @@ interface QualityTarget {
 type QualityTargetDefinition = Omit<QualityTarget, "quality">;
 
 export interface IngestTarget {
-  source: "guitar-chord-org" | "all-guitar-chords";
+  source: SourceId;
   chordId: string;
   slug: string;
   url: string;
@@ -62,21 +62,26 @@ function buildTargetForSource(
   rootSlug: string,
   qualityTarget: QualityTarget,
 ): IngestTarget {
-  if (source === "all-guitar-chords") {
-    return {
-      source,
-      chordId: `chord:${root}:${qualityTarget.quality}`,
-      slug: `${rootSlug}-${qualityTarget.cacheSuffix}`,
-      url: `https://www.all-guitar-chords.com/chords/index/${rootSlug}/${qualityTarget.allGuitarSlug}`,
-    };
+  switch (source) {
+    case "all-guitar-chords":
+      return {
+        source,
+        chordId: `chord:${root}:${qualityTarget.quality}`,
+        slug: `${rootSlug}-${qualityTarget.cacheSuffix}`,
+        url: `https://www.all-guitar-chords.com/chords/index/${rootSlug}/${qualityTarget.allGuitarSlug}`,
+      };
+    case "guitar-chord-org":
+      return {
+        source,
+        chordId: `chord:${root}:${qualityTarget.quality}`,
+        slug: `${rootSlug}-${qualityTarget.cacheSuffix}`,
+        url: `https://www.guitar-chord.org/${rootSlug}-${qualityTarget.guitarSlug}.html`,
+      };
+    default: {
+      const _exhaustiveCheck: never = source;
+      return _exhaustiveCheck;
+    }
   }
-
-  return {
-    source,
-    chordId: `chord:${root}:${qualityTarget.quality}`,
-    slug: `${rootSlug}-${qualityTarget.cacheSuffix}`,
-    url: `https://www.guitar-chord.org/${rootSlug}-${qualityTarget.guitarSlug}.html`,
-  };
 }
 
 function buildTargets(qualityTargets: ReadonlyArray<QualityTarget>): ReadonlyArray<IngestTarget> {

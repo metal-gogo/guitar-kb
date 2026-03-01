@@ -98,7 +98,7 @@ Writes `data/generated/chords.normalized.json`.
 
 Default merge precedence is deterministic and source-agnostic:
 - `all-guitar-chords` is processed first for each chord target.
-- `guitar-chord-org` is processed second as fallback when higher-priority pages are missing.
+- `guitar-chord-org` is processed second; both sources are ingested when available, with deterministic merge behavior for overlaps.
 
 To refresh remote source pages while ingesting:
 

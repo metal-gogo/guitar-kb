@@ -48,7 +48,8 @@ const SOURCE_REGISTRY_STUB: ReadonlyArray<SourceRegistryEntry> = [
 ];
 
 const TARGETS = [
-  // Intentionally shuffled: pipeline should sort by chord ID + source precedence.
+  // Intentionally shuffled: in this test (no chordId fields), ordering falls back
+  // to deterministic source/slug/url tie-breakers.
   { source: "guitar-chord-org", slug: "cmaj7", url: "https://www.guitar-chord.org/c-maj7.html" },
   {
     source: "guitar-chord-org",
