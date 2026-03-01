@@ -1,6 +1,19 @@
 import { load } from "cheerio";
 import type { ParserConfidence, RawChordRecord, RawVoicing } from "../../types/model.js";
 
+const URL_QUALITY_HINTS: ReadonlyArray<readonly [pattern: string, quality: string]> = [
+  ["/diminished-7th", "dim7"],
+  ["/minor-7th", "min7"],
+  ["/major-7th", "M7"],
+  ["/suspended-2nd", "sus2"],
+  ["/suspended-4th", "sus4"],
+  ["/dominant-7th", "7"],
+  ["/diminished", "dim"],
+  ["/augmented", "aug"],
+  ["/minor", "min"],
+  ["/major", "maj"],
+];
+
 function parseCell(value: string): number | null {
   const normalized = value.trim().toLowerCase();
   if (normalized === "x" || normalized === "") {
@@ -11,6 +24,16 @@ function parseCell(value: string): number | null {
 
 function parseVoicingList(value: string): Array<number | null> {
   return value.split("-").map((cell) => parseCell(cell));
+}
+
+function qualityHintFromUrl(url: string): string {
+  const normalized = url.toLowerCase();
+  for (const [pattern, quality] of URL_QUALITY_HINTS) {
+    if (normalized.includes(pattern)) {
+      return quality;
+    }
+  }
+  return "unknown";
 }
 
 function deriveParserConfidence(
@@ -54,15 +77,18 @@ function deriveParserConfidence(
 }
 
 export function parseAllGuitarChords(html: string, url: string): RawChordRecord {
+  const qualityToken = qualityHintFromUrl(url);
   const $ = load(html);
   const chord = $("section[data-root]").first();
 
   if (!chord.length) {
-    throw new Error(`all-guitar-chords parser failed for ${url}`);
+    throw new Error(
+      `all-guitar-chords parser failed source=all-guitar-chords url=${url} quality_token=${qualityToken}`,
+    );
   }
 
   const root = chord.attr("data-root") ?? "";
-  const qualityRaw = chord.attr("data-quality") ?? "";
+  const qualityRaw = chord.attr("data-quality") ?? (qualityToken !== "unknown" ? qualityToken : "");
   const symbol = chord.attr("data-symbol") ?? `${root}${qualityRaw}`;
   const formula = chord.find("[data-formula] code").map((_i, el) => $(el).text().trim()).get();
   const pitchClasses = chord.find("[data-notes] code").map((_i, el) => $(el).text().trim()).get();

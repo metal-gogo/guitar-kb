@@ -1,6 +1,19 @@
 import { load } from "cheerio";
 import type { ParserConfidence, RawChordRecord, RawVoicing } from "../../types/model.js";
 
+const URL_QUALITY_HINTS: ReadonlyArray<readonly [pattern: string, quality: string]> = [
+  ["-dim7.html", "dim7"],
+  ["-min7.html", "min7"],
+  ["-maj7.html", "maj7"],
+  ["-sus2.html", "sus2"],
+  ["-sus4.html", "sus4"],
+  ["-dim.html", "dim"],
+  ["-aug.html", "aug"],
+  ["-min.html", "minor"],
+  ["-maj.html", "major"],
+  ["-7.html", "7"],
+];
+
 function parseCell(value: string): number | null {
   const normalized = value.trim().toLowerCase();
   if (normalized === "x" || normalized === "") {
@@ -11,6 +24,16 @@ function parseCell(value: string): number | null {
 
 function parseVoicingList(value: string): Array<number | null> {
   return value.split(",").map((cell) => parseCell(cell));
+}
+
+function qualityHintFromUrl(url: string): string {
+  const normalized = url.toLowerCase();
+  for (const [pattern, quality] of URL_QUALITY_HINTS) {
+    if (normalized.includes(pattern)) {
+      return quality;
+    }
+  }
+  return "unknown";
 }
 
 function deriveParserConfidence(
@@ -54,15 +77,18 @@ function deriveParserConfidence(
 }
 
 export function parseGuitarChordOrg(html: string, url: string): RawChordRecord {
+  const qualityToken = qualityHintFromUrl(url);
   const $ = load(html);
   const chord = $("[data-chord-root]").first();
 
   if (!chord.length) {
-    throw new Error(`guitar-chord-org parser failed for ${url}`);
+    throw new Error(
+      `guitar-chord-org parser failed source=guitar-chord-org url=${url} quality_token=${qualityToken}`,
+    );
   }
 
   const root = chord.attr("data-chord-root") ?? "";
-  const qualityRaw = chord.attr("data-quality") ?? "";
+  const qualityRaw = chord.attr("data-quality") ?? (qualityToken !== "unknown" ? qualityToken : "");
   const symbol = chord.attr("data-symbol") ?? `${root}${qualityRaw}`;
   const formula = chord.find(".formula li").map((_i, el) => $(el).text().trim()).get();
   const pitchClasses = chord.find(".pitch-classes li").map((_i, el) => $(el).text().trim()).get();

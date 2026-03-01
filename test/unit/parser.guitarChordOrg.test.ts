@@ -500,9 +500,8 @@ describe("parseGuitarChordOrg", () => {
   describe("resilience – degraded HTML", () => {
     it("throws a structured error when [data-chord-root] is absent", () => {
       const html = readFixture("no-chord-root");
-      expect(() => parseGuitarChordOrg(html, BASE_URL)).toThrowError(
-        /guitar-chord-org parser failed/i,
-      );
+      expect(() => parseGuitarChordOrg(html, BASE_URL)).toThrowError(/source=guitar-chord-org/);
+      expect(() => parseGuitarChordOrg(html, BASE_URL)).toThrowError(/quality_token=major/);
     });
 
     it("returns empty arrays when optional sections are absent", () => {
@@ -561,6 +560,22 @@ describe("parseGuitarChordOrg", () => {
       const a = parseGuitarChordOrg(html, url);
       const b = parseGuitarChordOrg(html, url);
       expect(JSON.stringify(a)).toBe(JSON.stringify(b));
+    });
+
+    it("falls back to quality token from URL when data-quality is missing", () => {
+      const html = `
+        <article data-chord-root="C" data-symbol="Cm7">
+          <ul class="formula"><li>1</li><li>b3</li><li>5</li><li>b7</li></ul>
+          <ul class="pitch-classes"><li>C</li><li>Eb</li><li>G</li><li>Bb</li></ul>
+          <div class="aliases"><span>Cm7</span></div>
+          <div class="voicing" data-id="shape-1" data-base-fret="1" data-frets="x,3,1,3,1,3" data-fingers="0,3,1,4,1,4"></div>
+        </article>
+      `;
+      const parsed = parseGuitarChordOrg(html, "https://www.guitar-chord.org/c-min7.html");
+
+      expect(parsed.quality_raw).toBe("min7");
+      expect(parsed.parser_confidence?.checks).toContain("has_quality");
+      expect(parsed.parser_confidence?.level).toBe("high");
     });
   });
 });
