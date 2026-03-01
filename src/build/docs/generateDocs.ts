@@ -107,5 +107,10 @@ export function chordIndexMarkdown(chords: ChordRecord[]): string {
     return `## ${root}\n\n### Qualities\n\n${lines.join("\n")}`;
   });
 
-  return `# Chord Index\n\n${sections.join("\n\n")}\n`;
+  return `# Chord Index
+
+- [Coverage Dashboard](./coverage.md)
+
+${sections.join("\n\n")}
+`;
 }

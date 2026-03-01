@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { chordIndexMarkdown, chordMarkdown } from "../../src/build/docs/generateDocs.js";
+import { coverageDashboardMarkdown } from "../../src/build/docs/generateCoverage.js";
+import { buildRootQualityCoverageReport } from "../../src/validate/coverage.js";
 import type { ChordRecord } from "../../src/types/model.js";
 
 function buildChord(overrides: Partial<ChordRecord> = {}): ChordRecord {
@@ -232,6 +234,11 @@ describe("chordMarkdown", () => {
 });
 
 describe("chordIndexMarkdown", () => {
+  it("links to the coverage dashboard", () => {
+    const md = chordIndexMarkdown([buildChord()]);
+    expect(md).toContain("[Coverage Dashboard](./coverage.md)");
+  });
+
   it("includes the Chord Index heading", () => {
     const md = chordIndexMarkdown([buildChord()]);
     expect(md).toContain("# Chord Index");
@@ -313,6 +320,7 @@ describe("chordIndexMarkdown", () => {
     const indexMd = chordIndexMarkdown(chords);
     const generatedPages = new Set([
       "./index.md",
+      "./coverage.md",
       ...chords.map((chord) => `./chords/${chord.id.replace(/:/g, "__").replace(/#/g, "%23")}.md`),
     ]);
 
@@ -335,3 +343,25 @@ describe("chordIndexMarkdown", () => {
   });
 });
 
+describe("coverageDashboardMarkdown", () => {
+  it("renders deterministic coverage summary and missing-id table", () => {
+    const report = buildRootQualityCoverageReport(
+      [buildChord({ id: "chord:C:maj", root: "C", quality: "maj" })],
+      { roots: ["C"], qualities: ["maj", "min", "dim"] },
+    );
+
+    const md = coverageDashboardMarkdown(report, { missingLimit: 10 });
+    expect(md).toContain("# Coverage Dashboard");
+    expect(md).toContain("Coverage: `1/3` (`33.33%`)");
+    expect(md).toContain("| Canonical ID | Severity | Tags |");
+    expect(md).toContain("| chord:C:min | critical | severity:critical, quality:min |");
+    expect(md).toContain("| chord:C:dim | medium | severity:medium, quality:dim |");
+    expect(md).toContain("[← Chord Index](./index.md)");
+  });
+
+  it("uses deterministic truncation notice when missing list exceeds limit", () => {
+    const report = buildRootQualityCoverageReport([], { roots: ["C"], qualities: ["maj", "min", "7"] });
+    const md = coverageDashboardMarkdown(report, { missingLimit: 2 });
+    expect(md).toContain("_Showing first 2 of 3 missing IDs (deterministic order)._");
+  });
+});

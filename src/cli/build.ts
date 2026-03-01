@@ -1,6 +1,7 @@
 import { mkdir, readFile, rm } from "node:fs/promises";
 import path from "node:path";
 import { chordIndexMarkdown, chordMarkdown } from "../build/docs/generateDocs.js";
+import { coverageDashboardMarkdown } from "../build/docs/generateCoverage.js";
 import { chordDocFileName, voicingDiagramFileName } from "../build/docs/paths.js";
 import { buildDocsSitemap } from "../build/docs/generateSitemap.js";
 import { writeChordJsonl } from "../build/output/writeJsonl.js";
@@ -11,6 +12,7 @@ import type { ChordRecord } from "../types/model.js";
 import { compareChordOrder } from "../utils/sort.js";
 import { pathExists, writeJson, writeText } from "../utils/fs.js";
 import { validateChordRecords } from "../validate/schema.js";
+import { buildRootQualityCoverageReport } from "../validate/coverage.js";
 import { parseBuildCliOptions } from "./options.js";
 import { FULL_MATRIX_TARGETS } from "../config.js";
 
@@ -105,6 +107,8 @@ async function main(): Promise<void> {
   await mkdir(path.join("docs", "chords"), { recursive: true });
   await mkdir(path.join("docs", "diagrams"), { recursive: true });
   await writeText(path.join("docs", "index.md"), chordIndexMarkdown(chords));
+  const coverageReport = buildRootQualityCoverageReport(chords);
+  await writeText(path.join("docs", "coverage.md"), coverageDashboardMarkdown(coverageReport));
 
   const sitemapGeneratedAt =
     process.env.DOCS_SITEMAP_GENERATED_AT ??
