@@ -1,3 +1,5 @@
+import type { ChordQuality } from "./types/model.js";
+
 export const PROJECT_USER_AGENT = "GCKB/0.1 (+https://github.com/metal-gogo/guitar-kb)";
 
 export const ROOT_ORDER = [
@@ -6,12 +8,14 @@ export const ROOT_ORDER = [
 
 export const QUALITY_ORDER = ["maj", "min", "7", "maj7", "min7", "dim", "dim7", "aug", "sus2", "sus4"] as const;
 
-interface CoreQualityTarget {
-  quality: "maj" | "min" | "7" | "maj7";
-  cacheSuffix: "major" | "minor" | "7" | "maj7";
-  guitarSlug: "maj" | "min" | "7" | "maj7";
-  allGuitarSlug: "major" | "minor" | "dominant-7th" | "major-7th";
+interface QualityTarget {
+  quality: ChordQuality;
+  cacheSuffix: string;
+  guitarSlug: string;
+  allGuitarSlug: string;
 }
+
+type QualityTargetDefinition = Omit<QualityTarget, "quality">;
 
 export interface IngestTarget {
   source: "guitar-chord-org" | "all-guitar-chords";
@@ -20,12 +24,25 @@ export interface IngestTarget {
   url: string;
 }
 
-const CORE_QUALITY_TARGETS: readonly CoreQualityTarget[] = [
-  { quality: "maj", cacheSuffix: "major", guitarSlug: "maj", allGuitarSlug: "major" },
-  { quality: "min", cacheSuffix: "minor", guitarSlug: "min", allGuitarSlug: "minor" },
-  { quality: "7", cacheSuffix: "7", guitarSlug: "7", allGuitarSlug: "dominant-7th" },
-  { quality: "maj7", cacheSuffix: "maj7", guitarSlug: "maj7", allGuitarSlug: "major-7th" },
-] as const;
+const QUALITY_TARGET_DEFINITIONS = {
+  maj: { cacheSuffix: "major", guitarSlug: "maj", allGuitarSlug: "major" },
+  min: { cacheSuffix: "minor", guitarSlug: "min", allGuitarSlug: "minor" },
+  "7": { cacheSuffix: "7", guitarSlug: "7", allGuitarSlug: "dominant-7th" },
+  maj7: { cacheSuffix: "maj7", guitarSlug: "maj7", allGuitarSlug: "major-7th" },
+  min7: { cacheSuffix: "min7", guitarSlug: "min7", allGuitarSlug: "minor-7th" },
+  dim: { cacheSuffix: "dim", guitarSlug: "dim", allGuitarSlug: "diminished" },
+  dim7: { cacheSuffix: "dim7", guitarSlug: "dim7", allGuitarSlug: "diminished-7th" },
+  aug: { cacheSuffix: "aug", guitarSlug: "aug", allGuitarSlug: "augmented" },
+  sus2: { cacheSuffix: "sus2", guitarSlug: "sus2", allGuitarSlug: "suspended-2nd" },
+  sus4: { cacheSuffix: "sus4", guitarSlug: "sus4", allGuitarSlug: "suspended-4th" },
+} as const satisfies Record<ChordQuality, QualityTargetDefinition>;
+
+const FULL_QUALITY_TARGETS: readonly QualityTarget[] = QUALITY_ORDER.map((quality) => ({
+  quality,
+  ...QUALITY_TARGET_DEFINITIONS[quality],
+}));
+
+const CORE_QUALITY_SET = new Set<ChordQuality>(["maj", "min", "7", "maj7"]);
 
 function toRootSlug(root: string): string {
   let slug = root.toLowerCase().replace(/#/g, "-sharp");
@@ -35,23 +52,31 @@ function toRootSlug(root: string): string {
   return slug;
 }
 
-export const MVP_TARGETS: ReadonlyArray<IngestTarget> = ROOT_ORDER.flatMap((root) => {
-  const rootSlug = toRootSlug(root);
-  return CORE_QUALITY_TARGETS.flatMap((qualityTarget) => {
-    const cacheSlug = `${rootSlug}-${qualityTarget.cacheSuffix}`;
-    return [
-      {
-        source: "guitar-chord-org" as const,
-        chordId: `chord:${root}:${qualityTarget.quality}`,
-        slug: cacheSlug,
-        url: `https://www.guitar-chord.org/${rootSlug}-${qualityTarget.guitarSlug}.html`,
-      },
-      {
-        source: "all-guitar-chords" as const,
-        chordId: `chord:${root}:${qualityTarget.quality}`,
-        slug: cacheSlug,
-        url: `https://www.all-guitar-chords.com/chords/index/${rootSlug}/${qualityTarget.allGuitarSlug}`,
-      },
-    ];
+function buildTargets(qualityTargets: ReadonlyArray<QualityTarget>): ReadonlyArray<IngestTarget> {
+  return ROOT_ORDER.flatMap((root) => {
+    const rootSlug = toRootSlug(root);
+    return qualityTargets.flatMap((qualityTarget) => {
+      const cacheSlug = `${rootSlug}-${qualityTarget.cacheSuffix}`;
+      return [
+        {
+          source: "guitar-chord-org" as const,
+          chordId: `chord:${root}:${qualityTarget.quality}`,
+          slug: cacheSlug,
+          url: `https://www.guitar-chord.org/${rootSlug}-${qualityTarget.guitarSlug}.html`,
+        },
+        {
+          source: "all-guitar-chords" as const,
+          chordId: `chord:${root}:${qualityTarget.quality}`,
+          slug: cacheSlug,
+          url: `https://www.all-guitar-chords.com/chords/index/${rootSlug}/${qualityTarget.allGuitarSlug}`,
+        },
+      ];
+    });
   });
-});
+}
+
+export const FULL_MATRIX_TARGETS: ReadonlyArray<IngestTarget> = buildTargets(FULL_QUALITY_TARGETS);
+
+export const MVP_TARGETS: ReadonlyArray<IngestTarget> = buildTargets(
+  FULL_QUALITY_TARGETS.filter((target) => CORE_QUALITY_SET.has(target.quality)),
+);

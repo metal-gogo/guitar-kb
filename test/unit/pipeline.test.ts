@@ -1,9 +1,15 @@
 import { describe, expect, it } from "vitest";
 import { mkdtemp, mkdir, rm, writeFile } from "node:fs/promises";
+import { createHash } from "node:crypto";
 import os from "node:os";
 import path from "node:path";
-import { ROOT_ORDER, type IngestTarget } from "../../src/config.js";
-import { ingestNormalizedChords, ingestNormalizedChordsWithTargets, selectIngestTargets } from "../../src/ingest/pipeline.js";
+import { FULL_MATRIX_TARGETS, MVP_TARGETS, ROOT_ORDER, type IngestTarget } from "../../src/config.js";
+import {
+  defaultIngestTargets,
+  ingestNormalizedChords,
+  ingestNormalizedChordsWithTargets,
+  selectIngestTargets,
+} from "../../src/ingest/pipeline.js";
 import type { SourceRegistryEntry } from "../../src/types/model.js";
 
 describe("ingestNormalizedChords", () => {
@@ -137,5 +143,25 @@ describe("ingestNormalizedChords", () => {
 
     expect(() => selectIngestTargets(targets, registry, { chord: "chord:Db:maj7" }))
       .toThrow("No ingest targets matched filters");
+  });
+
+  it("uses expanded defined-quality target generation for dry-run mode", () => {
+    expect(defaultIngestTargets({ dryRun: true })).toEqual(FULL_MATRIX_TARGETS);
+    expect(defaultIngestTargets({ dryRun: false })).toEqual(MVP_TARGETS);
+    expect(defaultIngestTargets()).toEqual(MVP_TARGETS);
+  });
+
+  it("keeps existing core-quality targets byte-stable", () => {
+    const coreFromFull = FULL_MATRIX_TARGETS.filter((target) => {
+      const quality = target.chordId.split(":")[2];
+      return quality === "maj" || quality === "min" || quality === "7" || quality === "maj7";
+    });
+
+    expect(coreFromFull).toEqual(MVP_TARGETS);
+
+    const serializedMvpTargets = JSON.stringify(MVP_TARGETS);
+    const mvpDigest = createHash("sha256").update(serializedMvpTargets).digest("hex");
+
+    expect(mvpDigest).toBe("8460d67950f762f006ae1a5b2ed794ed650c9d76f728329453b696f45ba9ba3c");
   });
 });
