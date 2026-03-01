@@ -1,4 +1,4 @@
-import { FULL_MATRIX_TARGETS, QUALITY_ORDER } from "../config.js";
+import { FULL_MATRIX_TARGETS, QUALITY_ORDER, SOURCE_PRIORITY } from "../config.js";
 import { getCachedHtml } from "./fetch/cache.js";
 import { normalizeRecords } from "./normalize/normalize.js";
 import { SOURCE_REGISTRY } from "./sourceRegistry.js";
@@ -47,6 +47,9 @@ interface CapabilitySelection<T extends PipelineIngestTarget> {
 const KNOWN_QUALITY_SET = new Set<ChordQuality>(QUALITY_ORDER);
 const STRICT_CAPABILITIES_ENV = "INGEST_STRICT_CAPABILITIES";
 const CAPABILITY_ALLOWLIST_ENV = "INGEST_CAPABILITY_ALLOWLIST";
+const SOURCE_PRIORITY_INDEX: ReadonlyMap<string, number> = new Map(
+  SOURCE_PRIORITY.map((source, index) => [source, index]),
+);
 
 // Temporary explicit exceptions for known upstream target gaps.
 export const TEMPORARY_CAPABILITY_ALLOWLIST: ReadonlyArray<string> = [];
@@ -252,6 +255,37 @@ function enforceStrictCapabilities<T extends PipelineIngestTarget>(
   );
 }
 
+function sourcePriorityRank(source: string): number {
+  const rank = SOURCE_PRIORITY_INDEX.get(source);
+  if (rank === undefined) {
+    return SOURCE_PRIORITY.length;
+  }
+  return rank;
+}
+
+function compareIngestTargets<T extends PipelineIngestTarget>(a: T, b: T): number {
+  const chordA = a.chordId ?? "";
+  const chordB = b.chordId ?? "";
+  if (chordA !== chordB) {
+    return chordA.localeCompare(chordB);
+  }
+
+  const sourceRank = sourcePriorityRank(a.source) - sourcePriorityRank(b.source);
+  if (sourceRank !== 0) {
+    return sourceRank;
+  }
+
+  if (a.source !== b.source) {
+    return a.source.localeCompare(b.source);
+  }
+
+  if (a.slug !== b.slug) {
+    return a.slug.localeCompare(b.slug);
+  }
+
+  return a.url.localeCompare(b.url);
+}
+
 function filterTargets<T extends PipelineIngestTarget>(
   targets: ReadonlyArray<T>,
   registry: ReadonlyArray<SourceRegistryEntry>,
@@ -284,7 +318,7 @@ function filterTargets<T extends PipelineIngestTarget>(
     throw new Error(`No ingest targets matched filters: ${requested}`);
   }
 
-  return filtered;
+  return filtered.slice().sort(compareIngestTargets);
 }
 
 export function selectIngestTargets(

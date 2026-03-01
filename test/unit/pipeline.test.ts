@@ -162,6 +162,119 @@ describe("ingestNormalizedChords", () => {
     expect(selected[0]?.chordId).toBe("chord:C:maj");
   });
 
+  it("orders selected targets by chord ID then source precedence", () => {
+    const targets: IngestTarget[] = [
+      { source: "guitar-chord-org", chordId: "chord:C:maj7", slug: "c-maj7", url: "https://a.example/c-maj7" },
+      { source: "guitar-chord-org", chordId: "chord:C:maj", slug: "c-major", url: "https://a.example/c-major" },
+      { source: "all-guitar-chords", chordId: "chord:C:maj7", slug: "c-maj7", url: "https://b.example/c-maj7" },
+      { source: "all-guitar-chords", chordId: "chord:C:maj", slug: "c-major", url: "https://b.example/c-major" },
+    ];
+    const registry: SourceRegistryEntry[] = [
+      {
+        id: "guitar-chord-org",
+        displayName: "A",
+        baseUrl: "https://a.example",
+        cacheDir: "a",
+        capabilities: { roots: ["C"], qualities: ["maj", "maj7"] },
+        parse: () => { throw new Error("not used"); },
+      },
+      {
+        id: "all-guitar-chords",
+        displayName: "B",
+        baseUrl: "https://b.example",
+        cacheDir: "b",
+        capabilities: { roots: ["C"], qualities: ["maj", "maj7"] },
+        parse: () => { throw new Error("not used"); },
+      },
+    ];
+
+    const selected = selectIngestTargets(targets, registry, {});
+    expect(selected.map((target) => `${target.chordId}:${target.source}`)).toEqual([
+      "chord:C:maj:all-guitar-chords",
+      "chord:C:maj:guitar-chord-org",
+      "chord:C:maj7:all-guitar-chords",
+      "chord:C:maj7:guitar-chord-org",
+    ]);
+  });
+
+  it("falls back to lower-priority source when higher-priority page is missing", async () => {
+    const originalCwd = process.cwd();
+    const tempDir = await mkdtemp(path.join(os.tmpdir(), "gckb-source-priority-fallback-"));
+
+    try {
+      process.chdir(tempDir);
+      await mkdir(path.join("data", "sources", "guitar-chord-org"), { recursive: true });
+      await writeFile(path.join("data", "sources", "guitar-chord-org", "c-major.html"), "<html>cached</html>", "utf8");
+
+      const fetchSpy = vi.fn(async (_url: string) => new Response("Not Found", { status: 404, statusText: "Not Found" }));
+      vi.stubGlobal("fetch", fetchSpy);
+
+      const targets: IngestTarget[] = [
+        {
+          source: "guitar-chord-org",
+          chordId: "chord:C:maj",
+          slug: "c-major",
+          url: "https://a.example/c-major",
+        },
+        {
+          source: "all-guitar-chords",
+          chordId: "chord:C:maj",
+          slug: "c-major",
+          url: "https://b.example/c-major",
+        },
+      ];
+      const registry: SourceRegistryEntry[] = [
+        {
+          id: "guitar-chord-org",
+          displayName: "A",
+          baseUrl: "https://a.example",
+          cacheDir: "guitar-chord-org",
+          capabilities: { roots: ["C"], qualities: ["maj"] },
+          parse: (_html, url) => ({
+            source: "guitar-chord-org",
+            url,
+            symbol: "C",
+            root: "C",
+            quality_raw: "maj",
+            aliases: ["C"],
+            formula: ["1", "3", "5"],
+            pitch_classes: ["C", "E", "G"],
+            voicings: [{ id: "cached-c-major", frets: [null, 3, 2, 0, 1, 0], base_fret: 1 }],
+          }),
+        },
+        {
+          id: "all-guitar-chords",
+          displayName: "B",
+          baseUrl: "https://b.example",
+          cacheDir: "all-guitar-chords",
+          capabilities: { roots: ["C"], qualities: ["maj"] },
+          parse: () => {
+            throw new Error("all-guitar-chords parser should not run when source page is missing");
+          },
+        },
+      ];
+
+      const records = await ingestNormalizedChordsWithTargets(targets, registry, {
+        refresh: false,
+        delayMs: 0,
+      });
+
+      expect(fetchSpy).toHaveBeenCalledTimes(3);
+      expect(fetchSpy.mock.calls.map(([url]) => url)).toEqual([
+        "https://b.example/c-major",
+        "https://b.example/c-major",
+        "https://b.example/c-major",
+      ]);
+      expect(records).toHaveLength(1);
+      expect(records[0]?.id).toBe("chord:C:maj");
+      expect(records[0]?.source_refs.map((ref) => ref.source)).toEqual(["guitar-chord-org"]);
+    } finally {
+      vi.unstubAllGlobals();
+      process.chdir(originalCwd);
+      await rm(tempDir, { recursive: true, force: true });
+    }
+  });
+
   it("throws for unknown source or empty filtered result", () => {
     const targets: IngestTarget[] = [
       { source: "guitar-chord-org", chordId: "chord:C:maj", slug: "c-major", url: "https://a.example/c-major" },
@@ -201,7 +314,7 @@ describe("ingestNormalizedChords", () => {
     const serializedMvpTargets = JSON.stringify(MVP_TARGETS);
     const mvpDigest = createHash("sha256").update(serializedMvpTargets).digest("hex");
 
-    expect(mvpDigest).toBe("a499e124157902a7167bbc17dc283a7b3af3e1e6cbbafd5631a2bd37cf55c1b2");
+    expect(mvpDigest).toBe("0b4377ab1e8e6b897e2e3f7186a5dc0e71f98005873d11d3ed91e18985828c15");
   });
 
   it("reports deterministic SKIP_UNSUPPORTED diagnostics in dry-run mode", async () => {

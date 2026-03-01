@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { SOURCE_REGISTRY } from "../../src/ingest/sourceRegistry.js";
-import { CORE_QUALITY_ORDER } from "../../src/config.js";
+import { CORE_QUALITY_ORDER, SOURCE_PRIORITY } from "../../src/config.js";
 
 describe("SOURCE_REGISTRY", () => {
   it("defines required fields for each source entry", () => {
@@ -28,5 +28,9 @@ describe("SOURCE_REGISTRY", () => {
 
     expect(guitarChordOrg?.capabilities.qualities).toEqual([...CORE_QUALITY_ORDER]);
     expect(allGuitarChords?.capabilities.qualities).toEqual([...CORE_QUALITY_ORDER]);
+  });
+
+  it("keeps source registry order aligned with source precedence policy", () => {
+    expect(SOURCE_REGISTRY.map((entry) => entry.id)).toEqual([...SOURCE_PRIORITY]);
   });
 });
