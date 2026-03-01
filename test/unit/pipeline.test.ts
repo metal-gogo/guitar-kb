@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { mkdtemp, mkdir, rm, writeFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import os from "node:os";
@@ -13,6 +13,10 @@ import {
 import type { SourceRegistryEntry } from "../../src/types/model.js";
 
 describe("ingestNormalizedChords", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it("ingests the expanded core-quality set from cached sources", async () => {
     const chords = await ingestNormalizedChords({ refresh: false, delayMs: 0 });
 
@@ -74,6 +78,10 @@ describe("ingestNormalizedChords", () => {
         displayName: "Stub Third Source",
         baseUrl: "https://stub.example",
         cacheDir: "stub-third-source",
+        capabilities: {
+          roots: ["C"],
+          qualities: ["maj"],
+        },
         parse: (_html: string, url: string) => ({
           source: "stub-third-source",
           url,
@@ -115,8 +123,22 @@ describe("ingestNormalizedChords", () => {
       { source: "all-guitar-chords", chordId: "chord:C:maj7", slug: "c-maj7", url: "https://b.example/c-maj7" },
     ];
     const registry: SourceRegistryEntry[] = [
-      { id: "guitar-chord-org", displayName: "A", baseUrl: "https://a.example", cacheDir: "a", parse: () => { throw new Error("not used"); } },
-      { id: "all-guitar-chords", displayName: "B", baseUrl: "https://b.example", cacheDir: "b", parse: () => { throw new Error("not used"); } },
+      {
+        id: "guitar-chord-org",
+        displayName: "A",
+        baseUrl: "https://a.example",
+        cacheDir: "a",
+        capabilities: { roots: ["C"], qualities: ["maj"] },
+        parse: () => { throw new Error("not used"); },
+      },
+      {
+        id: "all-guitar-chords",
+        displayName: "B",
+        baseUrl: "https://b.example",
+        cacheDir: "b",
+        capabilities: { roots: ["C"], qualities: ["maj"] },
+        parse: () => { throw new Error("not used"); },
+      },
     ];
 
     const selected = selectIngestTargets(targets, registry, {
@@ -135,7 +157,14 @@ describe("ingestNormalizedChords", () => {
       { source: "guitar-chord-org", chordId: "chord:C:maj", slug: "c-major", url: "https://a.example/c-major" },
     ];
     const registry: SourceRegistryEntry[] = [
-      { id: "guitar-chord-org", displayName: "A", baseUrl: "https://a.example", cacheDir: "a", parse: () => { throw new Error("not used"); } },
+      {
+        id: "guitar-chord-org",
+        displayName: "A",
+        baseUrl: "https://a.example",
+        cacheDir: "a",
+        capabilities: { roots: ["C"], qualities: ["maj"] },
+        parse: () => { throw new Error("not used"); },
+      },
     ];
 
     expect(() => selectIngestTargets(targets, registry, { source: "missing-source" }))
@@ -163,5 +192,105 @@ describe("ingestNormalizedChords", () => {
     const mvpDigest = createHash("sha256").update(serializedMvpTargets).digest("hex");
 
     expect(mvpDigest).toBe("8460d67950f762f006ae1a5b2ed794ed650c9d76f728329453b696f45ba9ba3c");
+  });
+
+  it("reports deterministic SKIP_UNSUPPORTED diagnostics in dry-run mode", async () => {
+    const writeSpy = vi.spyOn(process.stdout, "write").mockImplementation(() => true);
+    const targets = [
+      {
+        source: "stub-source",
+        chordId: "chord:C:maj",
+        slug: "c-major",
+        url: "https://stub.example/c-major",
+      },
+      {
+        source: "stub-source",
+        chordId: "chord:C:min7",
+        slug: "c-min7",
+        url: "https://stub.example/c-min7",
+      },
+    ];
+    const registry: SourceRegistryEntry[] = [
+      {
+        id: "stub-source",
+        displayName: "Stub Source",
+        baseUrl: "https://stub.example",
+        cacheDir: "stub-source",
+        capabilities: { roots: ["C"], qualities: ["maj"] },
+        parse: () => { throw new Error("not used"); },
+      },
+    ];
+
+    await expect(ingestNormalizedChordsWithTargets(targets, registry, { dryRun: true, delayMs: 0 }))
+      .resolves.toEqual([]);
+
+    const output = writeSpy.mock.calls.map(([line]) => String(line)).join("");
+    expect(output).toContain("Dry run: would process 1 ingest targets (skipped unsupported: 1)");
+    expect(output).toContain("SKIP_UNSUPPORTED source=stub-source chord=chord:C:min7 slug=c-min7 reason=unsupported_quality");
+    expect(output).toContain("GAP_UNRESOLVED chord=chord:C:min7 unsupported_sources=stub-source");
+  });
+
+  it("fails strict capability mode when unresolved required gaps remain", async () => {
+    const writeSpy = vi.spyOn(process.stdout, "write").mockImplementation(() => true);
+    const targets = [
+      {
+        source: "stub-source",
+        chordId: "chord:C:min7",
+        slug: "c-min7",
+        url: "https://stub.example/c-min7",
+      },
+    ];
+    const registry: SourceRegistryEntry[] = [
+      {
+        id: "stub-source",
+        displayName: "Stub Source",
+        baseUrl: "https://stub.example",
+        cacheDir: "stub-source",
+        capabilities: { roots: ["C"], qualities: ["maj"] },
+        parse: () => { throw new Error("not used"); },
+      },
+    ];
+
+    await expect(ingestNormalizedChordsWithTargets(targets, registry, {
+      dryRun: true,
+      strictCapabilities: true,
+      delayMs: 0,
+    })).rejects.toThrow("Strict capability mode enabled, unresolved required gaps:");
+
+    const output = writeSpy.mock.calls.map(([line]) => String(line)).join("");
+    expect(output).toContain("GAP_UNRESOLVED chord=chord:C:min7 unsupported_sources=stub-source");
+  });
+
+  it("surfaces allowlisted gaps deterministically and passes strict mode", async () => {
+    const writeSpy = vi.spyOn(process.stdout, "write").mockImplementation(() => true);
+    const targets = [
+      {
+        source: "stub-source",
+        chordId: "chord:C:min7",
+        slug: "c-min7",
+        url: "https://stub.example/c-min7",
+      },
+    ];
+    const registry: SourceRegistryEntry[] = [
+      {
+        id: "stub-source",
+        displayName: "Stub Source",
+        baseUrl: "https://stub.example",
+        cacheDir: "stub-source",
+        capabilities: { roots: ["C"], qualities: ["maj"] },
+        parse: () => { throw new Error("not used"); },
+      },
+    ];
+
+    await expect(ingestNormalizedChordsWithTargets(targets, registry, {
+      dryRun: true,
+      strictCapabilities: true,
+      capabilityAllowlist: ["chord:C:min7"],
+      delayMs: 0,
+    })).resolves.toEqual([]);
+
+    const output = writeSpy.mock.calls.map(([line]) => String(line)).join("");
+    expect(output).toContain("GAP_ALLOWLISTED chord=chord:C:min7 unsupported_sources=stub-source");
+    expect(output).not.toContain("GAP_UNRESOLVED chord=chord:C:min7");
   });
 });

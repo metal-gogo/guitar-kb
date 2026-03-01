@@ -1,8 +1,8 @@
-import { FULL_MATRIX_TARGETS, MVP_TARGETS } from "../config.js";
+import { FULL_MATRIX_TARGETS, MVP_TARGETS, QUALITY_ORDER } from "../config.js";
 import { getCachedHtml } from "./fetch/cache.js";
 import { normalizeRecords } from "./normalize/normalize.js";
 import { SOURCE_REGISTRY } from "./sourceRegistry.js";
-import type { ChordRecord, RawChordRecord, SourceRegistryEntry } from "../types/model.js";
+import type { ChordQuality, ChordRecord, RawChordRecord, SourceRegistryEntry } from "../types/model.js";
 import type { IngestTarget } from "../config.js";
 
 export interface IngestPipelineOptions {
@@ -12,6 +12,8 @@ export interface IngestPipelineOptions {
   source?: string;
   dryRun?: boolean;
   includeParserConfidence?: boolean;
+  strictCapabilities?: boolean;
+  capabilityAllowlist?: ReadonlyArray<string>;
 }
 
 interface PipelineIngestTarget {
@@ -21,10 +23,233 @@ interface PipelineIngestTarget {
   url: string;
 }
 
+type UnsupportedReason = "unsupported_quality" | "unsupported_root";
+
+interface CapabilityDecision<T extends PipelineIngestTarget> {
+  target: T;
+  supported: boolean;
+  reason?: UnsupportedReason;
+}
+
+interface CapabilityGap {
+  chordId: string;
+  unsupportedSources: string[];
+}
+
+interface CapabilitySelection<T extends PipelineIngestTarget> {
+  selectedTargets: ReadonlyArray<T>;
+  processableTargets: ReadonlyArray<T>;
+  skippedUnsupported: ReadonlyArray<CapabilityDecision<T>>;
+  unresolvedGaps: ReadonlyArray<CapabilityGap>;
+  allowlistedGaps: ReadonlyArray<CapabilityGap>;
+}
+
+const KNOWN_QUALITY_SET = new Set<ChordQuality>(QUALITY_ORDER);
+const STRICT_CAPABILITIES_ENV = "INGEST_STRICT_CAPABILITIES";
+const CAPABILITY_ALLOWLIST_ENV = "INGEST_CAPABILITY_ALLOWLIST";
+
+// Temporary explicit exceptions for known upstream target gaps.
+export const TEMPORARY_CAPABILITY_ALLOWLIST: ReadonlyArray<string> = [];
+
 function sourceRegistryMap(
   registry: ReadonlyArray<SourceRegistryEntry>,
 ): Map<string, SourceRegistryEntry> {
   return new Map(registry.map((entry) => [entry.id, entry]));
+}
+
+function parseStrictCapabilitiesEnv(value: string | undefined): boolean {
+  if (!value) {
+    return false;
+  }
+  return value === "1" || value.toLowerCase() === "true";
+}
+
+function parseAllowlistEnv(value: string | undefined): ReadonlyArray<string> {
+  if (!value) {
+    return [];
+  }
+  return value
+    .split(",")
+    .map((entry) => entry.trim())
+    .filter((entry) => entry.length > 0);
+}
+
+function capabilityAllowlist(options: IngestPipelineOptions): ReadonlySet<string> {
+  return new Set([
+    ...TEMPORARY_CAPABILITY_ALLOWLIST,
+    ...parseAllowlistEnv(process.env[CAPABILITY_ALLOWLIST_ENV]),
+    ...(options.capabilityAllowlist ?? []),
+  ]);
+}
+
+function strictCapabilitiesEnabled(options: IngestPipelineOptions): boolean {
+  if (typeof options.strictCapabilities === "boolean") {
+    return options.strictCapabilities;
+  }
+  return parseStrictCapabilitiesEnv(process.env[STRICT_CAPABILITIES_ENV]);
+}
+
+function parseCanonicalChordId(chordId: string | undefined): { root: string; quality: ChordQuality } | null {
+  if (!chordId) {
+    return null;
+  }
+  const parts = chordId.split(":");
+  if (parts.length !== 3 || parts[0] !== "chord") {
+    return null;
+  }
+
+  const quality = parts[2] as ChordQuality;
+  if (!KNOWN_QUALITY_SET.has(quality)) {
+    return null;
+  }
+
+  return {
+    root: parts[1] ?? "",
+    quality,
+  };
+}
+
+function evaluateCapabilitiesForTarget<T extends PipelineIngestTarget>(
+  target: T,
+  sourceEntry: SourceRegistryEntry,
+): CapabilityDecision<T> {
+  const parsed = parseCanonicalChordId(target.chordId);
+  if (!parsed) {
+    return { target, supported: true };
+  }
+
+  if (!sourceEntry.capabilities.qualities.includes(parsed.quality)) {
+    return { target, supported: false, reason: "unsupported_quality" };
+  }
+  if (!sourceEntry.capabilities.roots.includes(parsed.root)) {
+    return { target, supported: false, reason: "unsupported_root" };
+  }
+  return { target, supported: true };
+}
+
+function applyCapabilitySelection<T extends PipelineIngestTarget>(
+  selectedTargets: ReadonlyArray<T>,
+  registryById: ReadonlyMap<string, SourceRegistryEntry>,
+  options: IngestPipelineOptions,
+): CapabilitySelection<T> {
+  const processableTargets: T[] = [];
+  const skippedUnsupported: CapabilityDecision<T>[] = [];
+  const gapOrder: string[] = [];
+  const gapByChord = new Map<string, { hasProcessable: boolean; unsupportedSources: Set<string> }>();
+  const allowlist = capabilityAllowlist(options);
+
+  for (const target of selectedTargets) {
+    const sourceEntry = registryById.get(target.source);
+    if (!sourceEntry) {
+      throw new Error(`No source registry entry found for ${target.source}`);
+    }
+
+    const decision = evaluateCapabilitiesForTarget(target, sourceEntry);
+    if (!decision.supported) {
+      skippedUnsupported.push(decision);
+    } else {
+      processableTargets.push(target);
+    }
+
+    const chordId = target.chordId;
+    if (!chordId) {
+      continue;
+    }
+
+    let gap = gapByChord.get(chordId);
+    if (!gap) {
+      gap = { hasProcessable: false, unsupportedSources: new Set<string>() };
+      gapByChord.set(chordId, gap);
+      gapOrder.push(chordId);
+    }
+
+    if (decision.supported) {
+      gap.hasProcessable = true;
+    } else {
+      gap.unsupportedSources.add(target.source);
+    }
+  }
+
+  const unresolvedGaps: CapabilityGap[] = [];
+  const allowlistedGaps: CapabilityGap[] = [];
+  for (const chordId of gapOrder) {
+    const gap = gapByChord.get(chordId);
+    if (!gap || gap.hasProcessable) {
+      continue;
+    }
+
+    const report: CapabilityGap = {
+      chordId,
+      unsupportedSources: [...gap.unsupportedSources].sort((a, b) => a.localeCompare(b)),
+    };
+    if (allowlist.has(chordId)) {
+      allowlistedGaps.push(report);
+    } else {
+      unresolvedGaps.push(report);
+    }
+  }
+
+  return {
+    selectedTargets,
+    processableTargets,
+    skippedUnsupported,
+    unresolvedGaps,
+    allowlistedGaps,
+  };
+}
+
+function writeCapabilityDiagnostics<T extends PipelineIngestTarget>(
+  selection: CapabilitySelection<T>,
+  options: IngestPipelineOptions,
+): void {
+  const shouldLog =
+    selection.skippedUnsupported.length > 0
+    || selection.unresolvedGaps.length > 0
+    || selection.allowlistedGaps.length > 0
+    || strictCapabilitiesEnabled(options);
+
+  if (!shouldLog) {
+    return;
+  }
+
+  process.stdout.write(
+    `Capability diagnostics: selected=${selection.selectedTargets.length} processable=${selection.processableTargets.length} `
+    + `skipped_unsupported=${selection.skippedUnsupported.length} `
+    + `allowlisted_gaps=${selection.allowlistedGaps.length} unresolved_gaps=${selection.unresolvedGaps.length}\n`,
+  );
+
+  for (const decision of selection.skippedUnsupported) {
+    process.stdout.write(
+      `SKIP_UNSUPPORTED source=${decision.target.source} chord=${decision.target.chordId ?? "unknown"} `
+      + `slug=${decision.target.slug} reason=${decision.reason ?? "unsupported"}\n`,
+    );
+  }
+
+  for (const gap of selection.allowlistedGaps) {
+    process.stdout.write(
+      `GAP_ALLOWLISTED chord=${gap.chordId} unsupported_sources=${gap.unsupportedSources.join(",")}\n`,
+    );
+  }
+
+  for (const gap of selection.unresolvedGaps) {
+    process.stdout.write(
+      `GAP_UNRESOLVED chord=${gap.chordId} unsupported_sources=${gap.unsupportedSources.join(",")}\n`,
+    );
+  }
+}
+
+function enforceStrictCapabilities<T extends PipelineIngestTarget>(
+  selection: CapabilitySelection<T>,
+  options: IngestPipelineOptions,
+): void {
+  if (!strictCapabilitiesEnabled(options) || selection.unresolvedGaps.length === 0) {
+    return;
+  }
+
+  throw new Error(
+    "Strict capability mode enabled, unresolved required gaps: "
+    + `${selection.unresolvedGaps.length} (first=${selection.unresolvedGaps[0]?.chordId ?? "unknown"})`,
+  );
 }
 
 function filterTargets<T extends PipelineIngestTarget>(
@@ -85,16 +310,25 @@ export async function ingestNormalizedChordsWithTargets(
   const rawRecords: RawChordRecord[] = [];
   const registryById = sourceRegistryMap(registry);
   const selectedTargets = filterTargets(targets, registry, options);
+  const capabilitySelection = applyCapabilitySelection(selectedTargets, registryById, options);
 
   if (dryRun) {
-    process.stdout.write(`Dry run: would process ${selectedTargets.length} ingest targets\n`);
-    for (const target of selectedTargets) {
+    process.stdout.write(
+      `Dry run: would process ${capabilitySelection.processableTargets.length} ingest targets `
+      + `(skipped unsupported: ${capabilitySelection.skippedUnsupported.length})\n`,
+    );
+    for (const target of capabilitySelection.processableTargets) {
       process.stdout.write(`- [${target.source}] ${target.slug} -> ${target.url}\n`);
     }
+    writeCapabilityDiagnostics(capabilitySelection, options);
+    enforceStrictCapabilities(capabilitySelection, options);
     return [];
   }
 
-  for (const target of selectedTargets) {
+  writeCapabilityDiagnostics(capabilitySelection, options);
+  enforceStrictCapabilities(capabilitySelection, options);
+
+  for (const target of capabilitySelection.processableTargets) {
     const sourceEntry = registryById.get(target.source);
     if (!sourceEntry) {
       throw new Error(`No source registry entry found for ${target.source}`);

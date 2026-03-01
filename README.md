@@ -91,6 +91,30 @@ To include parser confidence annotations for debugging:
 npm run ingest -- --include-parser-confidence
 ```
 
+Capability diagnostics:
+
+- In dry-run mode, ingest prints deterministic `SKIP_UNSUPPORTED` lines when a
+  target is outside a source's declared capability metadata.
+- Gap summary lines are printed as:
+  - `GAP_UNRESOLVED ...` for required matrix IDs with no supporting source
+  - `GAP_ALLOWLISTED ...` for temporarily allowlisted unsupported gaps
+
+Strict capability mode:
+
+```bash
+env INGEST_STRICT_CAPABILITIES=1 npm run ingest -- --dry-run
+```
+
+This exits non-zero if unresolved required gaps remain.
+
+Temporary allowlist override (comma-separated canonical IDs):
+
+```bash
+env INGEST_STRICT_CAPABILITIES=1 \
+  INGEST_CAPABILITY_ALLOWLIST=chord:C:min7,chord:D:aug \
+  npm run ingest -- --dry-run
+```
+
 ### Build outputs
 
 ```bash
