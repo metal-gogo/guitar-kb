@@ -1,4 +1,4 @@
-import { MVP_TARGETS } from "../config.js";
+import { FULL_MATRIX_TARGETS, MVP_TARGETS } from "../config.js";
 import { getCachedHtml } from "./fetch/cache.js";
 import { normalizeRecords } from "./normalize/normalize.js";
 import { SOURCE_REGISTRY } from "./sourceRegistry.js";
@@ -70,6 +70,10 @@ export function selectIngestTargets(
   return filterTargets(targets, registry, options);
 }
 
+export function defaultIngestTargets(options: IngestPipelineOptions = {}): ReadonlyArray<IngestTarget> {
+  return options.dryRun ? FULL_MATRIX_TARGETS : MVP_TARGETS;
+}
+
 export async function ingestNormalizedChordsWithTargets(
   targets: ReadonlyArray<PipelineIngestTarget>,
   registry: ReadonlyArray<SourceRegistryEntry>,
@@ -106,5 +110,6 @@ export async function ingestNormalizedChordsWithTargets(
 }
 
 export async function ingestNormalizedChords(options: IngestPipelineOptions = {}): Promise<ChordRecord[]> {
-  return ingestNormalizedChordsWithTargets(MVP_TARGETS, SOURCE_REGISTRY, options);
+  const targets = defaultIngestTargets(options);
+  return ingestNormalizedChordsWithTargets(targets, SOURCE_REGISTRY, options);
 }
