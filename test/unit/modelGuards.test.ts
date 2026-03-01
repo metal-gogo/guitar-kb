@@ -5,6 +5,7 @@ import {
   isChordQuality,
   isFlatCanonicalRoot,
   isVoicingPosition,
+  sharpAliasForFlatCanonicalRoot,
   toFlatCanonicalRoot,
 } from "../../src/types/guards.js";
 
@@ -60,5 +61,11 @@ describe("flat-baseline root guards", () => {
     expect(toFlatCanonicalRoot("F#")).toBe("Gb");
     expect(toFlatCanonicalRoot("A")).toBe("A");
     expect(toFlatCanonicalRoot("H")).toBeNull();
+  });
+
+  it("returns deterministic sharp aliases for flat canonical roots", () => {
+    expect(sharpAliasForFlatCanonicalRoot("Db")).toBe("C#");
+    expect(sharpAliasForFlatCanonicalRoot("Bb")).toBe("A#");
+    expect(sharpAliasForFlatCanonicalRoot("C")).toBeUndefined();
   });
 });

@@ -31,12 +31,33 @@
     },
     "root_aliases": {
       "type": "array",
-      "minItems": 1,
       "uniqueItems": true,
-      "items": {
-        "type": "string",
-        "pattern": "^[A-G](#|b)?$"
-      },
+      "oneOf": [
+        {
+          "minItems": 1,
+          "maxItems": 1,
+          "prefixItems": [
+            {
+              "$ref": "#/$defs/flatRoot"
+            }
+          ],
+          "items": false
+        },
+        {
+          "minItems": 2,
+          "maxItems": 2,
+          "prefixItems": [
+            {
+              "$ref": "#/$defs/flatRoot"
+            },
+            {
+              "type": "string",
+              "pattern": "^[A-G]#$"
+            }
+          ],
+          "items": false
+        }
+      ],
       "description": "Accepted root spellings for lookup (flat first, sharp alias second when present)."
     },
     "root_display": {

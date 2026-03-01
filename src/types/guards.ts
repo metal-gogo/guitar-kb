@@ -11,6 +11,20 @@ const SHARP_TO_FLAT_ROOT: Readonly<Record<string, FlatCanonicalRoot>> = {
   "G#": "Ab",
   "A#": "Bb",
 };
+const FLAT_TO_SHARP_ROOT: Readonly<Record<FlatCanonicalRoot, string | undefined>> = {
+  C: undefined,
+  Db: "C#",
+  D: undefined,
+  Eb: "D#",
+  E: undefined,
+  F: undefined,
+  Gb: "F#",
+  G: undefined,
+  Ab: "G#",
+  A: undefined,
+  Bb: "A#",
+  B: undefined,
+};
 
 export function isCanonicalChordId(value: string): boolean {
   return CHORD_ID_REGEX.test(value);
@@ -39,4 +53,8 @@ export function toFlatCanonicalRoot(value: string): FlatCanonicalRoot | null {
     return value;
   }
   return SHARP_TO_FLAT_ROOT[value] ?? null;
+}
+
+export function sharpAliasForFlatCanonicalRoot(value: FlatCanonicalRoot): string | undefined {
+  return FLAT_TO_SHARP_ROOT[value];
 }

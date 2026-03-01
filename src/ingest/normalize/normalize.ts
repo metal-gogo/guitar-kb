@@ -1,13 +1,16 @@
 import type {
   ChordQuality,
   ChordRecord,
-  FlatCanonicalRoot,
   ParserConfidence,
   RawChordRecord,
   SourceRef,
   VoicingPosition,
 } from "../../types/model.js";
-import { assertCanonicalChordId } from "../../types/guards.js";
+import {
+  assertCanonicalChordId,
+  sharpAliasForFlatCanonicalRoot,
+  toFlatCanonicalRoot,
+} from "../../types/guards.js";
 import { compareChordOrder } from "../../utils/sort.js";
 
 export const DUPLICATE_VOICING_SOURCE_REF_NOTE = "duplicate-voicing";
@@ -137,29 +140,6 @@ const ENHARMONIC_ROOT: Record<string, string> = {
   Bb: "A#"
 };
 
-const SHARP_TO_FLAT_ROOT: Readonly<Record<string, FlatCanonicalRoot>> = {
-  "C#": "Db",
-  "D#": "Eb",
-  "F#": "Gb",
-  "G#": "Ab",
-  "A#": "Bb",
-};
-
-const FLAT_TO_SHARP_ROOT: Readonly<Record<FlatCanonicalRoot, string | undefined>> = {
-  C: undefined,
-  Db: "C#",
-  D: undefined,
-  Eb: "D#",
-  E: undefined,
-  F: undefined,
-  Gb: "F#",
-  G: undefined,
-  Ab: "G#",
-  A: undefined,
-  Bb: "A#",
-  B: undefined,
-};
-
 const DEFAULT_FORMULAS: Record<ChordQuality, string[]> = {
   maj: ["1", "3", "5"],
   min: ["1", "b3", "5"],
@@ -251,11 +231,6 @@ function defaultAlias(root: string, quality: ChordQuality): string {
     case "sus4":
       return `${root}sus4`;
   }
-}
-
-function toFlatCanonicalRoot(root: string): FlatCanonicalRoot {
-  const mapped = SHARP_TO_FLAT_ROOT[root] ?? root;
-  return mapped as FlatCanonicalRoot;
 }
 
 function derivePitchClasses(root: string, formula: string[]): string[] {
@@ -479,7 +454,10 @@ export function normalizeRecords(raw: RawChordRecord[], options: NormalizeRecord
       url: input.url
     };
     const canonicalRoot = toFlatCanonicalRoot(input.root);
-    const sharpAlias = FLAT_TO_SHARP_ROOT[canonicalRoot];
+    if (!canonicalRoot) {
+      throw new Error(`Unsupported root for canonical mapping: ${input.root} (source=${input.source} url=${input.url})`);
+    }
+    const sharpAlias = sharpAliasForFlatCanonicalRoot(canonicalRoot);
     const rootAliases = sharpAlias ? [canonicalRoot, sharpAlias] : [canonicalRoot];
     const parserConfidence = includeParserConfidence
       ? mergeParserConfidence(undefined, input.parser_confidence)
