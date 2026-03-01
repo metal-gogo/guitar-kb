@@ -113,6 +113,19 @@ npm run validate
 
 Validates every `data/chords.jsonl` record against `chords.schema.json`.
 
+Coverage policy behavior:
+
+- Validation uses an explicit contract (`coverage-matrix/v1`) for
+  root-quality expectations.
+- The contract order is deterministic and matches configured matrix order in
+  code (roots + qualities).
+- `npm run validate` prints matrix metadata before coverage summaries:
+  - `matrix_version=...`
+  - `expected_roots=...`
+  - `expected_qualities=...`
+- Missing combinations are reported with deterministic severity tags per
+  quality (`critical`, `high`, `medium`, `low`).
+
 ### Report source cache freshness
 
 ```bash
