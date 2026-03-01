@@ -17,7 +17,7 @@ function chord(overrides: Partial<ChordRecord>): ChordRecord {
 }
 
 describe("filterBuildChords", () => {
-  it("supports slug-style chord filtering via MVP target mapping", () => {
+  it("supports slug-style chord filtering via target slug mapping", () => {
     const chords: ChordRecord[] = [
       chord({ id: "chord:D:min", root: "D", quality: "min" }),
       chord({ id: "chord:C:maj", root: "C", quality: "maj" }),
@@ -26,6 +26,17 @@ describe("filterBuildChords", () => {
     const filtered = filterBuildChords(chords, { chord: "d-minor", source: undefined, dryRun: false });
     expect(filtered).toHaveLength(1);
     expect(filtered[0]?.id).toBe("chord:D:min");
+  });
+
+  it("supports extended-quality slug filtering via full-matrix targets", () => {
+    const chords: ChordRecord[] = [
+      chord({ id: "chord:C:dim7", root: "C", quality: "dim7" }),
+      chord({ id: "chord:C:maj", root: "C", quality: "maj" }),
+    ];
+
+    const filtered = filterBuildChords(chords, { chord: "c-dim7", source: undefined, dryRun: false });
+    expect(filtered).toHaveLength(1);
+    expect(filtered[0]?.id).toBe("chord:C:dim7");
   });
 
   it("throws a clear error for unknown source id", () => {
