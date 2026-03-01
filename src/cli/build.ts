@@ -137,6 +137,7 @@ async function main(): Promise<void> {
   const sitemap = buildDocsSitemap(chords, sitemapGeneratedAt);
   await writeJson(path.join("docs", "sitemap.json"), sitemap);
   const aliasRedirects = new Map<string, string>();
+  const canonicalChordIds = new Set(chords.map((chord) => chord.id));
 
   for (const chord of chords) {
     await writeText(
@@ -149,9 +150,14 @@ async function main(): Promise<void> {
     );
 
     const canonicalRoot = chord.canonical_root ?? toFlatCanonicalRoot(chord.root);
-    const sharpRoot = chord.root_display?.sharp ?? (canonicalRoot ? sharpAliasForFlatCanonicalRoot(canonicalRoot) : undefined);
+    const sharpRoot =
+      chord.root_display?.sharp
+      ?? (canonicalRoot ? sharpAliasForFlatCanonicalRoot(canonicalRoot) : undefined);
     if (sharpRoot) {
-      aliasRedirects.set(`chord:${sharpRoot}:${chord.quality}`, chord.id);
+      const aliasChordId = `chord:${sharpRoot}:${chord.quality}`;
+      if (aliasChordId !== chord.id && !canonicalChordIds.has(aliasChordId) && !aliasRedirects.has(aliasChordId)) {
+        aliasRedirects.set(aliasChordId, chord.id);
+      }
     }
 
     for (const voicing of chord.voicings) {
