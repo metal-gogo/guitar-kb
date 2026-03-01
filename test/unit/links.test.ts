@@ -144,9 +144,9 @@ describe("checkDocLinks", () => {
   });
 
   it("resolves hosting-safe sharp chord and diagram links", async () => {
-    await mkdir(path.join(tempDir, "diagrams"), { recursive: true });
+    await mkdir(path.join(tempDir, "diagrams", "C-sharp", "maj"), { recursive: true });
     await writeFile(
-      path.join(tempDir, "diagrams", "chord__C-sharp__maj__v1.svg"),
+      path.join(tempDir, "diagrams", "C-sharp", "maj", "v1.svg"),
       "<svg/>",
       "utf8",
     );
@@ -158,7 +158,7 @@ describe("checkDocLinks", () => {
     );
     await writeFile(
       path.join(tempDir, "chords", "chord__C-sharp__maj.md"),
-      "# C# maj\n[← Index](../index.md)\n[diagram](../diagrams/chord__C-sharp__maj__v1.svg)\n",
+      "# C# maj\n[← Index](../index.md)\n[diagram](../diagrams/C-sharp/maj/v1.svg)\n",
       "utf8",
     );
 
