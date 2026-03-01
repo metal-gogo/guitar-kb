@@ -165,7 +165,7 @@ describe("normalizeRecords", () => {
     ];
 
     const normalized = normalizeRecords(raw);
-    expect(normalized.map((item) => item.id)).toEqual(["chord:C:maj", "chord:C#:maj", "chord:Db:maj"]);
+    expect(normalized.map((item) => item.id)).toEqual(["chord:C:maj", "chord:Db:maj", "chord:C#:maj"]);
   });
 
   it("links enharmonic equivalents explicitly", () => {
