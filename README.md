@@ -317,7 +317,9 @@ This project extracts facts, not copyrighted presentation.
 - Not allowed: copied source prose, reused external diagrams/images
 - Required: provenance references for each chord/voicing (`source`, `url`, optional `retrieved_at`/`note`)
 
-See `AGENTS.md` for full operating policy.
+See `AGENTS.md` for high-signal repository policy and
+`planning/prompts/autonomous-maintenance.md` for the detailed autonomous
+execution runbook.
 
 ## CI and review gates
 
