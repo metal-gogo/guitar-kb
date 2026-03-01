@@ -27,6 +27,14 @@ function diagramHref(voicingId: string): string {
   return `../diagrams/${voicingDiagramFileName(voicingId)}`;
 }
 
+function privacyHrefFromIndex(): string {
+  return "./privacy.html";
+}
+
+function privacyHrefFromChordPage(): string {
+  return "../privacy.html";
+}
+
 function rootAnchorId(root: string): string {
   const token = root
     .toLowerCase()
@@ -226,6 +234,7 @@ export function siteIndexHtml(chords: ReadonlyArray<ChordRecord>): string {
     "<header class=\"hero\">",
     "  <h1>Guitar Chord Knowledge Base</h1>",
     `  <p>Browse ${sorted.length} canonical chords by root and quality.</p>`,
+    `  <p class="meta"><a href="${escapeHtml(privacyHrefFromIndex())}">Privacy notice</a></p>`,
     `  <nav class="chip-row" aria-label="Root navigation">${rootChips}</nav>`,
     "</header>",
     "<section class=\"grid section\">",
@@ -281,7 +290,7 @@ export function siteChordHtml(chord: ChordRecord, allChords: ReadonlyArray<Chord
 
   const body = [
     "<header class=\"hero\">",
-    `  <p><a class="back-link" href="../index.html">← Back to index</a></p>`,
+    `  <p><a class="back-link" href="../index.html">← Back to index</a> · <a class="back-link" href="${escapeHtml(privacyHrefFromChordPage())}">Privacy notice</a></p>`,
     `  <h1>${escapeHtml(`${chord.root} ${chord.quality}`)}</h1>`,
     `  <p class="meta">${escapeHtml(chord.id)}</p>`,
     "</header>",
@@ -318,4 +327,36 @@ export function siteChordHtml(chord: ChordRecord, allChords: ReadonlyArray<Chord
 
 export function siteChordFileName(chordId: string): string {
   return chordFileName(chordId);
+}
+
+export function sitePrivacyHtml(): string {
+  const body = [
+    "<header class=\"hero\">",
+    "  <p><a class=\"back-link\" href=\"./index.html\">← Back to index</a></p>",
+    "  <h1>Privacy Notice</h1>",
+    "  <p class=\"meta\">Static-site behavior and hosting notes.</p>",
+    "</header>",
+    "<section class=\"grid section\">",
+    "  <article class=\"card\">",
+    "    <h2>What This Site Does</h2>",
+    "    <ul class=\"plain-list\">",
+    "      <li>Serves generated chord reference pages and SVG diagrams.</li>",
+    "      <li>Does not provide user accounts, forms, or in-site messaging.</li>",
+    "    </ul>",
+    "  </article>",
+    "  <article class=\"card\">",
+    "    <h2>Data Collection in Generated Output</h2>",
+    "    <ul class=\"plain-list\">",
+    "      <li>The generated site does not intentionally collect personal data.</li>",
+    "      <li>The generated site does not set first-party analytics cookies by default.</li>",
+    "    </ul>",
+    "  </article>",
+    "  <article class=\"card\">",
+    "    <h2>Hosting and Infrastructure Logs</h2>",
+    "    <p>When hosted (for example on GitHub Pages), the hosting provider may retain standard request logs under its own policies.</p>",
+    "  </article>",
+    "</section>",
+  ].join("\n");
+
+  return htmlFrame("Privacy Notice | GCKB", "./assets/site.css", body);
 }

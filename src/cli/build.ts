@@ -1,6 +1,6 @@
 import { mkdir, readFile, rm } from "node:fs/promises";
 import path from "node:path";
-import { chordIndexMarkdown, chordMarkdown } from "../build/docs/generateDocs.js";
+import { chordIndexMarkdown, chordMarkdown, privacyNoticeMarkdown } from "../build/docs/generateDocs.js";
 import { coverageDashboardMarkdown } from "../build/docs/generateCoverage.js";
 import { chordDocFileName, voicingDiagramFileName } from "../build/docs/paths.js";
 import { buildDocsSitemap } from "../build/docs/generateSitemap.js";
@@ -9,6 +9,7 @@ import {
   siteChordFileName,
   siteChordHtml,
   siteIndexHtml,
+  sitePrivacyHtml,
   siteStylesheet,
 } from "../build/site/generateSite.js";
 import { generateChordSvg } from "../build/svg/generateSvg.js";
@@ -117,9 +118,11 @@ async function main(): Promise<void> {
   await mkdir(path.join("site", "chords"), { recursive: true });
   await mkdir(path.join("site", "diagrams"), { recursive: true });
   await writeText(path.join("docs", "index.md"), chordIndexMarkdown(chords));
+  await writeText(path.join("docs", "privacy.md"), privacyNoticeMarkdown());
   const coverageReport = buildRootQualityCoverageReport(chords);
   await writeText(path.join("docs", "coverage.md"), coverageDashboardMarkdown(coverageReport));
   await writeText(path.join("site", "index.html"), siteIndexHtml(chords));
+  await writeText(path.join("site", "privacy.html"), sitePrivacyHtml());
   await writeText(path.join("site", "assets", "site.css"), siteStylesheet());
 
   const sitemapGeneratedAt =
