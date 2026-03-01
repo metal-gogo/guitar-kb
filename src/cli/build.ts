@@ -6,6 +6,7 @@ import { chordDocFileName, docsVoicingDiagramPath, siteVoicingDiagramPath } from
 import { buildDocsSitemap } from "../build/docs/generateSitemap.js";
 import { writeChordJsonl } from "../build/output/writeJsonl.js";
 import {
+  siteAliasRedirectHtml,
   siteChordFileName,
   siteChordHtml,
   siteIndexHtml,
@@ -17,6 +18,7 @@ import { generateChordSvg } from "../build/svg/generateSvg.js";
 import { ingestNormalizedChords } from "../ingest/pipeline.js";
 import { SOURCE_REGISTRY } from "../ingest/sourceRegistry.js";
 import type { ChordRecord } from "../types/model.js";
+import { sharpAliasForFlatCanonicalRoot, toFlatCanonicalRoot } from "../types/guards.js";
 import { compareChordOrder } from "../utils/sort.js";
 import { pathExists, writeJson, writeText } from "../utils/fs.js";
 import { validateChordRecords } from "../validate/schema.js";
@@ -134,6 +136,8 @@ async function main(): Promise<void> {
     DEFAULT_SITEMAP_GENERATED_AT;
   const sitemap = buildDocsSitemap(chords, sitemapGeneratedAt);
   await writeJson(path.join("docs", "sitemap.json"), sitemap);
+  const aliasRedirects = new Map<string, string>();
+  const canonicalChordIds = new Set(chords.map((chord) => chord.id));
 
   for (const chord of chords) {
     await writeText(
@@ -144,6 +148,18 @@ async function main(): Promise<void> {
       path.join("site", "chords", siteChordFileName(chord.id)),
       siteChordHtml(chord, chords),
     );
+
+    const canonicalRoot = chord.canonical_root ?? toFlatCanonicalRoot(chord.root);
+    const sharpRoot =
+      chord.root_display?.sharp
+      ?? (canonicalRoot ? sharpAliasForFlatCanonicalRoot(canonicalRoot) : undefined);
+    if (sharpRoot) {
+      const aliasChordId = `chord:${sharpRoot}:${chord.quality}`;
+      if (aliasChordId !== chord.id && !canonicalChordIds.has(aliasChordId) && !aliasRedirects.has(aliasChordId)) {
+        aliasRedirects.set(aliasChordId, chord.id);
+      }
+    }
+
     for (const voicing of chord.voicings) {
       const svg = generateChordSvg(voicing, chord.tuning);
       const docsDiagramPath = docsVoicingDiagramPath(voicing.id);
@@ -151,6 +167,13 @@ async function main(): Promise<void> {
       await writeText(docsDiagramPath, svg);
       await writeText(siteDiagramPath, svg);
     }
+  }
+
+  for (const [aliasChordId, canonicalChordId] of [...aliasRedirects.entries()].sort((a, b) => a[0].localeCompare(b[0]))) {
+    await writeText(
+      path.join("site", "chords", siteChordFileName(aliasChordId)),
+      siteAliasRedirectHtml(aliasChordId, canonicalChordId),
+    );
   }
 
   process.stdout.write(`Built outputs for ${chords.length} chords\n`);
