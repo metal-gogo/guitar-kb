@@ -46,6 +46,10 @@ export function shouldEnforceCacheCompletenessPolicy(options: BuildRuntimeOption
   return !options.chord && !options.source;
 }
 
+export function shouldWriteCacheManifest(options: BuildRuntimeOptions): boolean {
+  return shouldEnforceCacheCompletenessPolicy(options) && !options.dryRun;
+}
+
 export function cacheFailureMessage(
   missing: ReadonlyArray<{ source: string; slug: string }>,
   corrupt: ReadonlyArray<{ source: string; slug: string }>,
@@ -107,7 +111,7 @@ async function loadOrGenerateNormalized(options: BuildRuntimeOptions): Promise<C
   if (shouldEnforceCacheCompletenessPolicy(options)) {
     const cacheAudit = await auditCache();
     const cacheManifest = buildCacheCompletenessManifest(cacheAudit);
-    if (!options.dryRun) {
+    if (shouldWriteCacheManifest(options)) {
       await writeJson(CACHE_MANIFEST_PATH, cacheManifest);
     }
 
