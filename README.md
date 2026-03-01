@@ -229,6 +229,20 @@ npm run lint
 npm test
 ```
 
+### Dependency audit
+
+```bash
+npm run audit:deps
+```
+
+CI enforcement command (fails on high/critical findings):
+
+```bash
+npm run audit:ci
+```
+
+Workflow details: [`docs/contributing/dependency-audit.md`](docs/contributing/dependency-audit.md).
+
 ### Release gate (pre-merge verification)
 
 Run all quality gates in a single command:
@@ -303,6 +317,7 @@ npm run preflight
 
 Individual steps:
 
+- `npm run audit:ci`
 - `npm run lint`
 - `npm test`
 - `npm run build`
@@ -317,6 +332,7 @@ Copilot review gate:
 CI artifacts include:
 
 - `ci-summary`
+- `dependency-audit` (`.artifacts/npm-audit.json` from `npm run audit:ci`)
 - `flaky-test-summary`
 - `docs-changelog-snapshot`
 - `coverage-report` (`data/coverage-report.json` from `npm run validate`)
