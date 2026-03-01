@@ -5,7 +5,8 @@ GCKB is a deterministic pipeline that transforms cached chord source pages into:
 - Human-facing Markdown pages with generated chord diagrams
 - LLM-friendly normalized JSONL with stable canonical IDs and provenance
 
-Primary scope (MVP): chord references (C, Cm, C7, Cmaj7) from two sources.
+Current scope: deterministic chord-reference coverage from two sources across
+the configured root/quality matrix.
 
 ## What this repository does
 
@@ -420,7 +421,7 @@ Website publishing workflow:
 
 ## Project status
 
-MVP scope is implemented; current focus is post-MVP hardening:
+Current focus is production hardening:
 
 - documentation clarity
 - stronger determinism/provenance regression guards

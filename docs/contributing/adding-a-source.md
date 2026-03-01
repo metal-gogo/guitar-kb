@@ -29,23 +29,19 @@ into the GCKB ingest pipeline.
 - [ ] Pick a short, lowercase, hyphenated identifier, e.g. `my-chord-source`.
 - [ ] The ID must be unique across `SOURCE_REGISTRY` in
   [`src/ingest/sourceRegistry.ts`](../../src/ingest/sourceRegistry.ts).
-- [ ] Add the new ID to the `IngestTarget["source"]` union in
-  [`src/config.ts`](../../src/config.ts).
+- [ ] Add the new ID to `SOURCE_PRIORITY` in
+  [`src/config.ts`](../../src/config.ts) so it becomes part of `SourceId`.
 
 ### 2. Add the source targets to `config.ts`
 
 In [`src/config.ts`](../../src/config.ts):
 
-- [ ] Add entries to `MVP_TARGETS` (or a parallel targets array) for each
-  chord / root combination you want to ingest.  Each entry must include:
-  ```ts
-  {
-    source: "<your-source-id>",
-    chordId: "chord:<ROOT>:<QUALITY>",  // e.g. "chord:C:maj"
-    slug:    "<root>-<quality>",         // used as the cache filename
-    url:     "https://...",              // exact page URL to fetch
-  }
-  ```
+- [ ] Add a `case` for the new source in `buildTargetForSource(...)`.
+- [ ] Define deterministic slug and URL construction for every root/quality pair.
+- [ ] Confirm the source appears in `FULL_MATRIX_TARGETS` with canonical
+  `chordId` values (`chord:<ROOT>:<QUALITY>`).
+- [ ] If source precedence needs to change, update `SOURCE_PRIORITY` ordering
+  intentionally and document why in the PR.
 
 ### 3. Cache the source HTML
 
@@ -189,8 +185,8 @@ All four commands must pass with no errors before opening a PR.
 
 | # | Step | File(s) affected |
 |---|------|-----------------|
-| 1 | Choose source ID, add to `IngestTarget["source"]` union | `src/config.ts` |
-| 2 | Add ingest targets to `MVP_TARGETS` | `src/config.ts` |
+| 1 | Choose source ID, add to `SOURCE_PRIORITY` (`SourceId`) | `src/config.ts` |
+| 2 | Add source case to deterministic target builder | `src/config.ts` |
 | 3 | Cache HTML via `npm run ingest --refresh` | `data/sources/<id>/` |
 | 4 | Write parser returning `RawChordRecord` with provenance | `src/ingest/parsers/<id>.ts` |
 | 5 | Register in `SOURCE_REGISTRY` | `src/ingest/sourceRegistry.ts` |

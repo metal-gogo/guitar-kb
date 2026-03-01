@@ -3,10 +3,14 @@
 Use this prompt to generate the next roadmap wave (one parent planning issue plus 10–20 child execution issues) with consistent triage.
 
 > **Revision history**
-> - v1 — initial seeding wave (MVP foundation)
+> - v1 — initial seeding wave foundation
 > - v2 (current) — lessons from P0/P1 completion wave; adds label policy,
 >   dependency notation, execution ordering, `status/blocked` handling, and
 >   Copilot review integration guidance
+
+Policy alignment:
+- This prompt is procedural guidance.
+- `AGENTS.md` remains the authoritative source for legal/provenance policy.
 
 ---
 

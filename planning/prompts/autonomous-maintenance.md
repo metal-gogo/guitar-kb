@@ -3,6 +3,10 @@
 Use this prompt to instruct an agent to run continuous, unsupervised
 maintenance cycles on this repository.
 
+Policy alignment:
+- This prompt defines operational workflow.
+- `AGENTS.md` remains authoritative for legal/provenance constraints.
+
 ---
 
 ```
