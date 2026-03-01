@@ -3,10 +3,11 @@ import type { ChordQuality } from "./types/model.js";
 export const PROJECT_USER_AGENT = "GCKB/0.1 (+https://github.com/metal-gogo/guitar-kb)";
 
 export const ROOT_ORDER = [
-  "C", "C#", "Db", "D", "D#", "Eb", "E", "F", "F#", "Gb", "G", "G#", "Ab", "A", "A#", "Bb", "B"
+  "C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B",
 ] as const;
 
 export const QUALITY_ORDER = ["maj", "min", "7", "maj7", "min7", "dim", "dim7", "aug", "sus2", "sus4"] as const;
+export const CORE_QUALITY_ORDER = ["maj", "min", "7", "maj7"] as const;
 
 interface QualityTarget {
   quality: ChordQuality;
@@ -42,7 +43,7 @@ const FULL_QUALITY_TARGETS: readonly QualityTarget[] = QUALITY_ORDER.map((qualit
   ...QUALITY_TARGET_DEFINITIONS[quality],
 }));
 
-const CORE_QUALITY_SET = new Set<ChordQuality>(["maj", "min", "7", "maj7"]);
+const CORE_QUALITY_SET = new Set<ChordQuality>(CORE_QUALITY_ORDER);
 
 function toRootSlug(root: string): string {
   let slug = root.toLowerCase().replace(/#/g, "-sharp");
@@ -77,6 +78,9 @@ function buildTargets(qualityTargets: ReadonlyArray<QualityTarget>): ReadonlyArr
 
 export const FULL_MATRIX_TARGETS: ReadonlyArray<IngestTarget> = buildTargets(FULL_QUALITY_TARGETS);
 
-export const MVP_TARGETS: ReadonlyArray<IngestTarget> = buildTargets(
+export const CORE_MATRIX_TARGETS: ReadonlyArray<IngestTarget> = buildTargets(
   FULL_QUALITY_TARGETS.filter((target) => CORE_QUALITY_SET.has(target.quality)),
 );
+
+/** @deprecated Use CORE_MATRIX_TARGETS instead. */
+export const MVP_TARGETS: ReadonlyArray<IngestTarget> = CORE_MATRIX_TARGETS;
