@@ -1,6 +1,10 @@
 # ADR-0008: AGENTS.md Effectiveness Review and Scope Refactor
 
-Date: 2026-03-01
+**Status:** Accepted  
+**Date:** 2026-03-01  
+**Owner:** Guitar Chord Knowledge Base (GCKB)
+
+---
 
 ## Context
 

@@ -94,10 +94,7 @@ Git and PR policy:
 
 Required local quality gates before merge:
 
-- `npm run lint`
-- `npm test`
-- `npm run build`
-- `npm run validate`
+- `npm run preflight` (runs `audit:ci -> lint -> test -> build -> validate`)
 
 Expected project commands:
 
@@ -106,6 +103,7 @@ Expected project commands:
 - `npm run validate`
 - `npm test`
 - `npm run lint`
+- `npm run preflight`
 
 ## 5) Keep This File Thin
 
