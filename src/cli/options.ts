@@ -46,6 +46,16 @@ Options:
                     Default is off to avoid schema changes in final outputs.
                     Example: npm run ingest -- --include-parser-confidence
 
+Environment:
+  INGEST_STRICT_CAPABILITIES=1
+                    Fail ingest when required matrix chord IDs are unresolved
+                    after applying per-source capability metadata.
+
+  INGEST_CAPABILITY_ALLOWLIST=<comma-separated canonical chord IDs>
+                    Temporary allowlist for known unsupported gaps in strict
+                    mode. Example:
+                    INGEST_CAPABILITY_ALLOWLIST=chord:C:min7,chord:D:aug
+
   --help, -h        Print this help message and exit.
 
 Examples:

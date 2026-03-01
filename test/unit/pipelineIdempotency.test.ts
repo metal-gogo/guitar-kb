@@ -28,6 +28,10 @@ const SOURCE_REGISTRY_STUB: ReadonlyArray<SourceRegistryEntry> = [
     displayName: "Guitar Chord Org",
     baseUrl: "https://www.guitar-chord.org",
     cacheDir: "guitar-chord-org",
+    capabilities: {
+      roots: ["C"],
+      qualities: ["maj", "maj7"],
+    },
     parse: parseGuitarChordOrg,
   },
   {
@@ -35,6 +39,10 @@ const SOURCE_REGISTRY_STUB: ReadonlyArray<SourceRegistryEntry> = [
     displayName: "All Guitar Chords",
     baseUrl: "https://www.all-guitar-chords.com",
     cacheDir: "all-guitar-chords",
+    capabilities: {
+      roots: ["C"],
+      qualities: ["maj", "maj7"],
+    },
     parse: parseAllGuitarChords,
   },
 ];

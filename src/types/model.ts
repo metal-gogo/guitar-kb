@@ -69,10 +69,16 @@ export interface RawChordRecord {
 
 export type ParserFn = (html: string, url: string) => RawChordRecord;
 
+export interface SourceCapabilities {
+  roots: ReadonlyArray<string>;
+  qualities: ReadonlyArray<ChordQuality>;
+}
+
 export interface SourceRegistryEntry {
   id: string;
   displayName: string;
   baseUrl: string;
   cacheDir: string;
+  capabilities: SourceCapabilities;
   parse: ParserFn;
 }
