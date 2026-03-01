@@ -24,6 +24,18 @@ jobs:
           exit $code
         continue-on-error: true
 
+      - name: dependency audit
+        id: audit_deps
+        if: steps.install.outcome == 'success'
+        run: |
+          set +e
+          mkdir -p .artifacts
+          npm run audit:ci -- --json > .artifacts/npm-audit.json
+          code=$?
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          exit $code
+        continue-on-error: true
+
       - name: lint
         id: lint
         if: steps.install.outcome == 'success'
@@ -140,6 +152,7 @@ jobs:
         if: always()
         run: |
           STATUS_INSTALL="${{ steps.install.outcome }}"
+          STATUS_AUDIT_DEPS="${{ steps.audit_deps.outcome }}"
           STATUS_LINT="${{ steps.lint.outcome }}"
           STATUS_TEST="${{ steps.test.outcome }}"
           STATUS_FLAKY_SUMMARY="${{ steps.flaky_summary.outcome }}"
@@ -151,6 +164,7 @@ jobs:
           STATUS_VALIDATE="${{ steps.validate.outcome }}"
 
           EXIT_INSTALL="${{ steps.install.outputs.exit_code }}"
+          EXIT_AUDIT_DEPS="${{ steps.audit_deps.outputs.exit_code }}"
           EXIT_LINT="${{ steps.lint.outputs.exit_code }}"
           EXIT_TEST="${{ steps.test.outputs.exit_code }}"
           EXIT_FLAKY_SUMMARY="${{ steps.flaky_summary.outputs.exit_code }}"
@@ -162,6 +176,7 @@ jobs:
           EXIT_VALIDATE="${{ steps.validate.outputs.exit_code }}"
 
           [ -z "$EXIT_INSTALL" ] && EXIT_INSTALL="n/a"
+          [ -z "$EXIT_AUDIT_DEPS" ] && EXIT_AUDIT_DEPS="n/a"
           [ -z "$EXIT_LINT" ] && EXIT_LINT="n/a"
           [ -z "$EXIT_TEST" ] && EXIT_TEST="n/a"
           [ -z "$EXIT_FLAKY_SUMMARY" ] && EXIT_FLAKY_SUMMARY="n/a"
@@ -189,6 +204,7 @@ jobs:
             echo "| Step | Command | Status | Exit code |"
             echo "|------|---------|--------|-----------|"
             echo "| install  | \`npm ci\` | $(icon "$STATUS_INSTALL") $STATUS_INSTALL | $EXIT_INSTALL |"
+            echo "| dependency-audit | \`npm run audit:ci -- --json > .artifacts/npm-audit.json\` | $(icon "$STATUS_AUDIT_DEPS") $STATUS_AUDIT_DEPS | $EXIT_AUDIT_DEPS |"
             echo "| lint     | \`npm run lint\` | $(icon "$STATUS_LINT") $STATUS_LINT | $EXIT_LINT |"
             echo "| test     | \`npm test\` | $(icon "$STATUS_TEST") $STATUS_TEST | $EXIT_TEST |"
             echo "| flaky-summary | \`npm run ci:flaky-summary\` | $(icon "$STATUS_FLAKY_SUMMARY") $STATUS_FLAKY_SUMMARY | $EXIT_FLAKY_SUMMARY |"
@@ -199,7 +215,7 @@ jobs:
             echo "| source-freshness | \`npm run source-freshness -- --as-of 2026-02-27T00:00:00.000Z --max-age-days 30\` | $(icon "$STATUS_SOURCE_FRESHNESS") $STATUS_SOURCE_FRESHNESS | $EXIT_SOURCE_FRESHNESS |"
             echo "| validate | \`npm run validate\` | $(icon "$STATUS_VALIDATE") $STATUS_VALIDATE | $EXIT_VALIDATE |"
             echo ""
-            if [ "$STATUS_INSTALL" = "failure" ] || [ "$STATUS_LINT" = "failure" ] || [ "$STATUS_TEST" = "failure" ] || \
+            if [ "$STATUS_INSTALL" = "failure" ] || [ "$STATUS_AUDIT_DEPS" = "failure" ] || [ "$STATUS_LINT" = "failure" ] || [ "$STATUS_TEST" = "failure" ] || \
                [ "$STATUS_FLAKY_SUMMARY" = "failure" ] || \
                [ "$STATUS_INGEST" = "failure" ] || [ "$STATUS_BUILD" = "failure" ] || \
                [ "$STATUS_DOCS_CHANGELOG" = "failure" ] || \
@@ -209,6 +225,7 @@ jobs:
               echo "## Remediation Hints"
               echo ""
               [ "$STATUS_INSTALL"  = "failure" ] && echo "- **install failed**: run \`npm ci\` locally; check your Node.js version and network access."
+              [ "$STATUS_AUDIT_DEPS" = "failure" ] && echo "- **dependency-audit failed**: run \`npm run audit:deps\` locally and update dependencies or document a temporary risk acceptance."
               [ "$STATUS_LINT"     = "failure" ] && echo "- **lint failed**: run \`npm run lint\` locally and fix TypeScript errors."
               [ "$STATUS_TEST"     = "failure" ] && echo "- **test failed**: run \`npm test\` locally; check for regressions in parsers, normalization, or SVG output."
               [ "$STATUS_FLAKY_SUMMARY" = "failure" ] && echo "- **flaky-summary failed**: run \`npm run ci:flaky-summary -- --input .artifacts/vitest-results.json\` and verify vitest JSON is present."
@@ -239,6 +256,15 @@ jobs:
           path: |
             .artifacts/flaky-test-summary.md
             .artifacts/flaky-test-summary.json
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: upload dependency audit artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-audit
+          path: .artifacts/npm-audit.json
           if-no-files-found: warn
           retention-days: 7
 
@@ -276,6 +302,7 @@ jobs:
       - name: fail if any step failed
         if: |
           steps.install.outcome == 'failure' ||
+          steps.audit_deps.outcome == 'failure' ||
           steps.lint.outcome == 'failure' ||
           steps.test.outcome == 'failure' ||
           steps.flaky_summary.outcome == 'failure' ||
