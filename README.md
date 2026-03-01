@@ -32,12 +32,14 @@ End-to-end pipeline:
 - `data/chords.jsonl` (primary machine-consumable output)
 - `docs/chords/*.md` (per-chord documentation)
 - `docs/diagrams/*.svg` (generated voicing diagrams)
+- `site/index.html` + `site/chords/*.html` (generated static website)
+- `site/diagrams/*.svg` (website diagram assets)
 
 ### Artifact versioning policy
 
 Source cache (`data/sources/**/*.html`) is **committed** to enable deterministic, offline builds.
 
-All generated outputs (`data/generated/`, `data/chords.jsonl`, `docs/chords/`, `docs/diagrams/`) are **excluded from git** via `.gitignore`. They are fully reproducible by running `npm run build`. Committing generated outputs would create noisy diffs and risk stale artifacts drifting from the build scripts.
+All generated outputs (`data/generated/`, `data/chords.jsonl`, `docs/chords/`, `docs/diagrams/`, `site/`) are **excluded from git** via `.gitignore`. They are fully reproducible by running `npm run build`. Committing generated outputs would create noisy diffs and risk stale artifacts drifting from the build scripts.
 
 Full policy: [`planning/decisions/0004-artifact-versioning-policy.md`](planning/decisions/0004-artifact-versioning-policy.md)
 
@@ -49,6 +51,7 @@ Full policy: [`planning/decisions/0004-artifact-versioning-policy.md`](planning/
 - `src/ingest/normalize/*` – canonical record normalization
 - `src/build/output/*` – JSONL output writer
 - `src/build/docs/*` – Markdown generation
+- `src/build/site/*` – static website generation
 - `src/build/svg/*` – SVG diagram generation
 - `src/validate/*` – schema validation
 - `src/types/*` – core data model and guards
@@ -133,7 +136,15 @@ Build behavior:
 - otherwise generates normalized records via ingest pipeline
 - sorts records deterministically
 - validates records
-- regenerates JSONL/docs/SVG artifacts
+- regenerates JSONL/docs/SVG/static-site artifacts
+
+Local website preview:
+
+```bash
+python3 -m http.server --directory site 4173
+```
+
+Then open: `http://localhost:4173`
 
 To dry-run build output selection for an extended-quality canonical chord ID:
 

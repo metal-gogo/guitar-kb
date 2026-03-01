@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { chordIndexMarkdown, chordMarkdown } from "../../src/build/docs/generateDocs.js";
 import { coverageDashboardMarkdown } from "../../src/build/docs/generateCoverage.js";
+import { siteChordFileName, siteChordHtml, siteIndexHtml } from "../../src/build/site/generateSite.js";
 import { buildRootQualityCoverageReport } from "../../src/validate/coverage.js";
 import type { ChordRecord } from "../../src/types/model.js";
 
@@ -49,6 +50,16 @@ function extractMarkdownLinks(markdown: string): string[] {
     .map((match) => {
       const capture = /\[[^\]]+\]\(([^)]+)\)/.exec(match);
       return capture?.[1];
+    })
+    .filter((value): value is string => Boolean(value));
+}
+
+function extractHtmlLinks(html: string): string[] {
+  const links = html.match(/(?:href|src)="([^"]+)"/g) ?? [];
+  return links
+    .map((entry) => {
+      const match = /(?:href|src)="([^"]+)"/.exec(entry);
+      return match?.[1];
     })
     .filter((value): value is string => Boolean(value));
 }
@@ -363,5 +374,90 @@ describe("coverageDashboardMarkdown", () => {
     const report = buildRootQualityCoverageReport([], { roots: ["C"], qualities: ["maj", "min", "7"] });
     const md = coverageDashboardMarkdown(report, { missingLimit: 2 });
     expect(md).toContain("_Showing first 2 of 3 missing IDs (deterministic order)._");
+  });
+});
+
+describe("site generation", () => {
+  it("renders a deterministic site index with root and quality navigation", () => {
+    const chords = [
+      buildChord({ id: "chord:C:min", root: "C", quality: "min", aliases: ["Cm"] }),
+      buildChord({ id: "chord:C:maj", root: "C", quality: "maj", aliases: ["C"] }),
+      buildChord({ id: "chord:Db:maj", root: "Db", quality: "maj", aliases: ["Db"] }),
+    ];
+
+    const html = siteIndexHtml(chords);
+    const reversed = siteIndexHtml([...chords].reverse());
+
+    expect(html).toBe(reversed);
+    expect(html).toContain("Guitar Chord Knowledge Base");
+    expect(html).toContain("href=\"#root-c\"");
+    expect(html).toContain("href=\"#root-db\"");
+    expect(html).toContain("href=\"./chords/chord__C__maj.html\"");
+    expect(html).toContain("href=\"./chords/chord__C__min.html\"");
+    expect(html).toContain("href=\"./chords/chord__Db__maj.html\"");
+  });
+
+  it("renders chord pages with voicing diagrams, provenance, and cross-links", () => {
+    const cSharp = buildChord({
+      id: "chord:C#:maj",
+      root: "C#",
+      quality: "maj",
+      enharmonic_equivalents: ["chord:Db:maj"],
+      source_refs: [{ source: "guitar-chord-org", url: "https://example.com/c-sharp-major" }],
+    });
+    const dFlat = buildChord({
+      id: "chord:Db:maj",
+      root: "Db",
+      quality: "maj",
+      enharmonic_equivalents: [],
+      source_refs: [{ source: "all-guitar-chords", url: "https://example.com/d-flat-major" }],
+    });
+    const cMin = buildChord({
+      id: "chord:C#:min",
+      root: "C#",
+      quality: "min",
+      enharmonic_equivalents: [],
+    });
+
+    const html = siteChordHtml(cSharp, [cSharp, dFlat, cMin]);
+
+    expect(html).toContain("src=\"../diagrams/chord__C__maj__v1.svg\"");
+    expect(html).toContain("href=\"./chord__Db__maj.html\"");
+    expect(html).toContain("href=\"./chord__C%23__min.html\"");
+    expect(html).toContain("href=\"https://example.com/c-sharp-major\"");
+    expect(html).toContain("Back to index");
+  });
+
+  it("emits only resolvable internal links across generated index/chord pages", () => {
+    const chords = [
+      buildChord({ id: "chord:C:maj", root: "C", quality: "maj", enharmonic_equivalents: ["chord:Db:maj"] }),
+      buildChord({ id: "chord:C:min", root: "C", quality: "min", enharmonic_equivalents: [] }),
+      buildChord({ id: "chord:Db:maj", root: "Db", quality: "maj", enharmonic_equivalents: [] }),
+    ];
+
+    const index = siteIndexHtml(chords);
+    const pages = new Map<string, string>([
+      ["./index.html", index],
+      ...chords.map((chord) => [`./chords/${siteChordFileName(chord.id)}`, siteChordHtml(chord, chords)] as const),
+    ]);
+
+    const internalTargets = new Set<string>([
+      "./index.html",
+      "./assets/site.css",
+      ...chords.map((chord) => `./chords/${siteChordFileName(chord.id)}`),
+      ...chords.flatMap((chord) => chord.voicings.map((voicing) => `./diagrams/${voicing.id.replace(/:/g, "__").replace(/#/g, "%23")}.svg`)),
+    ]);
+
+    for (const [pathName, html] of pages.entries()) {
+      for (const target of extractHtmlLinks(html)) {
+        if (target.startsWith("https://") || target.startsWith("http://") || target.startsWith("#")) {
+          continue;
+        }
+        const normalized = pathName === "./index.html"
+          ? target
+          : (target.startsWith("../") ? `./${target.slice(3)}` : `./chords/${target.slice(2)}`);
+        expect(internalTargets.has(normalized), `${pathName} -> ${target}`).toBe(true);
+      }
+    }
   });
 });
