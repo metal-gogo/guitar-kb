@@ -69,7 +69,7 @@ Every chord and voicing must keep `source_refs` with:
 - Canonical chord IDs follow `chord:<ROOT>:<QUALITY>`.
 - Canonical root policy and enharmonic behavior must follow ADRs.
 - Keep machine outputs schema-valid (`chords.schema.json`) at all times.
-- Use the term `voicing` in active internal guidance (not `variation`).
+- Use the term `voicing` consistently in active internal guidance.
 
 ### 3.3 Separation of concerns
 
