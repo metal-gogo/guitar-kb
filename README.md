@@ -251,8 +251,8 @@ Run all quality gates in a single command:
 npm run preflight
 ```
 
-This runs `lint → test → build → validate` in sequence and fails fast on the
-first error. `build` includes the ingest pipeline if
+This runs `audit:ci → lint → test → build → validate` in sequence and fails
+fast on the first error. `build` includes the ingest pipeline if
 `data/generated/chords.normalized.json` is absent.
 
 To include a full source refresh before the gate:
@@ -332,7 +332,7 @@ Copilot review gate:
 CI artifacts include:
 
 - `ci-summary`
-- `dependency-audit` (`.artifacts/npm-audit.json` from `npm run audit:ci`)
+- `dependency-audit` (`.artifacts/npm-audit.json` from `npm run audit:ci -- --json > .artifacts/npm-audit.json`)
 - `flaky-test-summary`
 - `docs-changelog-snapshot`
 - `coverage-report` (`data/coverage-report.json` from `npm run validate`)

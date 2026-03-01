@@ -1,7 +1,7 @@
 # Dependency Audit Workflow
 
-Use this workflow to keep dependency risk low and deterministic across local
-development and CI.
+Use this workflow to keep dependency risk low and apply a consistent audit gate
+across local development and CI.
 
 ## Local commands
 
@@ -28,6 +28,7 @@ npm run audit:ci
 
 ## CI behavior
 
-- CI runs the high/critical gate via `npm run audit:ci`.
-- The raw audit output is uploaded as the `dependency-audit` artifact
-  (`.artifacts/npm-audit.json`).
+- CI runs the high/critical gate via
+  `npm run audit:ci -- --json > .artifacts/npm-audit.json`.
+- The JSON audit output from this command is uploaded as the
+  `dependency-audit` artifact (`.artifacts/npm-audit.json`).

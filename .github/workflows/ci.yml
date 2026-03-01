@@ -30,7 +30,7 @@ jobs:
         run: |
           set +e
           mkdir -p .artifacts
-          npm audit --audit-level=high --json > .artifacts/npm-audit.json
+          npm run audit:ci -- --json > .artifacts/npm-audit.json
           code=$?
           echo "exit_code=$code" >> "$GITHUB_OUTPUT"
           exit $code
@@ -204,7 +204,7 @@ jobs:
             echo "| Step | Command | Status | Exit code |"
             echo "|------|---------|--------|-----------|"
             echo "| install  | \`npm ci\` | $(icon "$STATUS_INSTALL") $STATUS_INSTALL | $EXIT_INSTALL |"
-            echo "| dependency-audit | \`npm run audit:ci\` | $(icon "$STATUS_AUDIT_DEPS") $STATUS_AUDIT_DEPS | $EXIT_AUDIT_DEPS |"
+            echo "| dependency-audit | \`npm run audit:ci -- --json > .artifacts/npm-audit.json\` | $(icon "$STATUS_AUDIT_DEPS") $STATUS_AUDIT_DEPS | $EXIT_AUDIT_DEPS |"
             echo "| lint     | \`npm run lint\` | $(icon "$STATUS_LINT") $STATUS_LINT | $EXIT_LINT |"
             echo "| test     | \`npm test\` | $(icon "$STATUS_TEST") $STATUS_TEST | $EXIT_TEST |"
             echo "| flaky-summary | \`npm run ci:flaky-summary\` | $(icon "$STATUS_FLAKY_SUMMARY") $STATUS_FLAKY_SUMMARY | $EXIT_FLAKY_SUMMARY |"
