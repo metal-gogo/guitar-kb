@@ -8,6 +8,7 @@ exports[`schema snapshot contracts > representative chord records match stored s
     "CM",
     "C major",
   ],
+  "canonical_root": "C",
   "enharmonic_equivalents": [],
   "formula": [
     "1",
@@ -25,6 +26,12 @@ exports[`schema snapshot contracts > representative chord records match stored s
   ],
   "quality": "maj",
   "root": "C",
+  "root_aliases": [
+    "C",
+  ],
+  "root_display": {
+    "flat": "C",
+  },
   "source_refs": [
     {
       "source": "guitar-chord-org",
@@ -151,6 +158,7 @@ exports[`schema snapshot contracts > representative chord records match stored s
     "Cmin",
     "C minor",
   ],
+  "canonical_root": "C",
   "enharmonic_equivalents": [],
   "formula": [
     "1",
@@ -168,6 +176,12 @@ exports[`schema snapshot contracts > representative chord records match stored s
   ],
   "quality": "min",
   "root": "C",
+  "root_aliases": [
+    "C",
+  ],
+  "root_display": {
+    "flat": "C",
+  },
   "source_refs": [
     {
       "source": "guitar-chord-org",
@@ -293,6 +307,7 @@ exports[`schema snapshot contracts > representative chord records match stored s
     "C7",
     "Cdom7",
   ],
+  "canonical_root": "C",
   "enharmonic_equivalents": [],
   "formula": [
     "1",
@@ -312,6 +327,12 @@ exports[`schema snapshot contracts > representative chord records match stored s
   ],
   "quality": "7",
   "root": "C",
+  "root_aliases": [
+    "C",
+  ],
+  "root_display": {
+    "flat": "C",
+  },
   "source_refs": [
     {
       "source": "guitar-chord-org",
@@ -437,6 +458,7 @@ exports[`schema snapshot contracts > representative chord records match stored s
     "Cmaj7",
     "CM7",
   ],
+  "canonical_root": "C",
   "enharmonic_equivalents": [],
   "formula": [
     "1",
@@ -456,6 +478,12 @@ exports[`schema snapshot contracts > representative chord records match stored s
   ],
   "quality": "maj7",
   "root": "C",
+  "root_aliases": [
+    "C",
+  ],
+  "root_display": {
+    "flat": "C",
+  },
   "source_refs": [
     {
       "source": "guitar-chord-org",

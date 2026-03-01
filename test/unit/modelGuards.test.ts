@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { assertCanonicalChordId, isCanonicalChordId, isChordQuality, isVoicingPosition } from "../../src/types/guards.js";
+import {
+  assertCanonicalChordId,
+  isCanonicalChordId,
+  isChordQuality,
+  isFlatCanonicalRoot,
+  isVoicingPosition,
+  sharpAliasForFlatCanonicalRoot,
+  toFlatCanonicalRoot,
+} from "../../src/types/guards.js";
 
 describe("isCanonicalChordId", () => {
   it("accepts valid canonical IDs", () => {
@@ -38,5 +46,26 @@ describe("isVoicingPosition", () => {
     expect(isVoicingPosition("upper")).toBe(true);
     expect(isVoicingPosition("unknown")).toBe(true);
     expect(isVoicingPosition("mid")).toBe(false);
+  });
+});
+
+describe("flat-baseline root guards", () => {
+  it("validates flat-baseline canonical roots", () => {
+    expect(isFlatCanonicalRoot("Db")).toBe(true);
+    expect(isFlatCanonicalRoot("Bb")).toBe(true);
+    expect(isFlatCanonicalRoot("C#")).toBe(false);
+  });
+
+  it("maps sharp aliases to flat-baseline canonical roots", () => {
+    expect(toFlatCanonicalRoot("C#")).toBe("Db");
+    expect(toFlatCanonicalRoot("F#")).toBe("Gb");
+    expect(toFlatCanonicalRoot("A")).toBe("A");
+    expect(toFlatCanonicalRoot("H")).toBeNull();
+  });
+
+  it("returns deterministic sharp aliases for flat canonical roots", () => {
+    expect(sharpAliasForFlatCanonicalRoot("Db")).toBe("C#");
+    expect(sharpAliasForFlatCanonicalRoot("Bb")).toBe("A#");
+    expect(sharpAliasForFlatCanonicalRoot("C")).toBeUndefined();
   });
 });

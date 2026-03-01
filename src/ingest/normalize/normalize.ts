@@ -6,7 +6,11 @@ import type {
   SourceRef,
   VoicingPosition,
 } from "../../types/model.js";
-import { assertCanonicalChordId } from "../../types/guards.js";
+import {
+  assertCanonicalChordId,
+  sharpAliasForFlatCanonicalRoot,
+  toFlatCanonicalRoot,
+} from "../../types/guards.js";
 import { compareChordOrder } from "../../utils/sort.js";
 
 export const DUPLICATE_VOICING_SOURCE_REF_NOTE = "duplicate-voicing";
@@ -449,6 +453,12 @@ export function normalizeRecords(raw: RawChordRecord[], options: NormalizeRecord
       source: input.source,
       url: input.url
     };
+    const canonicalRoot = toFlatCanonicalRoot(input.root);
+    if (!canonicalRoot) {
+      throw new Error(`Unsupported root for canonical mapping: ${input.root} (source=${input.source} url=${input.url})`);
+    }
+    const sharpAlias = sharpAliasForFlatCanonicalRoot(canonicalRoot);
+    const rootAliases = sharpAlias ? [canonicalRoot, sharpAlias] : [canonicalRoot];
     const parserConfidence = includeParserConfidence
       ? mergeParserConfidence(undefined, input.parser_confidence)
       : undefined;
@@ -460,6 +470,12 @@ export function normalizeRecords(raw: RawChordRecord[], options: NormalizeRecord
       merged.set(id, {
         id,
         root: input.root,
+        canonical_root: canonicalRoot,
+        root_aliases: rootAliases,
+        root_display: {
+          flat: canonicalRoot,
+          ...(sharpAlias ? { sharp: sharpAlias } : {}),
+        },
         quality,
         aliases,
         enharmonic_equivalents: enharmonic,

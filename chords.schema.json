@@ -25,6 +25,58 @@
       "pattern": "^[A-G](#|b)?$",
       "description": "Root note of the chord"
     },
+    "canonical_root": {
+      "$ref": "#/$defs/flatRoot",
+      "description": "Flat-baseline canonical root for this pitch class."
+    },
+    "root_aliases": {
+      "type": "array",
+      "uniqueItems": true,
+      "oneOf": [
+        {
+          "minItems": 1,
+          "maxItems": 1,
+          "prefixItems": [
+            {
+              "$ref": "#/$defs/flatRoot"
+            }
+          ],
+          "items": false
+        },
+        {
+          "minItems": 2,
+          "maxItems": 2,
+          "prefixItems": [
+            {
+              "$ref": "#/$defs/flatRoot"
+            },
+            {
+              "type": "string",
+              "pattern": "^[A-G]#$"
+            }
+          ],
+          "items": false
+        }
+      ],
+      "description": "Accepted root spellings for lookup (flat first, sharp alias second when present)."
+    },
+    "root_display": {
+      "type": "object",
+      "required": [
+        "flat"
+      ],
+      "properties": {
+        "flat": {
+          "$ref": "#/$defs/flatRoot"
+        },
+        "sharp": {
+          "type": "string",
+          "pattern": "^[A-G]#$"
+        }
+      },
+      "additionalProperties": false,
+      "description": "Display-oriented root aliases for notation toggles."
+    },
     "quality": {
       "type": "string",
       "description": "Normalized chord quality (e.g., maj, min, 7, maj7, dim, aug, sus2, sus4)"
@@ -160,6 +212,23 @@
     }
   },
   "$defs": {
+    "flatRoot": {
+      "type": "string",
+      "enum": [
+        "C",
+        "Db",
+        "D",
+        "Eb",
+        "E",
+        "F",
+        "Gb",
+        "G",
+        "Ab",
+        "A",
+        "Bb",
+        "B"
+      ]
+    },
     "sourceRef": {
       "type": "object",
       "required": [

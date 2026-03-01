@@ -1,4 +1,5 @@
 export type ChordQuality = "maj" | "min" | "7" | "maj7" | "min7" | "dim" | "dim7" | "aug" | "sus2" | "sus4";
+export type FlatCanonicalRoot = "C" | "Db" | "D" | "Eb" | "E" | "F" | "Gb" | "G" | "Ab" | "A" | "Bb" | "B";
 
 export interface SourceRef {
   source: string;
@@ -14,6 +15,11 @@ export interface ParserConfidence {
   source: string;
   level: ParserConfidenceLevel;
   checks: string[];
+}
+
+export interface RootDisplayAliases {
+  flat: FlatCanonicalRoot;
+  sharp?: string;
 }
 
 export interface RawVoicing {
@@ -40,6 +46,9 @@ export interface Voicing {
 export interface ChordRecord {
   id: string;
   root: string;
+  canonical_root?: FlatCanonicalRoot;
+  root_aliases?: string[];
+  root_display?: RootDisplayAliases;
   quality: ChordQuality;
   aliases?: string[];
   enharmonic_equivalents?: string[];
