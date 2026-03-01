@@ -30,7 +30,7 @@ what causes friction/conflict, and refactor it to a tighter, high-signal policy.
 - [ ] Legal and provenance constraints remain present and clearly non-negotiable.
 - [ ] Cross-reference alignment is updated for README/planning prompts where needed.
 - [ ] `npm run lint` exits `0`.
-- [ ] `rg -n \"Mission|Legal|Provenance|MVP|voicing|variation\" AGENTS.md planning/prompts README.md` output is reviewed and expected.
+- [ ] `rg -n "Mission|Legal|Provenance|MVP|voicing|variation" AGENTS.md planning/prompts README.md` output is reviewed and expected.
 
 ## Validation Steps
 
@@ -42,4 +42,3 @@ rg -n "Mission|Legal|Provenance|MVP|voicing|variation" AGENTS.md planning/prompt
 Expected outcome:
 - Lint exits `0`.
 - AGENTS guidance is tighter, non-conflicting, and still preserves legal safeguards.
-
