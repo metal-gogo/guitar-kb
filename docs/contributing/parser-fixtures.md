@@ -159,10 +159,28 @@ Add a fixture when **any** of these is true:
    the structure deviates from the happy path.
 5. **Reference the fixture in a test** — every fixture must have at least one
    test that reads it.
-6. **Run the full test suite** and confirm nothing broke:
+6. **Run parity checks** so fixture/cache drift is caught early:
+   ```bash
+   npm test -- test/unit/cache.test.ts test/unit/parser.invariants.test.ts
+   ```
+7. **Run the full test suite** and confirm nothing broke:
    ```bash
    npm test
    ```
+
+### Fixture/cache parity expectations
+
+The parity checks enforce deterministic diagnostics for:
+
+- expected ingest target cache slugs under `data/sources/<source>/`
+- expected parser fixture slugs under `test/fixtures/sources/<source>/`
+- fixture-backed cache availability for parser-covered scenarios
+
+Temporary cache-only regression slugs are explicitly allowlisted in
+`src/ingest/fixtureCacheParity.ts`. Any new cache-only slug must either:
+
+1. become a tracked target/fixture slug, or
+2. be explicitly allowlisted with a documented reason.
 
 ---
 
