@@ -30,4 +30,16 @@ To include confidence annotations in `data/generated/chords.normalized.json`:
 npm run ingest -- --include-parser-confidence
 ```
 
+When enabled, ingest also writes:
+
+- `data/generated/parser-confidence.report.json`
+
+The report is machine-readable and deterministic for identical normalized chord
+inputs. It includes:
+
+- overall confidence annotation totals (`high`, `medium`, `low`)
+- per-source confidence totals and per-quality breakdowns
+- aggregate per-quality confidence totals across all sources
+- deterministic list of chord IDs that have no confidence annotations
+
 This flag is intended for debugging and source-quality triage workflows.
