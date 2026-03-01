@@ -247,7 +247,7 @@ function enforceStrictCapabilities<T extends PipelineIngestTarget>(
   }
 
   throw new Error(
-    `Strict capability mode enabled via ${STRICT_CAPABILITIES_ENV}, unresolved required gaps: `
+    "Strict capability mode enabled, unresolved required gaps: "
     + `${selection.unresolvedGaps.length} (first=${selection.unresolvedGaps[0]?.chordId ?? "unknown"})`,
   );
 }

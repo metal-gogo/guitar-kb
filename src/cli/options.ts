@@ -48,8 +48,9 @@ Options:
 
 Environment:
   INGEST_STRICT_CAPABILITIES=1
-                    Fail ingest when required matrix chord IDs are unresolved
-                    after applying per-source capability metadata.
+                    Fail ingest when selected chord IDs remain unresolved
+                    after applying per-source capability metadata and target
+                    selection.
 
   INGEST_CAPABILITY_ALLOWLIST=<comma-separated canonical chord IDs>
                     Temporary allowlist for known unsupported gaps in strict

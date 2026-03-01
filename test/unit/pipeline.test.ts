@@ -255,7 +255,7 @@ describe("ingestNormalizedChords", () => {
       dryRun: true,
       strictCapabilities: true,
       delayMs: 0,
-    })).rejects.toThrow("Strict capability mode enabled via INGEST_STRICT_CAPABILITIES");
+    })).rejects.toThrow("Strict capability mode enabled, unresolved required gaps:");
 
     const output = writeSpy.mock.calls.map(([line]) => String(line)).join("");
     expect(output).toContain("GAP_UNRESOLVED chord=chord:C:min7 unsupported_sources=stub-source");
