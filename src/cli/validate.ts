@@ -6,6 +6,7 @@ import { checkProvenanceCoverage } from "../validate/provenance.js";
 import { buildEnharmonicReport, formatEnharmonicReport } from "../validate/enharmonic.js";
 import { runA11yLint } from "../validate/a11y.js";
 import { buildRootQualityCoverageReport } from "../validate/coverage.js";
+import { evaluateCoverageGate, resolveCoverageGatePolicy } from "../validate/coverageGate.js";
 import type { ChordRecord } from "../types/model.js";
 
 async function main(): Promise<void> {
@@ -19,6 +20,7 @@ async function main(): Promise<void> {
     .map((line) => line.trim())
     .filter((line) => line.length > 0)
     .map((line) => JSON.parse(line) as ChordRecord);
+  const validationFailures: string[] = [];
 
   // 2. Provenance coverage check (before AJV so missing provenance fields yield
   //    actionable chord/voicing paths rather than generic JSON Schema errors)
@@ -58,6 +60,47 @@ async function main(): Promise<void> {
     }
   }
 
+  const coverageGatePolicy = resolveCoverageGatePolicy();
+  const coverageGate = evaluateCoverageGate(coverage, coverageGatePolicy);
+  process.stdout.write(
+    `Coverage gate mode=${coverageGate.policy.mode} require_full_matrix=${coverageGate.policy.requireFullMatrix ? "1" : "0"}\n`,
+  );
+  process.stdout.write(
+    `Coverage gate allowlisted_missing=${coverageGate.allowedMissingCanonicalIds.length} blocked_missing=${coverageGate.blockedMissingCanonicalIds.length}\n`,
+  );
+
+  const coverageArtifact = {
+    matrix_version: coverage.matrixVersion,
+    expected_roots: coverage.expectedRoots,
+    expected_qualities: coverage.expectedQualities,
+    expected_combinations: coverage.expectedCombinations,
+    observed_combinations: coverage.observedCombinations,
+    coverage_percent: coverage.coveragePercent,
+    missing_canonical_ids: coverage.missingCanonicalIds,
+    missing_tagged: coverage.missingTagged,
+    missing_severity_counts: coverage.missingSeverityCounts,
+    unexpected_canonical_ids: coverage.unexpectedCanonicalIds,
+    gate: {
+      mode: coverageGate.policy.mode,
+      require_full_matrix: coverageGate.policy.requireFullMatrix,
+      allowlisted_missing_canonical_ids: coverageGate.policy.allowlistedMissingCanonicalIds,
+      allowed_missing_canonical_ids: coverageGate.allowedMissingCanonicalIds,
+      blocked_missing_canonical_ids: coverageGate.blockedMissingCanonicalIds,
+      pass: coverageGate.pass,
+    },
+  };
+  await writeFile("data/coverage-report.json", `${JSON.stringify(coverageArtifact, null, 2)}\n`, "utf8");
+  process.stdout.write("Coverage report: data/coverage-report.json\n");
+  if (!coverageGate.pass) {
+    process.stderr.write(
+      `Coverage gate failure: ${coverageGate.blockedMissingCanonicalIds.length} missing root-quality IDs are not allowlisted\n`,
+    );
+    for (const id of coverageGate.blockedMissingCanonicalIds) {
+      process.stderr.write(`BLOCKED_MISSING ${id}\n`);
+    }
+    validationFailures.push("coverage gate failed");
+  }
+
   // 4. Enharmonic equivalence report
   const report = buildEnharmonicReport(records);
   const reportMd = formatEnharmonicReport(report);
@@ -83,7 +126,11 @@ async function main(): Promise<void> {
     for (const v of a11y.violations) {
       process.stderr.write(`  [${v.rule}] ${v.file}: ${v.message}\n`);
     }
-    throw new Error(`Accessibility lint failed: ${a11y.violations.length} violation(s)`);
+    validationFailures.push(`Accessibility lint failed: ${a11y.violations.length} violation(s)`);
+  }
+
+  if (validationFailures.length > 0) {
+    throw new Error(validationFailures.join("; "));
   }
 }
 

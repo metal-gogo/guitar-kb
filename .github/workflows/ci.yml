@@ -213,6 +213,15 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
 
+      - name: upload coverage report artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: data/coverage-report.json
+          if-no-files-found: warn
+          retention-days: 7
+
       - name: fail if any step failed
         if: |
           steps.install.outcome == 'failure' ||

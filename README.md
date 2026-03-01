@@ -137,6 +137,23 @@ npm run validate
 
 Validates every `data/chords.jsonl` record against `chords.schema.json`.
 
+Validation also enforces the root-quality coverage gate and writes a
+deterministic machine-readable artifact:
+
+- `data/coverage-report.json`
+
+Coverage gate modes:
+
+- default (`allowlist`): requires full matrix coverage except explicit temporary
+  allowlist entries
+- strict (`full-matrix`): requires zero missing matrix entries
+
+Environment variables:
+
+- `VALIDATE_REQUIRE_FULL_MATRIX=1` - enable strict full-matrix mode
+- `VALIDATE_COVERAGE_ALLOWLIST=chord:C:min7,chord:D:min7` - add temporary
+  comma-separated allowlist entries in default mode
+
 Coverage policy behavior:
 
 - Validation uses an explicit contract (`coverage-matrix/v1`) for
@@ -271,6 +288,13 @@ Copilot review gate:
 - workflow: `.github/workflows/copilot-review.yml`
 - required check context: `Copilot Review / require-copilot-review`
 - ruleset-triggered Copilot review requests are enforced by the workflow
+
+CI artifacts include:
+
+- `ci-summary`
+- `flaky-test-summary`
+- `docs-changelog-snapshot`
+- `coverage-report` (`data/coverage-report.json` from `npm run validate`)
 
 ## Troubleshooting
 

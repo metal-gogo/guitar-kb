@@ -6,6 +6,7 @@ coverage/
 # Generated build outputs (reproducible from source cache — do not commit)
 data/generated/
 data/chords.jsonl
+data/coverage-report.json
 data/enharmonic-report.md
 docs/chords/
 docs/diagrams/
