@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { AliasCollisionError, detectAliasCollisions, derivePosition, normalizeQuality, normalizeRecords } from "../../src/ingest/normalize/normalize.js";
-import type { ChordRecord, RawChordRecord } from "../../src/types/model.js";
+import type { ChordQuality, ChordRecord, RawChordRecord } from "../../src/types/model.js";
 
 describe("normalizeQuality", () => {
   it("maps canonical aliases", () => {
@@ -30,18 +30,22 @@ describe("normalizeQuality", () => {
     expect(normalizeQuality("m7")).toBe("min7");
     expect(normalizeQuality("min7")).toBe("min7");
     expect(normalizeQuality("minor7")).toBe("min7");
+    expect(normalizeQuality("minor 7th")).toBe("min7");
+    expect(normalizeQuality("minor-7th")).toBe("min7");
     expect(normalizeQuality("-7")).toBe("min7");
 
     // dim variants
     expect(normalizeQuality("dim")).toBe("dim");
     expect(normalizeQuality("diminished")).toBe("dim");
     expect(normalizeQuality("m7b5")).toBe("dim");
+    expect(normalizeQuality("half-diminished")).toBe("dim");
     expect(normalizeQuality("°")).toBe("dim");
     expect(normalizeQuality("o")).toBe("dim");
 
     // dim7 variants
     expect(normalizeQuality("dim7")).toBe("dim7");
     expect(normalizeQuality("diminished7")).toBe("dim7");
+    expect(normalizeQuality("diminished 7th")).toBe("dim7");
     expect(normalizeQuality("°7")).toBe("dim7");
     expect(normalizeQuality("o7")).toBe("dim7");
 
@@ -53,9 +57,15 @@ describe("normalizeQuality", () => {
     // sus variants
     expect(normalizeQuality("sus2")).toBe("sus2");
     expect(normalizeQuality("suspended2")).toBe("sus2");
+    expect(normalizeQuality("suspended-2nd")).toBe("sus2");
     expect(normalizeQuality("sus4")).toBe("sus4");
     expect(normalizeQuality("suspended4")).toBe("sus4");
+    expect(normalizeQuality("suspended 4th")).toBe("sus4");
     expect(normalizeQuality("sus")).toBe("sus4");
+
+    // dominant 7 variants
+    expect(normalizeQuality("dominant7")).toBe("7");
+    expect(normalizeQuality("dominant 7th")).toBe("7");
   });
 
   it("rejects unsupported aliases", () => {
@@ -292,6 +302,43 @@ describe("normalizeRecords", () => {
     });
     expect(new Set(ids).size).toBe(1);
     expect(ids[0]).toBe("chord:C:maj");
+  });
+
+  it("reaches all defined qualities via alias variants with stable canonical IDs", () => {
+    const variantsByQuality: Record<ChordQuality, string[]> = {
+      maj: ["major", "maj", "M", "Δ", ""],
+      min: ["minor", "min", "m"],
+      "7": ["7", "dominant7", "dominant 7th"],
+      maj7: ["maj7", "major7", "major-7th", "Δ7"],
+      min7: ["min7", "minor7", "minor 7th", "minor-7th", "m7"],
+      dim: ["dim", "diminished", "m7b5", "half-diminished", "°"],
+      dim7: ["dim7", "diminished7", "diminished 7th", "°7"],
+      aug: ["aug", "augmented", "+"],
+      sus2: ["sus2", "suspended2", "suspended-2nd"],
+      sus4: ["sus4", "suspended4", "suspended 4th", "sus"],
+    };
+
+    for (const [quality, variants] of Object.entries(variantsByQuality) as Array<[ChordQuality, string[]]>) {
+      const ids = variants.map((quality_raw) => {
+        const records = normalizeRecords([
+          {
+            source: "source-a",
+            url: "https://example.com/c",
+            symbol: "C",
+            root: "C",
+            quality_raw,
+            aliases: [],
+            formula: [],
+            pitch_classes: [],
+            voicings: [{ id: "v1", frets: [null, 3, 2, 0, 1, 0], base_fret: 1 }],
+          },
+        ]);
+        return records[0]?.id;
+      });
+
+      expect(new Set(ids).size, `quality ${quality} should normalize to one canonical ID`).toBe(1);
+      expect(ids[0]).toBe(`chord:C:${quality}`);
+    }
   });
 
   it("links enharmonic equivalents for all supported enharmonic root pairs", () => {

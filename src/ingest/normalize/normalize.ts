@@ -75,6 +75,7 @@ export function detectAliasCollisions(chords: ChordRecord[]): void {
 
 const QUALITY_MAP: Record<string, ChordQuality> = {
   m: "min",
+  mi: "min",
   minor: "min",
   min: "min",
   "Δ": "maj",
@@ -87,17 +88,24 @@ const QUALITY_MAP: Record<string, ChordQuality> = {
   m7: "min7",
   "-7": "min7",
   minor7: "min7",
+  minor7th: "min7",
+  min7th: "min7",
   min7: "min7",
   "7": "7",
+  dominant7: "7",
+  dominant7th: "7",
   major7: "maj7",
+  major7th: "maj7",
   maj7: "maj7",
   m7b5: "dim",
+  halfdiminished: "dim",
   dim: "dim",
   diminished: "dim",
   "°": "dim",
   o: "dim",
   dim7: "dim7",
   diminished7: "dim7",
+  diminished7th: "dim7",
   "°7": "dim7",
   o7: "dim7",
   aug: "aug",
@@ -105,8 +113,10 @@ const QUALITY_MAP: Record<string, ChordQuality> = {
   augmented: "aug",
   sus2: "sus2",
   suspended2: "sus2",
+  suspended2nd: "sus2",
   sus4: "sus4",
   suspended4: "sus4",
+  suspended4th: "sus4",
   sus: "sus4"
 };
 
@@ -183,6 +193,14 @@ function normalizeStringArray(values: string[]): string[] {
   return [...unique];
 }
 
+function normalizeQualityToken(value: string): string {
+  return value
+    .trim()
+    .replace(/\s+/g, "")
+    .replace(/[-_.]/g, "")
+    .toLowerCase();
+}
+
 function defaultAlias(root: string, quality: ChordQuality): string {
   switch (quality) {
     case "maj":
@@ -232,7 +250,7 @@ export function normalizeQuality(qualityRaw: string): ChordQuality {
   }
 
   const key = rawTrimmed.toLowerCase();
-  const normalized = QUALITY_MAP[key];
+  const normalized = QUALITY_MAP[key] ?? QUALITY_MAP[normalizeQualityToken(rawTrimmed)];
   if (!normalized) {
     throw new Error(`Unsupported chord quality: ${qualityRaw}`);
   }

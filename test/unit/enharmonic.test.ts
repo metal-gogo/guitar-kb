@@ -38,6 +38,17 @@ describe("buildEnharmonicReport", () => {
     expect(report.recordsWithEnharmonics).toBe(2);
   });
 
+  it("detects symmetric pairs for extended-quality canonical IDs", () => {
+    const records = [
+      makeRecord("chord:C#:min7", ["chord:Db:min7"]),
+      makeRecord("chord:Db:min7", ["chord:C#:min7"]),
+    ];
+    const report = buildEnharmonicReport(records);
+    expect(report.pairs).toHaveLength(1);
+    expect(report.pairs[0]).toEqual({ a: "chord:C#:min7", b: "chord:Db:min7" });
+    expect(report.asymmetries).toHaveLength(0);
+  });
+
   it("does not duplicate symmetric pairs", () => {
     // Both sides refer to each other — should produce exactly one pair
     const records = [
