@@ -23,6 +23,24 @@ For deterministic output across repeated runs, pin `--as-of`:
 npm run source-freshness -- --as-of 2026-02-27T00:00:00.000Z --max-age-days 30
 ```
 
+## CI Policy
+
+CI runs the following cache-health checks on every PR:
+
+- `npm run audit-cache`
+- `npm run source-freshness -- --as-of 2026-02-27T00:00:00.000Z --max-age-days 30`
+
+Policy behavior:
+
+- **Fail** when cache audit finds missing or corrupt cache entries.
+- **Warn only** when source freshness reports stale entries (non-blocking).
+
+CI stores deterministic text artifacts in `.artifacts/` and uploads them as
+the `cache-health` artifact bundle:
+
+- `.artifacts/cache-audit.txt`
+- `.artifacts/source-freshness.txt`
+
 ## Output Shape
 
 The report prints:
