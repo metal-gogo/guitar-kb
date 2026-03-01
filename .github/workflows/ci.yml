@@ -97,6 +97,34 @@ jobs:
           exit $code
         continue-on-error: true
 
+      - name: cache audit
+        id: cache_audit
+        if: steps.install.outcome == 'success'
+        run: |
+          set +e
+          mkdir -p .artifacts
+          npm run audit-cache | tee .artifacts/cache-audit.txt
+          code=${PIPESTATUS[0]}
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          exit $code
+        continue-on-error: true
+
+      - name: source freshness
+        id: source_freshness
+        if: steps.install.outcome == 'success'
+        run: |
+          set +e
+          mkdir -p .artifacts
+          npm run source-freshness -- --as-of 2026-02-27T00:00:00.000Z --max-age-days 30 | tee .artifacts/source-freshness.txt
+          code=${PIPESTATUS[0]}
+          stale_count="$(awk '/^STALE_TARGETS / { print $2 }' .artifacts/source-freshness.txt)"
+          if [ -n "$stale_count" ] && [ "$stale_count" -gt 0 ]; then
+            echo "::warning::source-freshness detected $stale_count stale target(s); build remains non-blocking by policy."
+          fi
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          exit $code
+        continue-on-error: true
+
       - name: validate
         id: validate
         if: steps.install.outcome == 'success'
@@ -118,6 +146,8 @@ jobs:
           STATUS_INGEST="${{ steps.ingest.outcome }}"
           STATUS_BUILD="${{ steps.build.outcome }}"
           STATUS_DOCS_CHANGELOG="${{ steps.docs_changelog.outcome }}"
+          STATUS_CACHE_AUDIT="${{ steps.cache_audit.outcome }}"
+          STATUS_SOURCE_FRESHNESS="${{ steps.source_freshness.outcome }}"
           STATUS_VALIDATE="${{ steps.validate.outcome }}"
 
           EXIT_INSTALL="${{ steps.install.outputs.exit_code }}"
@@ -127,6 +157,8 @@ jobs:
           EXIT_INGEST="${{ steps.ingest.outputs.exit_code }}"
           EXIT_BUILD="${{ steps.build.outputs.exit_code }}"
           EXIT_DOCS_CHANGELOG="${{ steps.docs_changelog.outputs.exit_code }}"
+          EXIT_CACHE_AUDIT="${{ steps.cache_audit.outputs.exit_code }}"
+          EXIT_SOURCE_FRESHNESS="${{ steps.source_freshness.outputs.exit_code }}"
           EXIT_VALIDATE="${{ steps.validate.outputs.exit_code }}"
 
           [ -z "$EXIT_INSTALL" ] && EXIT_INSTALL="n/a"
@@ -136,6 +168,8 @@ jobs:
           [ -z "$EXIT_INGEST" ] && EXIT_INGEST="n/a"
           [ -z "$EXIT_BUILD" ] && EXIT_BUILD="n/a"
           [ -z "$EXIT_DOCS_CHANGELOG" ] && EXIT_DOCS_CHANGELOG="n/a"
+          [ -z "$EXIT_CACHE_AUDIT" ] && EXIT_CACHE_AUDIT="n/a"
+          [ -z "$EXIT_SOURCE_FRESHNESS" ] && EXIT_SOURCE_FRESHNESS="n/a"
           [ -z "$EXIT_VALIDATE" ] && EXIT_VALIDATE="n/a"
 
           icon() {
@@ -161,12 +195,16 @@ jobs:
             echo "| ingest   | \`npm run ingest\` | $(icon "$STATUS_INGEST") $STATUS_INGEST | $EXIT_INGEST |"
             echo "| build    | \`npm run build\` | $(icon "$STATUS_BUILD") $STATUS_BUILD | $EXIT_BUILD |"
             echo "| docs-changelog | \`npm run docs-changelog\` | $(icon "$STATUS_DOCS_CHANGELOG") $STATUS_DOCS_CHANGELOG | $EXIT_DOCS_CHANGELOG |"
+            echo "| cache-audit | \`npm run audit-cache\` | $(icon "$STATUS_CACHE_AUDIT") $STATUS_CACHE_AUDIT | $EXIT_CACHE_AUDIT |"
+            echo "| source-freshness | \`npm run source-freshness -- --as-of 2026-02-27T00:00:00.000Z --max-age-days 30\` | $(icon "$STATUS_SOURCE_FRESHNESS") $STATUS_SOURCE_FRESHNESS | $EXIT_SOURCE_FRESHNESS |"
             echo "| validate | \`npm run validate\` | $(icon "$STATUS_VALIDATE") $STATUS_VALIDATE | $EXIT_VALIDATE |"
             echo ""
             if [ "$STATUS_INSTALL" = "failure" ] || [ "$STATUS_LINT" = "failure" ] || [ "$STATUS_TEST" = "failure" ] || \
                [ "$STATUS_FLAKY_SUMMARY" = "failure" ] || \
                [ "$STATUS_INGEST" = "failure" ] || [ "$STATUS_BUILD" = "failure" ] || \
                [ "$STATUS_DOCS_CHANGELOG" = "failure" ] || \
+               [ "$STATUS_CACHE_AUDIT" = "failure" ] || \
+               [ "$STATUS_SOURCE_FRESHNESS" = "failure" ] || \
                [ "$STATUS_VALIDATE" = "failure" ]; then
               echo "## Remediation Hints"
               echo ""
@@ -177,6 +215,8 @@ jobs:
               [ "$STATUS_INGEST"   = "failure" ] && echo "- **ingest failed**: run \`npm run ingest\` locally; verify cached HTML under \`data/sources/\` is present (\`npm run audit-cache\`)."
               [ "$STATUS_BUILD"    = "failure" ] && echo "- **build failed**: run \`npm run build\` locally; check docs/SVG generator errors."
               [ "$STATUS_DOCS_CHANGELOG" = "failure" ] && echo "- **docs-changelog failed**: run \`npm run docs-changelog\` locally and verify docs outputs exist after \`npm run build\`."
+              [ "$STATUS_CACHE_AUDIT" = "failure" ] && echo "- **cache-audit failed**: run \`npm run audit-cache\` locally and restore missing/corrupt entries under \`data/sources/\`."
+              [ "$STATUS_SOURCE_FRESHNESS" = "failure" ] && echo "- **source-freshness failed**: run \`npm run source-freshness -- --as-of 2026-02-27T00:00:00.000Z --max-age-days 30\` locally and inspect freshness output."
               [ "$STATUS_VALIDATE" = "failure" ] && echo "- **validate failed**: run \`npm run validate\` locally; check \`chords.schema.json\` compliance and provenance."
             fi
           } > "$SUMMARY_FILE"
@@ -213,6 +253,17 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
 
+      - name: upload cache health artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cache-health
+          path: |
+            .artifacts/cache-audit.txt
+            .artifacts/source-freshness.txt
+          if-no-files-found: warn
+          retention-days: 7
+
       - name: upload coverage report artifact
         if: always()
         uses: actions/upload-artifact@v4
@@ -231,6 +282,8 @@ jobs:
           steps.ingest.outcome == 'failure' ||
           steps.build.outcome == 'failure' ||
           steps.docs_changelog.outcome == 'failure' ||
+          steps.cache_audit.outcome == 'failure' ||
+          steps.source_freshness.outcome == 'failure' ||
           steps.validate.outcome == 'failure'
         run: |
           echo "One or more CI steps failed. See ci-summary.md artifact for details."
